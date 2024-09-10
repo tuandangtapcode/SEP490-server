@@ -1,0 +1,63 @@
+import { Request, Response } from "express"
+import AccountService from "../services/account.service"
+
+const register = async (req: Request, res: Response) => {
+  try {
+    const response = await AccountService.fncRegister(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const registerByGoogle = async (req: Request, res: Response) => {
+  try {
+    const response = await AccountService.fncRegisterByGoogle(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const login = async (req: Request, res: Response) => {
+  try {
+    const response = await AccountService.fncLogin(req, res)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const loginByGoogle = async (req: Request, res: Response) => {
+  try {
+    const response = await AccountService.fncLoginByGoogle(req, res)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const logout = async (req: Request, res: Response) => {
+  res.clearCookie("token")
+  return res.status(200).json({ data: {}, isError: false, msg: "Đăng xuất thành công" })
+}
+
+const changePassword = async (req: Request, res: Response) => {
+  try {
+    const response = await AccountService.fncChangePassword(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const AccountController = {
+  register,
+  registerByGoogle,
+  login,
+  loginByGoogle,
+  logout,
+  changePassword
+}
+
+export default AccountController
