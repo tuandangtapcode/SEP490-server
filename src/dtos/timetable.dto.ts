@@ -8,12 +8,16 @@ export interface CreateTimeTableDTO {
   StartTime: Date,
   EndTime: Date,
   LearnType: number,
-  Address: string | undefined
+  Address?: string
 }
 
 export interface UpdateTimeTableDTO {
   TimeTableID: ObjectId,
   DateAt: Date
   StartTime: Date,
-  EndTime: Date
+  EndTime: Date,
+  Documents: {
+    DocName: string
+    DocPath: string
+  }[]
 }

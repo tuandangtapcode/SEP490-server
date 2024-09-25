@@ -2,7 +2,7 @@ import express from "express"
 import SubjectController from "../controllers/subject.controller"
 import upload from '../middlewares/clouddinary.middleware'
 import authMiddleware from "../middlewares/auth.middleware"
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import SubjectValidation from "../validations/subject.validation"
 
 const SubjectRoute = express.Router()
@@ -58,7 +58,6 @@ const SubjectRoute = express.Router()
  *         description: Internal server error
  */
 SubjectRoute.post("/createSubject",
-  upload('Avatar').single('Avatar'),
   authMiddleware([Roles.ROLE_ADMIN]),
   SubjectValidation.createSubject,
   SubjectController.createSubject
@@ -117,7 +116,6 @@ SubjectRoute.post("/getListSubject",
  *         description: Internal server error
  */
 SubjectRoute.post("/updateSubject",
-  upload('Avatar').single('Avatar'),
   authMiddleware([Roles.ROLE_ADMIN]),
   SubjectValidation.updateSubject,
   SubjectController.updateSubject

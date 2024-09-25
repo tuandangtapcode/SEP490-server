@@ -1,6 +1,6 @@
 import express from "express"
 import StatisticController from "../controllers/statistic.controller"
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import authMiddleware from "../middlewares/auth.middleware"
 import StatisticValidation from "../validations/statistic.validation"
 

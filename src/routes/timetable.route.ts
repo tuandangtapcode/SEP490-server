@@ -1,7 +1,7 @@
 import express from "express"
 import TimeTableController from "../controllers/timetable.controller"
 import authMiddleware from '../middlewares/auth.middleware'
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import upload from '../middlewares/clouddinary.middleware'
 import TimeTableValidation from "../validations/timetable.validation"
 
@@ -153,7 +153,6 @@ TimeTableRoute.get("/attendanceTimeTable/:TimeTableID",
  *         description: Internal server error
  */
 TimeTableRoute.post("/updateTimeTable",
-  upload('Document').single('Document'),
   authMiddleware([Roles.ROLE_TEACHER]),
   TimeTableValidation.updateTimeTable,
   TimeTableController.updateTimeTable

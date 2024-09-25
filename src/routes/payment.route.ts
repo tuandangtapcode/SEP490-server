@@ -1,9 +1,8 @@
 import express from "express"
 import PaymentController from "../controllers/payment.controller"
 import authMiddleware from '../middlewares/auth.middleware'
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import PaymentValidation from "../validations/payment.validation"
-import upload from '../middlewares/clouddinary.middleware'
 
 const PaymentRoute = express.Router()
 
@@ -60,7 +59,7 @@ const PaymentRoute = express.Router()
  *         description: Internal server error
  */
 PaymentRoute.post("/createPayment",
-  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_STAFF, Roles.ROLE_TEACHER]),
+  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
   PaymentValidation.createPayment,
   PaymentController.createPayment
 )
@@ -85,7 +84,7 @@ PaymentRoute.post("/createPayment",
  *         description: Internal server error
  */
 PaymentRoute.post("/getListPaymentHistoryByUser",
-  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_STAFF, Roles.ROLE_TEACHER]),
+  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
   PaymentValidation.getListPaymentHistoryByUser,
   PaymentController.getListPaymentHistoryByUser
 )
@@ -123,8 +122,7 @@ PaymentRoute.post("/getListPaymentHistoryByUser",
  *         description: Internal server error
  */
 PaymentRoute.post("/changePaymentStatus",
-  upload('Bill').single('Image'),
-  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_STAFF, Roles.ROLE_TEACHER]),
+  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
   PaymentValidation.changePaymentStatus,
   PaymentController.changePaymentStatus
 )
@@ -158,14 +156,8 @@ PaymentRoute.post("/getListPayment",
 /**
  * @swagger
  * /payment/exportExcel:
- *   post:
+ *   get:
  *     tags: [Payments]
- *     requestBody:
- *       content:
- *         application/json:
- *           example:
- *               PageSize: 10
- *               CurrentPage: 1
  *     responses:
  *       200:
  *         description: Thêm thành công
@@ -198,7 +190,7 @@ PaymentRoute.get("/exportExcel",
  */
 PaymentRoute.post("/getListTransfer",
   authMiddleware([Roles.ROLE_ADMIN]),
-  // PaymentValidation.getListTransfer,
+  PaymentValidation.getListTransfer,
   PaymentController.getListTransfer
 )
 

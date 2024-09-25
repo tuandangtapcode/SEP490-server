@@ -1,7 +1,7 @@
 import express from "express"
 import BankingInforController from "../controllers/bankinginfor.controller"
 import authMiddleware from "../middlewares/auth.middleware"
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import BankInforValidation from "../validations/bankinginfor.validation"
 
 const BankingInforRoute = express.Router()

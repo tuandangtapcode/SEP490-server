@@ -1,13 +1,13 @@
 import TimeTable from "../models/timetable"
 import LearnHistory from "../models/learnhistory"
-import { Roles, response } from "../utils/lib"
+import { Roles } from "../utils/constant"
 import { getOneDocument } from "../utils/queryFunction"
-import iconv from "iconv-lite"
 import { Request } from "express"
 import {
   CreateTimeTableDTO,
   UpdateTimeTableDTO
 } from "../dtos/timetable.dto"
+import response from "../utils/response"
 
 const fncCreateTimeTable = async (req: Request) => {
   try {
@@ -24,14 +24,15 @@ const fncCreateTimeTable = async (req: Request) => {
       }).lean()
     )
     const checkTimeTableExist = await Promise.all(findTimeTableExist)
-    if (!!checkTimeTableExist.length)
+    if (!!checkTimeTableExist[0])
       return response(
-        {},
-        false,
-        checkTimeTableExist.map((i) => ({
-          StartTime: i?.StartTime,
-          EndTime: i?.EndTime
+        checkTimeTableExist.map((i: any) => ({
+          StartTime: i.StartTime,
+          EndTime: i.EndTime,
+          DateAt: i.DateAt
         })),
+        false,
+        "Lịch học đã được đăng ký",
         200
       )
     const newTimeTable = await TimeTable.insertMany(data, { ordered: true })
@@ -97,31 +98,18 @@ const fncAttendanceTimeTable = async (req: Request) => {
 
 const fncUpdateTimeTable = async (req: Request) => {
   try {
-    const { TimeTableID, DateAt, StartTime, EndTime } =
+    const { TimeTableID, StartTime, EndTime } =
       req.body as UpdateTimeTableDTO
-    let docName
     const timetable = await getOneDocument(TimeTable, "_id", TimeTableID)
     if (!timetable) return response({}, true, "Lịch học không tồn tại", 200)
     const checkDateTime = await TimeTable.findOne({
-      DateAt, StartTime, EndTime
+      StartTime, EndTime
     })
-    console.log(req.file);
-    if (!!checkDateTime && !timetable._id.equals(checkDateTime._id)) return response({}, true, "Bạn đã có lịch học vào ngày giờ này", 200)
-    if (!!req.file) {
-      const buffer = Buffer.from(req.file.originalname, 'latin1')
-      docName = iconv.decode(buffer, 'utf8')
-    }
+    if (!!checkDateTime && !timetable._id.equals(checkDateTime._id))
+      return response({}, true, "Bạn đã có lịch học vào thời điểm này", 200)
     const updateTimetable = await TimeTable.findOneAndUpdate(
       { _id: TimeTableID },
-      {
-        ...req.body,
-        Document: !!req.file
-          ? {
-            DocName: docName,
-            DocPath: req.file.path
-          }
-          : null,
-      },
+      { ...req.body },
       { new: true }
     )
     return response(updateTimetable, false, "Cập nhật lịch học thành công", 200)

@@ -3,6 +3,7 @@ import { PaginationDTO } from "./common.dto"
 
 export interface CreateCommentDTO {
   Teacher: ObjectId,
+  Content: string,
   Rate: number
 }
 

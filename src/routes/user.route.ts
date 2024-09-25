@@ -2,7 +2,7 @@ import express from "express"
 import UserController from "../controllers/user.controller"
 import authMiddleware from "../middlewares/auth.middleware"
 import upload from '../middlewares/clouddinary.middleware'
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import UserValidation from "../validations/user.validation"
 
 const UserRoute = express.Router()
@@ -124,7 +124,14 @@ const UserRoute = express.Router()
  *        description: Internal server error
  */
 UserRoute.get("/getDetailProfile",
-  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
+  authMiddleware([
+    Roles.ROLE_ADMIN,
+    Roles.ROLE_STAFF_USER,
+    Roles.ROLE_STAFF_SUBJECT,
+    Roles.ROLE_STAFF_INBOX,
+    Roles.ROLE_TEACHER,
+    Roles.ROLE_STUDENT,
+  ]),
   UserController.getDetailProfile
 )
 
@@ -146,7 +153,6 @@ UserRoute.get("/getDetailProfile",
  *        description: Internal server error
  */
 UserRoute.post("/changeProfile",
-  upload("Avatar").single("Avatar"),
   authMiddleware([Roles.ROLE_TEACHER, Roles.ROLE_STUDENT]),
   UserController.changeProfile
 )
@@ -186,29 +192,29 @@ UserRoute.get("/requestConfirmRegister",
  *           description: internal server error
  */
 UserRoute.post("/responseConfirmRegister",
-  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
+  authMiddleware([Roles.ROLE_ADMIN,]),
   UserValidation.responseConfirmRegister,
   UserController.responseConfirmRegister
 )
 
 /**
  * @swagger
- * /user/pushOrPullSubjectForTeacher/{SubjectID}:
- *   get:
+ * /user/pushOrPullSubjectForTeacher:
+ *   post:
  *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: SubjectID
- *         schema:
- *           type: ObjectId
- *         description: ID của môn học
+ *     requestBody:
+ *        content:
+ *          application/json:
+ *              example:
+ *                SubjectID: 664c1480b8f11adfc4f4a85b
+ *                Email: "abc@gmail.com"
  *     responses:
  *       200:
  *         description: Thêm môn học thành công
  *       500:
  *        description: Internal server error
  */
-UserRoute.get("/pushOrPullSubjectForTeacher/:SubjectID",
+UserRoute.post("/pushOrPullSubjectForTeacher",
   authMiddleware([Roles.ROLE_TEACHER]),
   UserValidation.pushOrPullSubjectForTeacher,
   UserController.pushOrPullSubjectForTeacher

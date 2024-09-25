@@ -1,18 +1,17 @@
 import SubjectCate from "../models/subjectcate"
 import Subject from "../models/subject"
-import { response } from "../utils/lib"
+import response from "../utils/response"
 import { getOneDocument } from "../utils/queryFunction"
 import { Request } from "express"
 import {
-  CreateSubjectCateDTO,
+  CreateUpdateSubjectCateDTO,
   GetDetailSubjectCateDTO,
-  UpdateSubjectCateDTO
 } from "../dtos/subjectcate.dto"
 import { CommonDTO } from "../dtos/common.dto"
 
 const fncCreateSubjectCate = async (req: Request) => {
   try {
-    const { SubjectCateName, Description } = req.body as CreateSubjectCateDTO
+    const { SubjectCateName, Description } = req.body as CreateUpdateSubjectCateDTO
     const subjectCate = await getOneDocument(SubjectCate, "SubjectCateName", SubjectCateName)
     if (!!subjectCate) return response({}, true, "Loại môn đã tồn tại", 200)
     const newSubjectCate = await SubjectCate.create({
@@ -52,16 +51,19 @@ const fncGetListSubjectCate = async (req: Request) => {
 
 const fncUpdateSubjectCate = async (req: Request) => {
   try {
-    const { SubjectCateID, SubjectCateName, Description } =
-      req.body as UpdateSubjectCateDTO
-    const checkExist = await getOneDocument(SubjectCate, "_id", SubjectCateID)
-    if (!checkExist) return response({}, true, "Loại danh mục không tồn tại", 200)
-    const checkExistName = await getOneDocument(SubjectCate, "SubjectCateName", SubjectCateName)
-    if (!!checkExistName && !checkExist._id.equals(checkExistName._id))
+    const { SubjectCateID, SubjectCateName } =
+      req.body as CreateUpdateSubjectCateDTO
+    const checkExistName = await SubjectCate.findOne({
+      SubjectCateName,
+      _id: {
+        $ne: SubjectCateName
+      }
+    })
+    if (!!checkExistName)
       return response({}, true, `Loại danh mục ${SubjectCateName} đã tồn tại`, 200)
     const updatedSubjectCate = await SubjectCate.findByIdAndUpdate(
       SubjectCateID,
-      { SubjectCateName, Description },
+      { ...req.body },
       { new: true, runValidators: true }
     )
     if (!updatedSubjectCate) return response({}, true, "Có lỗi xảy ra", 200)

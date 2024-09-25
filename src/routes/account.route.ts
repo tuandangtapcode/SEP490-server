@@ -1,7 +1,7 @@
 import express from "express"
 import AccountController from "../controllers/account.controller"
 import authMiddleware from "../middlewares/auth.middleware"
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import AccountValidation from "../validations/account.validation"
 
 const AccountRoute = express.Router()

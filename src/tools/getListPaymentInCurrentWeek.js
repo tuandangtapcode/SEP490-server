@@ -2,7 +2,7 @@ import User from "../models/user"
 import Payment from "../models/payment"
 import { ADMIN_ID } from "../services/message.service"
 import { getCurrentWeekRange, randomNumber } from "../utils/commonFunction"
-import { Roles } from "../utils/lib"
+import { Roles } from "../utils/constant"
 
 const getListPaymentInCurrentWeek = async () => {
   try {

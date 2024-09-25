@@ -1,12 +1,11 @@
-import { response } from "../utils/lib"
+import response from "../utils/response"
 import { getOneDocument } from "../utils/queryFunction"
 import BankingInfor from "../models/bankinginfor"
 import sendEmail from "../utils/send-mail"
 import { Request } from "express"
 import {
-  CreateBankingInforDTO,
+  CreateUpdateBankingInforDTO,
   GetBankingInforOfUserDTO,
-  UpdatedBankingInforDTO
 } from "../dtos/bankinginfor.dto"
 import { CommonDTO } from "../dtos/common.dto"
 
@@ -14,7 +13,7 @@ const fncCreateBankingInfor = async (req: Request) => {
   try {
     const UserID = req.user.ID
     const newBankingInfor = await BankingInfor.create({
-      ...req.body as CreateBankingInforDTO,
+      ...req.body as CreateUpdateBankingInforDTO,
       User: UserID
     })
     return response(newBankingInfor, false, "Tạo thông tin banking thành công", 201)
@@ -60,15 +59,11 @@ const fncGetListBankingInfor = async (req: Request) => {
 
 const fncUpdateBankingInfor = async (req: Request) => {
   try {
-    const { BankingInforID, BankID, UserBankName, UserBankAccount } =
-      req.body as UpdatedBankingInforDTO
+    const { BankingInforID } =
+      req.body as CreateUpdateBankingInforDTO
     const updatedBankingInfor = await BankingInfor.findByIdAndUpdate(
       BankingInforID,
-      {
-        BankID: BankID,
-        UserBankName: UserBankName,
-        UserBankAccount: UserBankAccount,
-      },
+      { ...req.body },
       { new: true, runValidators: true }
     )
     if (!updatedBankingInfor) return response({}, true, "Có lỗi xảy ra", 200)

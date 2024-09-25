@@ -1,23 +1,19 @@
-import { response } from "../utils/lib"
+import response from "../utils/response"
 import { getOneDocument } from "../utils/queryFunction"
 import Blog from "../models/blog"
 import { Request } from "express"
-import {
-  CreateBlogDTO,
-  UpdateBlogDTO
-} from "../dtos/blog.dto"
+import { CreateUpdateBlogDTO } from "../dtos/blog.dto"
 import { PaginationDTO } from "../dtos/common.dto"
 
 const fncCreateBlog = async (req: Request) => {
   try {
-    const { Title } = req.body as CreateBlogDTO
+    const { Title } = req.body as CreateUpdateBlogDTO
     const UserID = req.user.ID
     const blog = await getOneDocument(Blog, "Title", Title)
     if (!!blog) return response({}, true, "Tiêu đề blog đã tồn tại", 200)
     const newCreateBlog = await Blog.create({
       ...req.body,
       Teacher: UserID,
-      AvatarPath: !!req.file ? req.file.path : undefined
     })
     return response(newCreateBlog, false, "Tạo bài viết thành công", 201)
   } catch (error: any) {
@@ -74,20 +70,21 @@ const fncDeleteBlog = async (req: Request) => {
 
 const fncUpdateBlog = async (req: Request) => {
   try {
-    const { BlogID, Title } = req.body as UpdateBlogDTO
-    const checkExist = await getOneDocument(Blog, "_id", BlogID)
-    if (!checkExist) return response({}, true, "Có lỗi xảy ra", 200)
-    const checkExistTitle = await getOneDocument(Blog, "Title", Title)
-    if (!!checkExistTitle && !checkExist._id.equals(checkExistTitle._id))
+    const { BlogID, Title } = req.body as CreateUpdateBlogDTO
+    const checkExistTitle = await Blog.findOne({
+      Title: Title,
+      _id: {
+        $ne: BlogID
+      }
+    })
+    if (!!checkExistTitle)
       return response({}, true, "Tiêu đề blog đã tồn tại", 200)
     const updateBlog = await Blog.findOneAndUpdate(
       { _id: BlogID },
-      {
-        ...req.body,
-        AvatarPath: !!req.file ? req.file.path : checkExist?.AvatarPath
-      },
+      { ...req.body },
       { new: true }
     )
+    if (!updateBlog) return response({}, true, "Có lỗi xảy ra", 200)
     return response(updateBlog, false, "Cập nhật blog thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

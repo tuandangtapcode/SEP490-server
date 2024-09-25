@@ -19,7 +19,7 @@ const PaymentSchema = new Schema({
     required: true
   },
   TraddingCode: {
-    type: Number,
+    type: String,
     required: true
   },
   TotalFee: {

@@ -1,7 +1,7 @@
 import express from "express"
 import MessageController from "../controllers/message.controller"
 import authMiddleware from "../middlewares/auth.middleware"
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import MessageValidation from "../validations/message.validation"
 
 const MessageRoute = express.Router()
@@ -70,7 +70,7 @@ const MessageRoute = express.Router()
  *         description: Internal server error
  */
 MessageRoute.post("/createMessage",
-  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_STAFF, Roles.ROLE_TEACHER]),
+  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
   MessageValidation.createMessage,
   MessageController.createMessage
 )
@@ -94,7 +94,7 @@ MessageRoute.post("/createMessage",
  *         description: Internal server error
  */
 MessageRoute.post("/getMessageByChat",
-  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_STAFF, Roles.ROLE_TEACHER]),
+  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
   MessageValidation.getMessageByChat,
   MessageController.getMessageByChat
 )
@@ -116,7 +116,7 @@ MessageRoute.post("/getMessageByChat",
  *         description: Internal server error
  */
 MessageRoute.post("/getChatWithUser",
-  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_STAFF, Roles.ROLE_TEACHER]),
+  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
   MessageValidation.getChatWithUser,
   MessageController.getChatWithUser
 )
@@ -156,7 +156,7 @@ MessageRoute.get("/getChatOfAdmin",
  *         description: Server error
  */
 MessageRoute.get("/seenMessage/:ChatID",
-  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_STAFF, Roles.ROLE_TEACHER]),
+  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
   MessageValidation.seenMessage,
   MessageController.seenMessage
 )

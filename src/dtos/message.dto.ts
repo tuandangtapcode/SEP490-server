@@ -3,8 +3,8 @@ import { PaginationDTO } from "./common.dto"
 
 export interface CreateMessageDTO {
   Content: string,
-  ChatID: ObjectId,
-  Receiver: ObjectId
+  ChatID?: ObjectId,
+  Receiver?: ObjectId
 }
 
 export interface GetMessageByChatDTO extends PaginationDTO {
