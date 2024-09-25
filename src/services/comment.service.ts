@@ -1,7 +1,7 @@
 import { CreateCommentDTO, GetListCommentOfTeacherDTO } from "../dtos/comment.dto"
 import Comment from "../models/comment"
 import User from "../models/user"
-import { response } from "../utils/lib"
+import response from "../utils/response"
 import { Request } from "express"
 
 const fncCreateComment = async (req: Request) => {

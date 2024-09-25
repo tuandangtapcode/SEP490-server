@@ -1,13 +1,10 @@
 import { Document, ObjectId } from "mongoose"
 import { CommonDTO } from "./common.dto"
 
-export interface CreateSubjectCateDTO {
+export interface CreateUpdateSubjectCateDTO {
   SubjectCateName: string,
-  Description: string
-}
-
-export interface UpdateSubjectCateDTO extends CreateSubjectCateDTO {
-  SubjectCateID: ObjectId
+  Description: string,
+  SubjectCateID?: string
 }
 
 export interface GetDetailSubjectCateDTO extends CommonDTO {

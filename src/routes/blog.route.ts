@@ -1,7 +1,7 @@
 import express from "express"
 import BlogController from "../controllers/blog.controller"
 import authMiddleware from "../middlewares/auth.middleware"
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import upload from '../middlewares/clouddinary.middleware'
 import BlogValidation from "../validations/blog.validation"
 
@@ -61,7 +61,6 @@ const BlogRoute = express.Router()
  *         description: Internal server error
  */
 BlogRoute.post("/createBlog",
-    upload('Avatar').single('Avatar'),
     authMiddleware([Roles.ROLE_TEACHER]),
     BlogValidation.createBlog,
     BlogController.createBlog
@@ -164,7 +163,6 @@ BlogRoute.get("/getDetailBlog/:BlogID",
  *         description: Internal server error
  */
 BlogRoute.post("/updateBlog",
-    upload('Avatar').single('Avatar'),
     authMiddleware([Roles.ROLE_TEACHER]),
     BlogValidation.updateBlog,
     BlogController.updateBlog

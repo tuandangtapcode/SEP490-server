@@ -1,6 +1,6 @@
-import { response } from '../utils/lib.js'
 import { decodeData } from '../utils/commonFunction'
 import { NextFunction, Request, Response } from 'express'
+import response from '../utils/response'
 
 const authMiddleware = (Roles: any) => {
   return (req: Request, res: Response, next: NextFunction) => {

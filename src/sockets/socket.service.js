@@ -10,6 +10,7 @@ const addUserOnline = (socket) => {
           SocketID: socket.id
         })
       }
+      console.log("userOnlines", userOnlines);
     }
   }
 }

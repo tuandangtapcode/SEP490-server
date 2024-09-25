@@ -22,12 +22,14 @@ const TimeTableSchema = new Schema({
     ref: 'Subjects',
     required: true
   },
-  Document: {
-    type: {
-      DocPath: { type: String, required: true },
-      DocName: { type: String, required: true }
-    },
-    default: null
+  Documents: {
+    type: [
+      {
+        DocPath: { type: String, required: true },
+        DocName: { type: String, required: true }
+      }
+    ],
+    default: []
   },
   DateAt: {
     type: Date,

@@ -1,7 +1,7 @@
 import express from "express"
-import SystemKeyController from "../controllers/systemkey.controller"
+import CommonController from "../controllers/common.controller"
 
-const SystemKeyRoute = express.Router()
+const CommonRoute = express.Router()
 
 // Define model trên swagger
 /**
@@ -33,9 +33,9 @@ const SystemKeyRoute = express.Router()
 
 /**
  * @swagger
- * /systemkey/getListSystemkey:
+ * /commons/getListSystemkey:
  *   get:
- *     tags: [SystemKeys]
+ *     tags: [Commons]
  *     security:
  *        - Authorization: []
  *     responses:
@@ -44,8 +44,10 @@ const SystemKeyRoute = express.Router()
  *       500:
  *        description: Internal server error
  */
-SystemKeyRoute.get("/getListSystemkey",
-  SystemKeyController.getListSystemKey
+CommonRoute.get("/getListSystemkey",
+  CommonController.getListSystemKey
 )
 
-export default SystemKeyRoute
+
+
+export default CommonRoute

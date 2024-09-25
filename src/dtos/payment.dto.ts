@@ -11,7 +11,7 @@ export interface CreatePaymentDTO {
 }
 
 export interface GetListPaymentHistoryByUserDTO extends PaginationDTO {
-  TraddingCode: number,
+  TraddingCode: string,
   PaymentStatus: number,
   PaymentType: number
 }
@@ -22,7 +22,8 @@ export interface ChangePaymentStatusDTO {
   TotalFee: number,
   FullName: string,
   Email: string,
-  RoleID: string
+  RoleID: string,
+  Image: string
 }
 
 export interface GetListPaymentDTO extends CommonDTO {

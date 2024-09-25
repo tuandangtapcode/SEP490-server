@@ -1,7 +1,7 @@
 import express from "express"
 import CommentController from "../controllers/comment.controller"
 import authMiddleware from "../middlewares/auth.middleware"
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import CommentValidation from "../validations/comment.validation"
 
 const CommentRoute = express.Router()

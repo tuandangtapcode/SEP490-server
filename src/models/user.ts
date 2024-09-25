@@ -24,68 +24,13 @@ const UserSchema = new Schema({
     ],
     default: []
   },
-  Quotes: {
-    type: [
-      {
-        SubjectID: { type: mongoose.Schema.Types.ObjectId, ref: "Subjects" },
-        Title: { type: String },
-        Content: { type: String },
-        Levels: {
-          type: [
-            { type: Number }
-          ]
-        }
-      }
-    ],
-    default: []
+  Certificates: {
+    type: [String],
+    required: true
   },
-  Schedules: {
-    type: [
-      {
-        DateAt: { type: String },
-        StartTime: { type: Date },
-        EndTime: { type: Date }
-      }
-    ],
-    default: []
-  },
-  Description: {
-    type: String,
-    default: null
-  },
-  Experiences: {
-    type: [
-      {
-        Title: { type: String, required: true },
-        Content: { type: String, required: true },
-        StartDate: { type: String, required: true },
-        EndDate: { type: String, required: true }
-      }
-    ],
-    default: []
-  },
-  Educations: {
-    type: [
-      {
-        Title: { type: String, required: true },
-        Content: { type: String, required: true },
-        StartDate: { type: String, required: true },
-        EndDate: { type: String, required: true }
-      }
-    ],
-    default: []
-  },
-  Price: {
-    type: String,
-  },
-  IntroductVideos: {
-    type: [
-      {
-        Title: { type: String },
-        VideoPath: { type: String }
-      }
-    ],
-    default: []
+  IntroVideos: {
+    type: [String],
+    required: true
   },
   Votes: {
     type: [

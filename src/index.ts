@@ -10,9 +10,9 @@ import { rateLimit } from "express-rate-limit"
 import compression from "compression"
 dotenv.config()
 import cors from 'cors'
-import connect from './config/index'
+import connect from './config/DBConfig'
 import routes from './routes/index'
-import { optionSwagger } from "./utils/lib"
+import { optionSwagger } from "./utils/constant"
 import schedule from "node-schedule"
 import getListPaymentInCurrentWeek from "./tools/getListPaymentInCurrentWeek"
 import socket from "./sockets/index"

@@ -4,7 +4,8 @@ import { CommonDTO } from "./common.dto"
 export interface ResponseConfirmRegisterDTO {
   TeacherID: ObjectId,
   RegisterStatus: number,
-  FullName: string
+  FullName: string,
+  Email: string
 }
 
 export interface GetListTeacherDTO extends CommonDTO {
@@ -35,4 +36,9 @@ export interface InactiveOrActiveAccountDTO {
   UserID: ObjectId,
   IsActive: boolean,
   RegisterStatus: number
+}
+
+export interface PushOrPullSubjectForTeacherDTO {
+  SubjectID: ObjectId,
+  Email: string
 }

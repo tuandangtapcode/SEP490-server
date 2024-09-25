@@ -1,12 +1,13 @@
 import mongoose from "mongoose"
 import LearnHistory from "../models/learnhistory"
-import { response } from "../utils/lib"
+import { Roles } from "../utils/constant"
 import sendEmail from "../utils/send-mail"
 import { Request } from "express"
 import {
   CreateLearnHistoryDTO,
   GetListLearnHistoryDTO
 } from "../dtos/learnhistory.dto"
+import response from "../utils/response"
 
 const fncCreateLearnHistory = async (req: Request) => {
   try {
@@ -48,11 +49,14 @@ const fncCreateLearnHistory = async (req: Request) => {
 
 const fncGetListLearnHistory = async (req: Request) => {
   try {
-    const UserID = req.user.ID
+    const { ID, RoleID } = req.user
     const { PageSize, CurrentPage, LearnedStatus, TextSearch } =
       req.body as GetListLearnHistoryDTO
     let query = {
-      Student: new mongoose.Types.ObjectId(`${UserID}`),
+      [RoleID === Roles.ROLE_STUDENT
+        ? "Student"
+        : "Teacher"
+      ]: new mongoose.Types.ObjectId(`${ID}`),
     } as any
     if (!!LearnedStatus) {
       query = {
@@ -136,6 +140,11 @@ const fncGetListLearnHistory = async (req: Request) => {
             { 'Subject.SubjectName': { $regex: TextSearch, $options: 'i' } },
             { 'Teacher.FullName': { $regex: TextSearch, $options: 'i' } }
           ]
+        }
+      },
+      {
+        $group: {
+          _id: "$_id"
         }
       },
       {

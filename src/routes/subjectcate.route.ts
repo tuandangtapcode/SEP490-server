@@ -1,7 +1,7 @@
 import express from "express"
 import SubjectCateController from "../controllers/subjectcate.controller"
 import authMiddleware from "../middlewares/auth.middleware"
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import SubjectCateValidation from "../validations/subjectcate.validation"
 
 const SubjectCateRoute = express.Router()

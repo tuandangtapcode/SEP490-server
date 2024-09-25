@@ -1,7 +1,7 @@
 import express from "express"
 import NotificationController from "../controllers/notification.controller"
 import authMiddleware from '../middlewares/auth.middleware'
-import { Roles } from '../utils/lib.js'
+import { Roles } from '../utils/constant'
 import NotificaitonValidation from "../validations/notification.validation"
 
 const NotificationRoute = express.Router()
@@ -51,7 +51,7 @@ const NotificationRoute = express.Router()
  *           description: internal server error
  */
 NotificationRoute.post('/createNotification',
-  authMiddleware([Roles.ROLE_STAFF, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER, Roles.ROLE_ADMIN]),
+  authMiddleware([, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER, Roles.ROLE_ADMIN]),
   NotificaitonValidation.createNotificaiton,
   NotificationController.createNotification
 )
@@ -73,7 +73,7 @@ NotificationRoute.post('/createNotification',
  *        description: Internal server error
  */
 NotificationRoute.get('/changeStatusNotification/:ReceiverID',
-  authMiddleware([Roles.ROLE_STAFF, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER, Roles.ROLE_ADMIN]),
+  authMiddleware([, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER, Roles.ROLE_ADMIN]),
   NotificationController.changeStatusNotification
 )
 
@@ -89,7 +89,7 @@ NotificationRoute.get('/changeStatusNotification/:ReceiverID',
  *        description: Internal server error
  */
 NotificationRoute.get('/getListNotification/:ReceiverID',
-  authMiddleware([Roles.ROLE_STAFF, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER, Roles.ROLE_ADMIN]),
+  authMiddleware([, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER, Roles.ROLE_ADMIN]),
   NotificationController.getListNotification
 )
 
@@ -111,7 +111,7 @@ NotificationRoute.get('/getListNotification/:ReceiverID',
  *           description: internal server error
  */
 NotificationRoute.post('/seenNotification',
-  authMiddleware([Roles.ROLE_STAFF, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER, Roles.ROLE_ADMIN]),
+  authMiddleware([, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER, Roles.ROLE_ADMIN]),
   NotificaitonValidation.seenNotification,
   NotificationController.seenNotification
 )
