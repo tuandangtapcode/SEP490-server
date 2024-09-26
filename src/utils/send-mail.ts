@@ -4,7 +4,7 @@ dotenv.config()
 const { MAIL_TRANSPORT_HOST, MAIL_AUTH_USERNAME, MAIL_AUTH_PASSWORD } = process.env
 
 
-const sendEmail = async (to, subject, content, attachments = []) => {
+const sendEmail = async (to: string, subject: string, content: string, attachments?: any) => {
   const transporter = nodemailer.createTransport({
     host: MAIL_TRANSPORT_HOST,
     port: 465,
@@ -17,7 +17,7 @@ const sendEmail = async (to, subject, content, attachments = []) => {
 
   transporter.verify(function (error, success) {
     if (error) {
-      return json('Email của bạn không tồn tại. Hãy kiểm tra lại!')
+      return 'Email của bạn không tồn tại. Hãy kiểm tra lại!'
     }
   })
 

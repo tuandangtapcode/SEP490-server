@@ -21,7 +21,7 @@ const checkPayment = async () => {
       .sendKeys("Thuhuyen1")
     const btnLogin = await driver.findElement(By.className("btn-login"))
     await btnLogin.click()
-  } catch (error) {
+  } catch (error: any) {
     console.log("error", error.toString())
     return false
   } finally {
