@@ -38,7 +38,7 @@ const getListPaymentInCurrentWeek = async () => {
         }
       }
     ])
-    let teacherReported = []
+    let teacherReported = [] as any
     teachers.forEach(teacher => {
       if (!!teacher.TimeTables.length) {
         const newPayment = Payment.create({
@@ -54,7 +54,7 @@ const getListPaymentInCurrentWeek = async () => {
       }
     })
     await Promise.all(teacherReported)
-  } catch (error) {
+  } catch (error: any) {
     console.log("error", error.toString())
   }
 }

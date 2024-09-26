@@ -24,17 +24,17 @@ export const randomNumber = () => {
   return randomNumber
 }
 
-export const encodeData = object => {
+export const encodeData = (object: any) => {
   return CryptoJS.AES.encrypt(
     JSON.stringify(object),
-    process.env.HASH_KEY,
+    process.env.HASH_KEY || "default_hash_key",
   ).toString()
 }
 
-export const decodeData = data_hashed => {
+export const decodeData = (data_hashed: any) => {
   const decryptedBytes = CryptoJS.AES.decrypt(
     data_hashed,
-    process.env.HASH_KEY,
+    process.env.HASH_KEY || "default_hash_key",
   )
   return JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8))
 }
@@ -63,5 +63,5 @@ export const getCurrentWeekRange = () => {
   return { startOfWeek, endOfWeek }
 }
 
-export const formatMoney = money =>
+export const formatMoney = (money: number) =>
   (Math.round(money * 100) / 100).toLocaleString().replaceAll(",", ".")

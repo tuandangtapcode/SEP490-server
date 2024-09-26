@@ -1,8 +1,8 @@
 import SocketService, { userOnlines } from "./socket.service"
 
-const socket = (io) => {
+const socket = (io: any) => {
 
-  io.on("connection", (socket) => {
+  io.on("connection", (socket: any) => {
 
     console.log(`người dùng ${socket.id} đã kết nối`)
 
