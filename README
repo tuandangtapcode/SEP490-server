@@ -1,0 +1,5 @@
+Khi lấy code về:
+  npm i
+  npx tsc --build
+Run code
+  npm run dev
