@@ -4,8 +4,9 @@ import LearnHistory from "../models/learnhistory"
 import Payment from "../models/payment"
 import User from "../models/user"
 import { getCurrentWeekRange } from "../utils/commonFunction"
-import { Roles, response } from "../utils/lib"
+import { Roles } from "../utils/constant"
 import { StatisticTotalUserDTO } from "../dtos/statistic.dto"
+import response from "../utils/response"
 
 const getResultData = (TotalTeacher: number, TotalStudent: number) => {
   return {

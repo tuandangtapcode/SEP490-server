@@ -1,10 +1,10 @@
-export const response = (data, isError, msg, statusCode) => {
-  return { data, isError, msg, statusCode }
-}
 
 export const Roles = {
   ROLE_ADMIN: 1,
-  ROLE_STAFF: 2,
+  ROLE_STAFF_USER: 5,
+  ROLE_STAFF_SUBJECT: 6,
+  ROLE_STAFF_INBOX: 7,
+  ROLE_STAFF_TRANSFER: 8,
   ROLE_TEACHER: 3,
   ROLE_STUDENT: 4,
 }
@@ -38,7 +38,7 @@ export const optionSwagger = {
       { url: 'http://localhost:9999' },
     ],
   },
-  apis: ['./src/routes/*.route.js', "./src/models/*.js"],
+  apis: ['./src/routes/*.route.ts', "./src/models/*.ts", './dist/routes/*.route.js', "./dist/models/*.js"],
 }
 
 // ------------------------------------

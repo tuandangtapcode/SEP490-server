@@ -1,6 +1,6 @@
 import { Request } from "express"
 import Notification from "../models/notification"
-import { response } from "../utils/lib"
+import response from "../utils/response"
 import {
   CreateNotificationDTO,
   SeenNotificationDTO

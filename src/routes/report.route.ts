@@ -1,7 +1,7 @@
 import express from "express"
 import ReportController from "../controllers/report.controller"
 import authMiddleware from "../middlewares/auth.middleware"
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import ReportValidation from "../validations/report.validation"
 
 const ReportRoute = express.Router()
@@ -53,7 +53,7 @@ const ReportRoute = express.Router()
  *         description: Server error
  */
 ReportRoute.post("/createReport",
-    authMiddleware([Roles.ROLE_STAFF, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
+    authMiddleware([, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
     ReportValidation.createReport,
     ReportController.createReport
 )

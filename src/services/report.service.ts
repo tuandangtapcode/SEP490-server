@@ -1,4 +1,4 @@
-import { response } from "../utils/lib"
+import response from "../utils/response"
 import Report from "../models/report"
 import { Request } from "express"
 import Blog from "../models/blog"

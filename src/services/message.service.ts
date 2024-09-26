@@ -1,7 +1,7 @@
 import { Request } from "express"
 import Chat from "../models/chat"
 import Message from "../models/message"
-import { response } from "../utils/lib"
+import response from "../utils/response"
 import {
   CreateMessageDTO,
   GetMessageByChatDTO

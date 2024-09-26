@@ -1,23 +1,18 @@
 import { Request } from "express"
 import Subject from "../models/subject"
-import { response } from "../utils/lib"
+import response from "../utils/response"
 import { getOneDocument } from "../utils/queryFunction"
 import {
-  CreateSubjectDTO,
+  CreateUpdateSubjectDTO,
   GetListSubjectDTO,
-  UpdateSubjectDTO
 } from "../dtos/subject.dto"
 
 const fncCreateSubject = async (req: Request) => {
   try {
-    const { SubjectCateID, SubjectName } = req.body as CreateSubjectDTO
+    const { SubjectCateID, SubjectName } = req.body as CreateUpdateSubjectDTO
     const subject = await getOneDocument(Subject, "SubjectName", SubjectName)
     if (!!subject) return response({}, true, `Môn ${SubjectName} đã tồn tại`, 200)
-    const newSubject = await Subject.create({
-      SubjectCateID,
-      SubjectName,
-      AvatarPath: !!req.file ? req.file.path : undefined
-    })
+    const newSubject = await Subject.create({ ...req.body })
     return response(newSubject, false, "Tạo môn học thành công", 201)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -57,19 +52,18 @@ const fncGetListSubject = async (req: Request) => {
 
 const fncUpdateSubject = async (req: Request) => {
   try {
-    const { SubjectCateID, SubjectName, SubjectID } = req.body as UpdateSubjectDTO
-    const checkExist = await getOneDocument(Subject, "_id", SubjectID)
-    if (!checkExist) return response({}, true, "Môn học không tồn tại", 200)
-    const checkExistName = await getOneDocument(Subject, "SubjectName", SubjectName)
-    if (!!checkExistName && !checkExist._id.equals(checkExistName._id))
+    const { SubjectName, SubjectID } = req.body as CreateUpdateSubjectDTO
+    const checkExistName = await Subject.findOne({
+      SubjectName,
+      _id: {
+        $ne: SubjectID
+      }
+    })
+    if (!!checkExistName)
       return response({}, true, `Môn học ${SubjectName} đã tồn tại`, 200)
     const updatedSubject = await Subject.findByIdAndUpdate(
       SubjectID,
-      {
-        SubjectCateID,
-        SubjectName,
-        AvatarPath: !!req.file ? req.file.path : checkExist?.AvatarPath
-      },
+      { ...req.body },
       { new: true, runValidators: true }
     )
     if (!updatedSubject) return response({}, true, "Có lỗi xảy ra", 200)

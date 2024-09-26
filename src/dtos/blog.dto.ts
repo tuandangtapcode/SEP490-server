@@ -1,9 +1,9 @@
 import { ObjectId } from "mongoose"
 
-export interface CreateBlogDTO {
-  Title: string
-}
-
-export interface UpdateBlogDTO extends CreateBlogDTO {
-  BlogID: ObjectId
+export interface CreateUpdateBlogDTO {
+  Title: string,
+  Description: string,
+  Avatar: string,
+  Content: string
+  BlogID?: ObjectId
 }

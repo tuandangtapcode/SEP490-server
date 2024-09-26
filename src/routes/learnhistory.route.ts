@@ -1,7 +1,7 @@
 import express from "express"
 import LearnHistoryController from "../controllers/learnhistory.controller"
 import authMiddleware from "../middlewares/auth.middleware"
-import { Roles } from "../utils/lib.js"
+import { Roles } from "../utils/constant"
 import LearnhistoryValidation from "../validations/learnhistory.validation"
 
 const LearnHistoryRoute = express.Router()

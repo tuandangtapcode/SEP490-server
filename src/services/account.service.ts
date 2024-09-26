@@ -2,7 +2,7 @@ import { Request, Response } from "express"
 import Account from "../models/account"
 import User from "../models/user"
 import bcrypt from "bcrypt"
-import { Roles, response } from "../utils/lib"
+import { Roles } from "../utils/constant"
 import { encodeData, randomPassword } from "../utils/commonFunction"
 import sendEmail from "../utils/send-mail"
 import { getOneDocument } from "../utils/queryFunction"
@@ -12,6 +12,7 @@ import {
   RegisterByGoogleDTO,
   RegisterDTO
 } from "../dtos/account.dto"
+import response from "../utils/response"
 const saltRounds = 10
 
 const fncRegister = async (req: Request) => {
