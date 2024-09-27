@@ -23,7 +23,7 @@ const routes = (app: Application) => {
   app.use("/timetable", TimeTableRoute)
   app.use("/subject", SubjectRoute)
   app.use("/subjectcate", SubjectCateRoute)
-  app.use("/commons", CommonRoute)
+  app.use("/common", CommonRoute)
   app.use("/user", UserRoute)
   app.use("/blog", BlogRoute)
   app.use("/payment", PaymentRoute)

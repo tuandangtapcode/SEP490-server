@@ -33,11 +33,9 @@ const CommonRoute = express.Router()
 
 /**
  * @swagger
- * /commons/getListSystemkey:
+ * /common/getListSystemkey:
  *   get:
- *     tags: [Commons]
- *     security:
- *        - Authorization: []
+ *     tags: [Common]
  *     responses:
  *       200:
  *         description: Lấy ra danh sách thành công
