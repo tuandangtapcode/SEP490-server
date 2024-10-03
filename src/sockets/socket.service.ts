@@ -9,7 +9,7 @@ import {
   ToggleHandlerDTO,
 } from "./socket.dto"
 
-export let userOnlines: any[]
+export let userOnlines = [] as any
 
 const addUserOnline = (socket: any) => {
   return (data: ObjectId) => {
@@ -28,7 +28,7 @@ const addUserOnline = (socket: any) => {
 
 const sendNotification = (socket: any) => {
   return (data: SendNotificationDTO) => {
-    const user = userOnlines.find(i => i.UserID === data.Receiver)
+    const user = userOnlines.find((i: any) => i.UserID === data.Receiver)
     if (!!user) {
       socket.to(user.SocketID).emit('get-notification', data)
     }
@@ -61,7 +61,7 @@ const leaveRoom = (socket: any) => {
 
 const sendMessage = (socket: any) => {
   return (data: SendMessageDTO) => {
-    const user = userOnlines.find(i => i.UserID === data.Receiver)
+    const user = userOnlines.find((i: any) => i.UserID === data.Receiver)
     if (!!user) {
       socket.to(user.SocketID).emit("get-message", data)
     }
@@ -70,7 +70,7 @@ const sendMessage = (socket: any) => {
 
 const userLogout = () => {
   return (data: ObjectId) => {
-    const index = userOnlines.findIndex(i => i.UserID === data)
+    const index = userOnlines.findIndex((i: any) => i.UserID === data)
     userOnlines.splice(index, 1)
   }
 }
@@ -103,7 +103,7 @@ const leaveMeetingRoom = (socket: any) => {
 
 const inactiveAccount = (socket: any) => {
   return (data: ObjectId) => {
-    const user = userOnlines.find(i => i.UserID === data)
+    const user = userOnlines.find((i: any) => i.UserID === data)
     if (!!user) {
       socket.to(user.SocketID).emit('listen-inactive-account', data)
     }

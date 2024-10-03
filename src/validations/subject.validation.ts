@@ -3,11 +3,12 @@ import { getRegexObjectID } from '../utils/commonFunction'
 import { parameterValidation } from './common.validation'
 import { NextFunction, Request, Response } from 'express'
 
-const createSubject = async (req: Request, res: Response, next: NextFunction) => {
+const createUpdateSubject = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     SubjectCateID: Joi.string().pattern(getRegexObjectID()).required(),
     SubjectName: Joi.string().min(1).required(),
     Avatar: Joi.string().min(1).required(),
+    SubjectID: Joi.string().pattern(getRegexObjectID()).optional()
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })
@@ -18,27 +19,11 @@ const createSubject = async (req: Request, res: Response, next: NextFunction) =>
 }
 
 const getListSubject = async (req: Request, res: Response, next: NextFunction) => {
-  const { SubjectCateID } = req.body
   const trueCondition = Joi.object({
     PageSize: Joi.number().integer().min(0).required(),
     CurrentPage: Joi.number().integer().min(0).required(),
     TextSearch: Joi.string().empty(""),
-    SubjectCateID: !!SubjectCateID ? Joi.string().pattern(getRegexObjectID()) : Joi.string().empty("")
-  })
-  try {
-    await trueCondition.validateAsync(req.body, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
-const updateSubject = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = Joi.object({
-    SubjectID: Joi.string().pattern(getRegexObjectID()).required(),
-    SubjectCateID: Joi.string().pattern(getRegexObjectID()).required(),
-    SubjectName: Joi.string().min(1).required(),
-    Avatar: Joi.string().min(1).required(),
+    SubjectCateID: Joi.string().pattern(getRegexObjectID()).optional()
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })
@@ -59,9 +44,8 @@ const getDetailSubject = async (req: Request, res: Response, next: NextFunction)
 }
 
 const SubjectValidation = {
-  createSubject,
+  createUpdateSubject,
   getListSubject,
-  updateSubject,
   getDetailSubject
 }
 

@@ -15,9 +15,10 @@ const sendEmail = async (to: string, subject: string, content: string, attachmen
     },
   })
 
-  transporter.verify(function (error, success) {
+  transporter.verify((error, success) => {
     if (error) {
-      return 'Email của bạn không tồn tại. Hãy kiểm tra lại!'
+      console.log("error", error.toString());
+      return false
     }
   })
 
@@ -31,8 +32,10 @@ const sendEmail = async (to: string, subject: string, content: string, attachmen
   try {
     const info = await transporter.sendMail(mailOptions)
     console.log('Email sent:', info.response)
+    return true
   } catch (error) {
     console.error('Error sending email:', error)
+    return false
   }
 }
 

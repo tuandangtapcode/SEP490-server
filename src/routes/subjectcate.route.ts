@@ -46,7 +46,7 @@ const SubjectCateRoute = express.Router()
  */
 SubjectCateRoute.post("/createSubjectCate",
   authMiddleware([Roles.ROLE_ADMIN]),
-  SubjectCateValidation.createSubjectCate,
+  SubjectCateValidation.createUpdateSubjectCate,
   SubjectCateController.createSubjectCate
 )
 
@@ -95,7 +95,7 @@ SubjectCateRoute.post("/getListSubjectCate",
  */
 SubjectCateRoute.post("/updateSubjectCate",
   authMiddleware([Roles.ROLE_ADMIN]),
-  SubjectCateValidation.updateSubjectCate,
+  SubjectCateValidation.createUpdateSubjectCate,
   SubjectCateController.updateSubjectCate
 )
 

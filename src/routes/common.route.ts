@@ -1,5 +1,7 @@
 import express from "express"
 import CommonController from "../controllers/common.controller"
+import authMiddleware from "../middlewares/auth.middleware"
+import { Roles } from "../utils/constant"
 
 const CommonRoute = express.Router()
 
@@ -33,11 +35,9 @@ const CommonRoute = express.Router()
 
 /**
  * @swagger
- * /commons/getListSystemkey:
+ * /common/getListSystemkey:
  *   get:
- *     tags: [Commons]
- *     security:
- *        - Authorization: []
+ *     tags: [Common]
  *     responses:
  *       200:
  *         description: Lấy ra danh sách thành công
@@ -48,6 +48,13 @@ CommonRoute.get("/getListSystemkey",
   CommonController.getListSystemKey
 )
 
+CommonRoute.get("/getProfitPercent",
+  CommonController.getProfitPercent
+)
 
+CommonRoute.post("/changeProfitPercent",
+  authMiddleware([Roles.ROLE_ADMIN]),
+  CommonController.changeProfitPercent
+)
 
 export default CommonRoute

@@ -106,7 +106,8 @@ const fncGetBankingInforOfUser = async (req: Request) => {
                 </body>
                 </html>
                 `
-      await sendEmail(Email, subject, content)
+      const checkSendMail = await sendEmail(Email, subject, content)
+      if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
       return response({}, true, "Người dùng chưa điền thông tin ngân hàng", 200)
     }
     return response(bankingInfor, false, "lấy ra thông tin thành công", 200)

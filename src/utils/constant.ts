@@ -13,9 +13,9 @@ export const optionSwagger = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'TatuBoo',
+      title: 'Talent LearningHub',
       version: '1.0.0',
-      description: 'TatuBoo covered Create, Read, Update, and Delete operations using a Node.js API',
+      description: 'Talent LearningHub covered Create, Read, Update, and Delete operations using a Node.js API',
     },
     components: {
       securitySchemes: {

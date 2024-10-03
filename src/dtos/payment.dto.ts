@@ -30,24 +30,6 @@ export interface GetListPaymentDTO extends CommonDTO {
   PaymentType: number
 }
 
-export interface PaymentDTO {
-  _id: ObjectId,
-  Sender: {
-    _id: ObjectId,
-    FullName: string
-  },
-  Receiver: ObjectId,
-  PaymentType: number,
-  TraddingCode: number,
-  TotalFee: number,
-  Description: string,
-  PaymentStatus: number,
-  PaymentTime: Date,
-  RequestAxplanationAt: Date,
-  createdAt: Date,
-  updatedAt: Date
-}
-
 export interface GetListTransferDTO extends PaginationDTO {
   FromDate: Date,
   ToDate: Date

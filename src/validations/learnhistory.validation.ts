@@ -23,12 +23,11 @@ const createLearnHistory = async (req: Request, res: Response, next: NextFunctio
 }
 
 const getListLearnHistory = async (req: Request, res: Response, next: NextFunction) => {
-  const { LearnedStatus } = req.body
   const trueCondition = Joi.object({
-    PageSize: Joi.number().integer().min(1).required(),
-    CurrentPage: Joi.number().integer().min(1).required(),
+    PageSize: Joi.number().integer().min(0).required(),
+    CurrentPage: Joi.number().integer().min(0).required(),
     TextSearch: Joi.string().empty(""),
-    LearnedStatus: !!LearnedStatus ? Joi.number().integer().valid(1, 2) : Joi.number()
+    LearnedStatus: Joi.number().integer().valid(0, 1, 2).required()
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })

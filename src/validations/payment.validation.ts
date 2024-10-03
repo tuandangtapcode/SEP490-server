@@ -3,14 +3,13 @@ import { getRegexEmail, getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Request, Response } from "express"
 
 const createPayment = async (req: Request, res: Response, next: NextFunction) => {
-  const { Receiver, PaymentStatus } = req.body
   const trueCondition = Joi.object({
     Description: Joi.string().min(3).max(256).required(),
     PaymentType: Joi.number().min(1).max(3).required(),
     TotalFee: Joi.number().min(1).required(),
     TraddingCode: Joi.number().min(1).required(),
-    Receiver: !!Receiver ? Joi.string().pattern(getRegexObjectID()) : Joi.string().empty(""),
-    PaymentStatus: !!PaymentStatus ? Joi.number().min(1).max(3).required() : Joi.number()
+    Receiver: Joi.string().pattern(getRegexObjectID()).optional(),
+    PaymentStatus: Joi.number().min(1).max(3).required().optional()
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })
@@ -21,13 +20,12 @@ const createPayment = async (req: Request, res: Response, next: NextFunction) =>
 }
 
 const getListPaymentHistoryByUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { PaymentType, PaymentStatus } = req.body
   const trueCondition = Joi.object({
-    PageSize: Joi.number().integer().min(1).required(),
-    CurrentPage: Joi.number().integer().min(1).required(),
+    PageSize: Joi.number().integer().min(0).required(),
+    CurrentPage: Joi.number().integer().min(0).required(),
     TraddingCode: Joi.string().empty(""),
-    PaymentType: !!PaymentType ? Joi.number().min(1).max(3) : Joi.number(),
-    PaymentStatus: !!PaymentStatus ? Joi.number().min(1).max(3) : Joi.number(),
+    PaymentType: Joi.number().valid(0, 1, 2, 3).required(),
+    PaymentStatus: Joi.number().valid(0, 1, 2, 3).required(),
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })
@@ -56,13 +54,12 @@ const changePaymentStatus = async (req: Request, res: Response, next: NextFuncti
 }
 
 const getListPayment = async (req: Request, res: Response, next: NextFunction) => {
-  const { PaymentType, PaymentStatus } = req.body
   const trueCondition = Joi.object({
-    PageSize: Joi.number().integer().min(1).required(),
-    CurrentPage: Joi.number().integer().min(1).required(),
+    PageSize: Joi.number().integer().min(0).required(),
+    CurrentPage: Joi.number().integer().min(0).required(),
     TextSearch: Joi.string().empty(""),
-    PaymentType: !!PaymentType ? Joi.number().min(1).max(3) : Joi.number(),
-    PaymentStatus: !!PaymentStatus ? Joi.number().min(1).max(3) : Joi.number()
+    PaymentType: Joi.number().valid(0, 1, 2, 3).required(),
+    // PaymentStatus: Joi.number().valid(0, 1, 2, 3).required(),
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })
@@ -74,8 +71,8 @@ const getListPayment = async (req: Request, res: Response, next: NextFunction) =
 
 const getListTransfer = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
-    PageSize: Joi.number().integer().min(1).required(),
-    CurrentPage: Joi.number().integer().min(1).required(),
+    PageSize: Joi.number().integer().min(0).required(),
+    CurrentPage: Joi.number().integer().min(0).required(),
     FromDate: Joi.date().required(),
     ToDate: Joi.date().required()
   })

@@ -15,7 +15,6 @@ import StatisticRoute from "./statistic.route"
 import { Application } from "express"
 import FileRoute from "./file.route"
 import CommonRoute from "./common.route"
-import TeacherSubjectRoute from "./teachersubject.route"
 
 const routes = (app: Application) => {
   app.use("/account", AccountRoute)
@@ -23,7 +22,7 @@ const routes = (app: Application) => {
   app.use("/timetable", TimeTableRoute)
   app.use("/subject", SubjectRoute)
   app.use("/subjectcate", SubjectCateRoute)
-  app.use("/commons", CommonRoute)
+  app.use("/common", CommonRoute)
   app.use("/user", UserRoute)
   app.use("/blog", BlogRoute)
   app.use("/payment", PaymentRoute)
@@ -34,7 +33,6 @@ const routes = (app: Application) => {
   app.use("/report", ReportRoute)
   app.use("/statistic", StatisticRoute)
   app.use("/file", FileRoute)
-  app.use("/teachersubject", TeacherSubjectRoute)
 }
 
 export default routes

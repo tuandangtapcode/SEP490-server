@@ -34,7 +34,7 @@ const socket = (io: any) => {
 
     socket.on('disconnect', () => {
       console.log(`người dùng ${socket.id} đã ngắt kết nối`)
-      const index = userOnlines.findIndex(i => i.SocketID === socket.id)
+      const index = userOnlines.findIndex((i: any) => i.SocketID === socket.id)
       userOnlines.splice(index, 1)
       console.log(userOnlines)
     })

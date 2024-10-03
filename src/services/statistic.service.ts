@@ -187,9 +187,11 @@ const fncStatisticFinancial = async (req: Request) => {
     const result = await Promise.all([revenue, expense])
     return response(
       {
-        Revenue: result[0][0].totalFeeSum,
-        Expense: result[1][0].totalFeeSum,
-        Profit: result[0][0].totalFeeSum - result[1][0].totalFeeSum
+        Revenue: !!result[0][0]?.totalFeeSum ? result[0][0]?.totalFeeSum : 0,
+        Expense: !!result[1][0]?.totalFeeSum ? result[1][0]?.totalFeeSum : 0,
+        Profit: !!result[0][0]?.totalFeeSum && !!result[1][0]?.totalFeeSum
+          ? result[0][0]?.totalFeeSum - result[1][0]?.totalFeeSum
+          : 0
       },
       false,
       "Lấy data thành công",
