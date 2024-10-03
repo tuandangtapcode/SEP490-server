@@ -19,8 +19,8 @@ const createComment = async (req: Request, res: Response, next: NextFunction) =>
 const getListCommentOfTeacher = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     TeacherID: Joi.string().pattern(getRegexObjectID()).required(),
-    PageSize: Joi.number().integer().min(1).required(),
-    CurrentPage: Joi.number().integer().min(1).required(),
+    PageSize: Joi.number().integer().min(0).required(),
+    CurrentPage: Joi.number().integer().min(0).required(),
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })

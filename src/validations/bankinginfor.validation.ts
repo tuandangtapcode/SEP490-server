@@ -2,26 +2,12 @@ import Joi from 'joi'
 import { getRegexEmail, getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Request, Response } from 'express'
 
-const createBankingInfor = async (req: Request, res: Response, next: NextFunction) => {
+const createUpdateBankingInfor = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     BankID: Joi.number().min(1).required(),
     UserBankName: Joi.string().required(),
     UserBankAccount: Joi.number().min(1).required(),
-  })
-  try {
-    await trueCondition.validateAsync(req.body, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
-const updateBankingInfor = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = Joi.object({
-    BankID: Joi.number().min(1).required(),
-    UserBankName: Joi.string().required(),
-    UserBankAccount: Joi.number().min(1).required(),
-    BankingInforID: Joi.string().pattern(getRegexObjectID()).required()
+    BankingInforID: Joi.string().pattern(getRegexObjectID()).optional()
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })
@@ -46,8 +32,7 @@ const getBankingInforOfUser = async (req: Request, res: Response, next: NextFunc
 }
 
 const BankInforValidation = {
-  createBankingInfor,
-  updateBankingInfor,
+  createUpdateBankingInfor,
   getBankingInforOfUser
 }
 

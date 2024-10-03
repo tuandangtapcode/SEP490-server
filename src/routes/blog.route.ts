@@ -62,7 +62,7 @@ const BlogRoute = express.Router()
  */
 BlogRoute.post("/createBlog",
     authMiddleware([Roles.ROLE_TEACHER]),
-    BlogValidation.createBlog,
+    BlogValidation.createUpdateBlog,
     BlogController.createBlog
 )
 
@@ -164,7 +164,7 @@ BlogRoute.get("/getDetailBlog/:BlogID",
  */
 BlogRoute.post("/updateBlog",
     authMiddleware([Roles.ROLE_TEACHER]),
-    BlogValidation.updateBlog,
+    BlogValidation.createUpdateBlog,
     BlogController.updateBlog
 )
 

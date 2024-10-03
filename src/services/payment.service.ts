@@ -13,7 +13,6 @@ import {
   GetListPaymentDTO,
   GetListPaymentHistoryByUserDTO,
   GetListTransferDTO,
-  PaymentDTO,
   SendRequestExplanationDTO,
 } from "../dtos/payment.dto"
 import response from "../utils/response"
@@ -151,7 +150,8 @@ const fncChangePaymentStatus = async (req: Request) => {
                 </body>
                 </html>
                 `
-    await sendEmail(Email, subject, content, attachments)
+    const checkSendMail = await sendEmail(Email, subject, content)
+    if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     return response(updatePayment, false, "Thanh toán thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -262,9 +262,9 @@ const fncExportExcel = async (res: Response) => {
       { header: "Trạng thái thanh toán", key: "PaymentStatus", width: 20 },
     ]
     const payments =
-      await Payment.find().populate("Sender", ["_id", "FullName"]) as unknown as PaymentDTO[]
+      await Payment.find().populate("Sender", ["_id", "FullName"])
     const listColumCenter = ['A', 'B', 'C', 'E', 'F', 'G']
-    payments.forEach((payment, idx) => {
+    payments.forEach((payment: any, idx) => {
       const row = worksheet.addRow({
         STT: idx + 1,
         TraddingCode: payment.TraddingCode,
@@ -466,7 +466,7 @@ const fncSendRequestExplanation = async (req: Request) => {
                 <body>
                   <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO GIẢI TRÌNH BUỔI HỌC BỊ REPORT</p>
                   <p style="margin-bottom:10px">Xin chào ${FullName},</p>
-                  <p style="margin-bottom:10px">TaTuBoo thông báo: Chúng tôi xin thông báo về các buổi học bạn bị report trong tuần qua:</p>
+                  <p style="margin-bottom:10px">Talent LearningHub thông báo: Chúng tôi xin thông báo về các buổi học bạn bị report trong tuần qua:</p>
                   ${Reports.map((i, idx) =>
       `<div>
                     <p style="font-weight: 600; font-size: 17px">Lần report thứ ${idx + 1}</p>

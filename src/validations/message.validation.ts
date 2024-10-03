@@ -4,10 +4,9 @@ import { parameterValidation } from "./common.validation"
 import { NextFunction, Request, Response } from "express"
 
 const createMessage = async (req: Request, res: Response, next: NextFunction) => {
-  const { ChatID, Receiver } = req.body
   const trueCondition = Joi.object({
-    ChatID: !!ChatID ? Joi.string().pattern(getRegexObjectID()) : Joi.string().empty(""),
-    Receiver: !!Receiver ? Joi.string().pattern(getRegexObjectID()) : Joi.string().empty(""),
+    ChatID: Joi.string().pattern(getRegexObjectID()).optional(),
+    Receiver: Joi.string().pattern(getRegexObjectID()).optional(),
     Content: Joi.string().min(0).max(256).required()
   })
   try {
@@ -19,11 +18,10 @@ const createMessage = async (req: Request, res: Response, next: NextFunction) =>
 }
 
 const getMessageByChat = async (req: Request, res: Response, next: NextFunction) => {
-  const { ChatID } = req.body
   const trueCondition = Joi.object({
-    ChatID: !!ChatID ? Joi.string().pattern(getRegexObjectID()) : Joi.string().empty(""),
-    PageSize: Joi.number().integer().min(1).required(),
-    CurrentPage: Joi.number().integer().min(1).required(),
+    ChatID: Joi.string().pattern(getRegexObjectID()).optional(),
+    PageSize: Joi.number().integer().min(0).required(),
+    CurrentPage: Joi.number().integer().min(0).required(),
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })

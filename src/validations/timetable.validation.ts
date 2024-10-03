@@ -3,7 +3,6 @@ import { getRegexObjectID } from "../utils/commonFunction"
 import { NextFunction, Request, Response } from "express"
 
 const createTimeTable = async (req: Request, res: Response, next: NextFunction) => {
-  const isHasAddress = req.body.every((i: any) => !!i.Address)
   const trueCondition = Joi.array().items(
     Joi.object({
       LearnHistory: Joi.string().pattern(getRegexObjectID()).required(),
@@ -13,7 +12,7 @@ const createTimeTable = async (req: Request, res: Response, next: NextFunction) 
       StartTime: Joi.date().required(),
       EndTime: Joi.date().required(),
       LearnType: Joi.number().integer().valid(1, 2).required(),
-      Address: !!isHasAddress ? Joi.string().min(1) : Joi.string().empty("")
+      Address: Joi.string().min(1).optional()
     })
   )
   try {

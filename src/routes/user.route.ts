@@ -198,29 +198,6 @@ UserRoute.post("/responseConfirmRegister",
 )
 
 /**
- * @swagger
- * /user/pushOrPullSubjectForTeacher:
- *   post:
- *     tags: [Users]
- *     requestBody:
- *        content:
- *          application/json:
- *              example:
- *                SubjectID: 664c1480b8f11adfc4f4a85b
- *                Email: "abc@gmail.com"
- *     responses:
- *       200:
- *         description: Thêm môn học thành công
- *       500:
- *        description: Internal server error
- */
-UserRoute.post("/pushOrPullSubjectForTeacher",
-  authMiddleware([Roles.ROLE_TEACHER]),
-  UserValidation.pushOrPullSubjectForTeacher,
-  UserController.pushOrPullSubjectForTeacher
-)
-
-/**
  *  @swagger
  *  /user/getListTeacher:
  *    post:
@@ -343,6 +320,45 @@ UserRoute.post("/inactiveOrActiveAccount",
   authMiddleware([Roles.ROLE_ADMIN]),
   UserValidation.inactiveOrActiveAccount,
   UserController.inactiveOrActiveAccount
+)
+
+/**
+ * @swagger
+ * /user/getListSubjectSettingByTeacher:
+ *   get:
+ *     responses:
+ *       200:
+ *         description: Thêm môn học thành công
+ *       500:
+ *        description: Internal server error
+ */
+UserRoute.get("/getListSubjectSettingByTeacher",
+  authMiddleware([Roles.ROLE_TEACHER]),
+  UserController.getListSubjectSettingByTeacher
+)
+
+UserRoute.get("/createSubjectSetting/:SubjectID",
+  authMiddleware([Roles.ROLE_TEACHER]),
+  UserValidation.createSubjectSetting,
+  UserController.createSubjectSetting
+)
+
+UserRoute.post("/updateSubjectSetting",
+  authMiddleware([Roles.ROLE_TEACHER]),
+  UserValidation.updateSubjectSetting,
+  UserController.updateSubjectSetting
+)
+
+UserRoute.get("/deleteSubjectSetting/:SubjectSettingID",
+  authMiddleware([Roles.ROLE_TEACHER]),
+  UserValidation.deleteSubjectSetting,
+  UserController.deleteSubjectSetting
+)
+
+UserRoute.post("/confirmSubjectSetting",
+  authMiddleware([Roles.ROLE_ADMIN]),
+  UserValidation.confirmSubjectSetting,
+  UserController.confirmSubjectSetting
 )
 
 export default UserRoute

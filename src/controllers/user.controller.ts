@@ -37,15 +37,6 @@ const responseConfirmRegister = async (req: Request, res: Response) => {
   }
 }
 
-const pushOrPullSubjectForTeacher = async (req: Request, res: Response) => {
-  try {
-    const response = await UserSerivce.fncPushOrPullSubjectForTeacher(req)
-    return res.status(response.statusCode).json(response)
-  } catch (error: any) {
-    return res.status(500).json(error.toString())
-  }
-}
-
 const getListTeacher = async (req: Request, res: Response) => {
   try {
     const response = await UserSerivce.fncGetListTeacher(req)
@@ -91,17 +82,66 @@ const inactiveOrActiveAccount = async (req: Request, res: Response) => {
   }
 }
 
+const getListSubjectSettingByTeacher = async (req: Request, res: Response) => {
+  try {
+    const response = await UserSerivce.fncGetListSubjectSettingByTeacher(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const createSubjectSetting = async (req: Request, res: Response) => {
+  try {
+    const response = await UserSerivce.fncCreateSubjectSetting(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const updateSubjectSetting = async (req: Request, res: Response) => {
+  try {
+    const response = await UserSerivce.fncUpdateSubjectSetting(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const deleteSubjectSetting = async (req: Request, res: Response) => {
+  try {
+    const response = await UserSerivce.fncDeleteSubjectSetting(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const confirmSubjectSetting = async (req: Request, res: Response) => {
+  try {
+    const response = await UserSerivce.fncConfirmSubjectSetting(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
 const UserController = {
   getDetailProfile,
   changeProfile,
   requestConfirmRegister,
   responseConfirmRegister,
-  pushOrPullSubjectForTeacher,
   getListTeacher,
   getListTeacherByUser,
   getDetailTeacher,
   getListStudent,
-  inactiveOrActiveAccount
+  inactiveOrActiveAccount,
+  getListSubjectSettingByTeacher,
+  createSubjectSetting,
+  updateSubjectSetting,
+  deleteSubjectSetting,
+  confirmSubjectSetting
 }
 
 export default UserController

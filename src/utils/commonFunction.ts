@@ -17,6 +17,11 @@ export const getRegexObjectID = () => {
   return regex
 }
 
+export function getRegexPhoneNumber() {
+  const re = /^(\+84|84|0)+(9|3|7|8|5)+([0-9]{8})\b/
+  return re
+}
+
 export const randomNumber = () => {
   const min = 100000
   const max = 999999

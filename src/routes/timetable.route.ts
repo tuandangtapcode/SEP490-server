@@ -2,7 +2,6 @@ import express from "express"
 import TimeTableController from "../controllers/timetable.controller"
 import authMiddleware from '../middlewares/auth.middleware'
 import { Roles } from "../utils/constant"
-import upload from '../middlewares/clouddinary.middleware'
 import TimeTableValidation from "../validations/timetable.validation"
 
 const TimeTableRoute = express.Router()

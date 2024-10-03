@@ -14,7 +14,6 @@ const fncCreateLearnHistory = async (req: Request) => {
     const UserID = req.user.ID
     const { TeacherName, StudentName, SubjectName, StudentEmail, TeacherEmail, Times, ...remainBody } =
       req.body as CreateLearnHistoryDTO
-    const newLearnHistory = await LearnHistory.create({ ...remainBody, Student: UserID })
     const subject = "THÔNG BÁO HỌC SINH ĐĂNG KÝ HỌC"
     const content = `
                 <html>
@@ -40,7 +39,9 @@ const fncCreateLearnHistory = async (req: Request) => {
                 </body>
                 </html>
                 `
-    await sendEmail(TeacherEmail, subject, content)
+    const checkSendMail = await sendEmail(TeacherName, subject, content)
+    if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
+    const newLearnHistory = await LearnHistory.create({ ...remainBody, Student: UserID })
     return response(newLearnHistory, false, "Thêm thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

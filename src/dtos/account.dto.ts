@@ -1,14 +1,14 @@
+import { ObjectId } from "mongoose"
+
 export interface RegisterDTO {
   Email: string,
   RoleID: number,
-  FullName: string
-}
-
-export interface RegisterByGoogleDTO {
-  email: string,
-  given_name: string,
-  picture: string,
-  RoleID: number
+  FullName: string,
+  Phone: string,
+  DateOfBirth: Date,
+  Subjects?: ObjectId[]
+  IsByGoogle?: Boolean,
+  Subject?: ObjectId
 }
 
 export interface Login {
