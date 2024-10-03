@@ -55,6 +55,10 @@ const TeacherSubjectSchema = new Schema({
     type: String,
     required: true
   },
+  IsDeleted: {
+    type: Boolean,
+    default: false
+  },
 }, {
   timestamps: true
 })
