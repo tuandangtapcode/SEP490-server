@@ -58,30 +58,6 @@ AccountRoute.post("/register",
 
 /**
  *  @swagger
- *  /account/registerByGoogle:
- *    post:
- *      tags: [Accounts]
- *      requestBody:
- *        content:
- *          application/json:
- *            example:
- *                given_name: Nguyen Van An
- *                email: abc@gmail.com
- *                picture: "abc.jpg"
- *                RoleID: 1
- *      responses:
- *        200:
- *          description: tài khoản đăng ký thành công
- *        500:
- *           description: internal server error
- */
-AccountRoute.post("/registerByGoogle",
-  AccountValidation.registerByGoogle,
-  AccountController.registerByGoogle
-)
-
-/**
- *  @swagger
  *  /account/login:
  *    post:
  *      tags: [Accounts]

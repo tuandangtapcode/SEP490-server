@@ -56,7 +56,7 @@ const fncUpdateSubjectCate = async (req: Request) => {
     const checkExistName = await SubjectCate.findOne({
       SubjectCateName,
       _id: {
-        $ne: SubjectCateName
+        $ne: SubjectCateID
       }
     })
     if (!!checkExistName)

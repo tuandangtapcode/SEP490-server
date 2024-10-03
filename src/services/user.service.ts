@@ -6,17 +6,19 @@ import sendEmail from "../utils/send-mail"
 import { getOneDocument } from "../utils/queryFunction"
 import mongoose from "mongoose"
 import { Request } from "express"
-import iconv from "iconv-lite"
 import {
+  ConfirmSubjectSettingDTO,
   GetDetailTeacherDTO,
   GetListStudentDTO,
   GetListTeacherByUserDTO,
   GetListTeacherDTO,
   InactiveOrActiveAccountDTO,
-  PushOrPullSubjectForTeacherDTO,
-  ResponseConfirmRegisterDTO
+  ResponseConfirmRegisterDTO,
+  UpdateSubjectSettingDTO
 } from "../dtos/user.dto"
 import response from "../utils/response"
+import ProfitPercent from "../models/profitpercent"
+import SubjectSetting from "../models/subjectsetting"
 
 const getAllFiedls = {
   _id: 1,
@@ -39,7 +41,9 @@ const getAllFiedls = {
   Address: 1,
   createdAt: 1,
   Certificates: 1,
-  IntroVideos: 1
+  IntroVideos: 1,
+  DateOfBirth: 1,
+  Phone: 1
 }
 
 const fncGetDetailProfile = async (req: Request) => {
@@ -140,8 +144,8 @@ const fncResponseConfirmRegister = async (req: Request) => {
     const { TeacherID, RegisterStatus, FullName, Email } = req.body as ResponseConfirmRegisterDTO
     const user = await User.findOneAndUpdate({ _id: TeacherID }, { RegisterStatus }, { new: true })
     if (!user) return response({}, true, "Có lỗi xảy ra", 200)
-    const confirmContent = "Thông tin tài khoản của bạn đã được duyệt. Từ giờ bạn đã trở thành giáo viên của TaTuBoo và bạn đã có thể nhận học viên."
-    const noteContent = "LƯU Ý: Hãy tuân thủ tất cả điều khoản của TaTuBoo. Nếu bạn vi phạm tài khoản của bạn sẽ bị khóa vĩnh viễn!"
+    const confirmContent = "Thông tin tài khoản của bạn đã được duyệt. Từ giờ bạn đã trở thành giáo viên của Talent LearningHub và bạn đã có thể nhận học viên."
+    const noteContent = "LƯU Ý: Hãy tuân thủ tất cả điều khoản của Talent LearningHub. Nếu bạn vi phạm tài khoản của bạn sẽ bị khóa vĩnh viễn!"
     const rejectContent = "Thông tin tài khoản của bạn đã bị hủy. Chúng tôi nhận thấy profile của bạn có nhiều thông tin không chứng thực. Bạn có thể phản hồi để làm rõ."
     const subject = "THÔNG BÁO KIỂM DUYỆT PROFILE"
     const content = `
@@ -156,54 +160,14 @@ const fncResponseConfirmRegister = async (req: Request) => {
                 <body>
                   <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO KIỂM DUYỆT PROFILE</p>
                   <p style="margin-bottom:10px">Xin chào ${FullName},</p>
-                  <p style="margin-bottom:10px">TaTuBoo thông báo: ${RegisterStatus === 3 ? confirmContent : rejectContent}</p>
+                  <p style="margin-bottom:10px">Talent LearningHub thông báo: ${RegisterStatus === 3 ? confirmContent : rejectContent}</p>
                   <p>${RegisterStatus === 3 ? noteContent : ""}</p>
                 </body>
                 </html>
                 `
-    await sendEmail(Email, subject, content)
+    const checkSendMail = await sendEmail(Email, subject, content)
+    if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     return response(user, false, "Update thành công", 200)
-  } catch (error: any) {
-    return response({}, true, error.toString(), 500)
-  }
-}
-
-const fncPushOrPullSubjectForTeacher = async (req: Request) => {
-  try {
-    const { SubjectID, Email } = req.body as PushOrPullSubjectForTeacherDTO
-    const UserID = req.user.ID
-    const user = await getOneDocument(User, "_id", UserID)
-    let update
-    if (!!user.Subjects.some((i: any) => i.equals(SubjectID))) {
-      update = {
-        $pull: {
-          Subjects: SubjectID,
-          Quotes: {
-            SubjectID: SubjectID
-          }
-        }
-      }
-    } else {
-      update = {
-        $push: {
-          Subjects: SubjectID
-        }
-      }
-    }
-    const updateUser = await User
-      .findOneAndUpdate(
-        { _id: UserID },
-        update,
-        { new: true }
-      )
-      .populate("Subjects", ["_id", "SubjectName"])
-      .lean()
-    return response(
-      { ...updateUser, Email: Email },
-      false,
-      `${user.Subjects.some((i: any) => i.equals(SubjectID)) ? "Xóa" : "Thêm"} thành công`,
-      200
-    )
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -213,49 +177,32 @@ const fncGetListTeacher = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, SubjectID, Level, RegisterStatus } =
       req.body as GetListTeacherDTO
-    let query = {
+    let queryUser = {
       FullName: { $regex: TextSearch, $options: "i" },
       RoleID: Roles.ROLE_TEACHER
     } as any
+    if (!!RegisterStatus) {
+      queryUser = {
+        ...queryUser,
+        RegisterStatus: RegisterStatus
+      }
+    }
+    let querySubjectSetting = {} as any
     if (!!SubjectID) {
-      query = {
-        ...query,
-        Subjects: {
-          $elemMatch: { $eq: new mongoose.Types.ObjectId(`${SubjectID}`) }
-        }
+      querySubjectSetting = {
+        ...querySubjectSetting,
+        "SubjectSettings.Subject._id": new mongoose.Types.ObjectId(`${SubjectID}`)
       }
     }
     if (!!Level.length) {
-      query = {
-        ...query,
-        "Quotes.Levels": { $all: Level }
-      }
-    }
-    if (!!RegisterStatus) {
-      query = {
-        ...query,
-        RegisterStatus: RegisterStatus
+      querySubjectSetting = {
+        ...querySubjectSetting,
+        "SubjectSettings.Levels": { $all: Level }
       }
     }
     const users = User.aggregate([
       {
-        $match: query
-      },
-      {
-        $lookup: {
-          from: "subjects",
-          localField: "Subjects",
-          foreignField: "_id",
-          as: "Subjects",
-          pipeline: [
-            {
-              $project: {
-                _id: 1,
-                SubjectName: 1
-              }
-            }
-          ]
-        }
+        $match: queryUser
       },
       {
         $lookup: {
@@ -267,13 +214,44 @@ const fncGetListTeacher = async (req: Request) => {
       },
       { $unwind: "$Account" },
       {
+        $lookup: {
+          from: "SubjectSettings",
+          localField: "_id",
+          foreignField: "Teacher",
+          as: "SubjectSettings",
+          pipeline: [
+            {
+              $lookup: {
+                from: "subjects",
+                localField: "Subject",
+                foreignField: "_id",
+                as: "Subject",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      SubjectName: 1
+                    }
+                  }
+                ]
+              }
+            },
+            { $unwind: "$Subject" }
+          ]
+        }
+      },
+      {
+        $match: querySubjectSetting
+      },
+      {
         $project: {
           ...getAllFiedls,
-          "Account.Email": 1
+          "Account.Email": 1,
+          SubjectSettings: 1
         }
       }
     ])
-    const total = User.countDocuments(query)
+    const total = User.countDocuments(queryUser)
     const result = await Promise.all([users, total])
     return response(
       {
@@ -527,17 +505,119 @@ const fncInactiveOrActiveAccount = async (req: Request) => {
   }
 }
 
+const fncGetListSubjectSettingByTeacher = async (req: Request) => {
+  try {
+    const UserID = req.user.ID
+    const list = await SubjectSetting
+      .find({
+        Teacher: UserID
+      })
+      .populate("Subject", ["_id", "SubjectName"])
+    return response(list, false, "Lấy data thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncCreateSubjectSetting = async (req: Request) => {
+  try {
+    const { SubjectID } = req.params
+    const UserID = req.user.ID
+    const newSubjectSetting = await SubjectSetting.create({
+      Subject: SubjectID,
+      Teacher: UserID,
+    })
+    return response(newSubjectSetting, false, "Môn học có thể giảng dạy đã được thêm", 201)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncUpdateSubjectSetting = async (req: Request) => {
+  try {
+    const { SubjectSettingID, SubjectID } = req.body as UpdateSubjectSettingDTO
+    const UserID = req.user.ID
+    const updateSubjectSetting = await SubjectSetting
+      .findOneAndUpdate(
+        {
+          _id: SubjectSettingID,
+          Teacher: UserID,
+          Subject: SubjectID
+        },
+        { ...req.body },
+        { new: true }
+      )
+      .populate("Subject", ["_id", "SubjectName"])
+    if (!updateSubjectSetting) return response({}, true, "Có lỗi xảy ra", 200)
+    return response(updateSubjectSetting, false, "Cập nhật môn học thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncDeleteSubjectSetting = async (req: Request) => {
+  try {
+    const { SubjectSettingID } = req.params
+    const deleteSubjectSetting = await SubjectSetting.findOneAndDelete({
+      _id: SubjectSettingID
+    })
+    if (!deleteSubjectSetting) return response({}, true, "Có lỗi xảy ra", 200)
+    return response({}, false, "Xóa môn học thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncConfirmSubjectSetting = async (req: Request) => {
+  try {
+    const { SubjectSettingID, FullName, Email } = req.body as ConfirmSubjectSettingDTO
+    const confirmContent = "Môn học của bạn đã được duyệt. Từ giờ học viên có thể nhìn thấy môn học của bạn và có thể thực hiện booking."
+    const subject = "THÔNG BÁO KIỂM DUYỆT MÔN HỌC"
+    const content = `
+                <html>
+                <head>
+                <style>
+                    p {
+                        color: #333;
+                    }
+                </style>
+                </head>
+                <body>
+                  <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO KIỂM DUYỆT PROFILE</p>
+                  <p style="margin-bottom:10px">Xin chào ${FullName},</p>
+                  <p style="margin-bottom:10px">Talent LearningHub thông báo: ${confirmContent}</p>
+                </body>
+                </html>
+                `
+    const checkSendMail = await sendEmail(Email, subject, content)
+    if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
+    const updateSubjectSetting = await SubjectSetting.findOneAndUpdate(
+      { _id: SubjectSettingID },
+      { IsActive: true },
+      { new: true }
+    )
+    if (!updateSubjectSetting) return response({}, true, "Có lỗi xảy ra", 200)
+    return response({}, false, "Duyệt môn học cho giáo viên thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const UserSerivce = {
   fncGetDetailProfile,
   fncChangeProfile,
   fncRequestConfirmRegister,
   fncResponseConfirmRegister,
-  fncPushOrPullSubjectForTeacher,
   fncGetListTeacher,
   fncGetListTeacherByUser,
   fncGetDetailTeacher,
   fncGetListStudent,
-  fncInactiveOrActiveAccount
+  fncInactiveOrActiveAccount,
+  fncGetListSubjectSettingByTeacher,
+  fncCreateSubjectSetting,
+  fncUpdateSubjectSetting,
+  fncDeleteSubjectSetting,
+  fncConfirmSubjectSetting
 }
 
 export default UserSerivce

@@ -37,8 +37,37 @@ export interface InactiveOrActiveAccountDTO {
   IsActive: boolean,
   RegisterStatus: number
 }
-
-export interface PushOrPullSubjectForTeacherDTO {
+export interface UpdateSubjectSettingDTO {
+  SubjectSettingID: ObjectId,
   SubjectID: ObjectId,
+  Quotes: {
+    Title: string,
+    Content: string
+  }[],
+  Levels: number[],
+  Schedules: {
+    DateAt: string,
+    StartTime: Date,
+    EndTime: Date
+  }[],
+  Experiences: {
+    Title: string,
+    Content: string,
+    StartDate: string,
+    EndDate: string
+  }[],
+  Educations: {
+    Title: string,
+    Content: string,
+    StartDate: string,
+    EndDate: string
+  }[],
+  Price: string,
+  LearnTypes: number[]
+}
+
+export interface ConfirmSubjectSettingDTO {
+  SubjectSettingID: ObjectId,
+  FullName: string,
   Email: string
 }

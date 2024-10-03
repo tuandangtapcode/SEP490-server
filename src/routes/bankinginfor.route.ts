@@ -56,7 +56,7 @@ const BankingInforRoute = express.Router()
  */
 BankingInforRoute.post("/createBankingInfor",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
-  BankInforValidation.createBankingInfor,
+  BankInforValidation.createUpdateBankingInfor,
   BankingInforController.createBankingInfor
 )
 
@@ -153,7 +153,7 @@ BankingInforRoute.get("/deleteBankingInfor/:BankingInforID",
  */
 BankingInforRoute.post("/updateBankingInfor",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
-  BankInforValidation.updateBankingInfor,
+  BankInforValidation.createUpdateBankingInfor,
   BankingInforController.updateBankingInfor
 )
 

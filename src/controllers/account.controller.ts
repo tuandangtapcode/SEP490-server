@@ -10,15 +10,6 @@ const register = async (req: Request, res: Response) => {
   }
 }
 
-const registerByGoogle = async (req: Request, res: Response) => {
-  try {
-    const response = await AccountService.fncRegisterByGoogle(req)
-    return res.status(response.statusCode).json(response)
-  } catch (error: any) {
-    return res.status(500).json(error.toString())
-  }
-}
-
 const login = async (req: Request, res: Response) => {
   try {
     const response = await AccountService.fncLogin(req, res)
@@ -53,7 +44,6 @@ const changePassword = async (req: Request, res: Response) => {
 
 const AccountController = {
   register,
-  registerByGoogle,
   login,
   loginByGoogle,
   logout,

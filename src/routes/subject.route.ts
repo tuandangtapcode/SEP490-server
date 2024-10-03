@@ -59,7 +59,7 @@ const SubjectRoute = express.Router()
  */
 SubjectRoute.post("/createSubject",
   authMiddleware([Roles.ROLE_ADMIN]),
-  SubjectValidation.createSubject,
+  SubjectValidation.createUpdateSubject,
   SubjectController.createSubject
 )
 
@@ -117,7 +117,7 @@ SubjectRoute.post("/getListSubject",
  */
 SubjectRoute.post("/updateSubject",
   authMiddleware([Roles.ROLE_ADMIN]),
-  SubjectValidation.updateSubject,
+  SubjectValidation.createUpdateSubject,
   SubjectController.updateSubject
 )
 

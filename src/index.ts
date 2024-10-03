@@ -27,7 +27,7 @@ const io = new Server(server, {
 })
 
 app.use(cors({
-  origin: process.env.CLIENT_URL_LOCAL,
+  origin: ["http://localhost:5173", "https://tuanpm.drswtfccy4qy1.amplifyapp.com"],
   credentials: true,
 }))
 
