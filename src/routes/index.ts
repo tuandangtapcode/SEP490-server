@@ -15,6 +15,7 @@ import StatisticRoute from "./statistic.route"
 import { Application } from "express"
 import FileRoute from "./file.route"
 import CommonRoute from "./common.route"
+import CourseRoute from "./course.route"
 
 const routes = (app: Application) => {
   app.use("/account", AccountRoute)
@@ -33,6 +34,7 @@ const routes = (app: Application) => {
   app.use("/report", ReportRoute)
   app.use("/statistic", StatisticRoute)
   app.use("/file", FileRoute)
+  app.use("/course", CourseRoute)
 }
 
 export default routes
