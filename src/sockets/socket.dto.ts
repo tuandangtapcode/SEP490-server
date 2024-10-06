@@ -1,12 +1,10 @@
-import { ObjectId } from "mongoose"
-
 export interface SendNotificationDTO {
   Content: string,
   IsSeen: boolean,
-  _id: ObjectId,
+  _id: string,
   Type: string,
   IsNew: boolean,
-  Receiver: ObjectId,
+  Receiver: string,
   createdAt: Date
 }
 
@@ -17,16 +15,16 @@ export interface SendCommentDTO {
     FullName: string,
     AvatarPath: string
   },
-  RoomID: ObjectId,
+  RoomID: string,
   createdAt: Date
 }
 
 export interface SendMessageDTO {
   Content: string,
-  ChatID?: ObjectId,
-  Receiver: ObjectId,
+  ChatID?: string,
+  Receiver: string,
   Sender: {
-    _id: ObjectId,
+    _id: string,
     FullName: string,
     AvatarPath: string
   },
@@ -34,17 +32,17 @@ export interface SendMessageDTO {
 }
 
 export interface JoinMeetingRoomDTO {
-  UserID: ObjectId,
+  UserID: string,
   FullName: string,
   Avatar: string,
-  RoomID: ObjectId,
+  RoomID: string,
   PeerID: string,
   IsViewVideo: boolean,
   Muted: boolean
 }
 
 export interface ToggleHandlerDTO {
-  RoomID: ObjectId,
+  RoomID: string,
   PeerID: string,
   Key: string
 }
@@ -55,10 +53,10 @@ export interface LeaveMeetingRoomDTO {
 }
 
 export interface SendMessageMeetingRoomDTO {
-  RoomID: ObjectId,
+  RoomID: string,
   Content: string,
   Sender: {
-    _id: ObjectId,
+    _id: string,
     FullName: string,
     AvatarPath: string
   }

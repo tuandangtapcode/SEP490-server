@@ -66,7 +66,10 @@ const fncGetListPaymentHistoryByUser = async (req: Request) => {
     const { PageSize, CurrentPage, TraddingCode, PaymentStatus, PaymentType } =
       req.body as GetListPaymentHistoryByUserDTO
     let query = {
-      Sender: UserID,
+      $or: [
+        { Sender: UserID },
+        { Receiver: UserID }
+      ],
       TraddingCode: { $regex: TraddingCode, $options: "i" }
     } as any
     if (!!PaymentStatus) {
