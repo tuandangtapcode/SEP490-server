@@ -1,4 +1,3 @@
-import { ObjectId } from "mongoose"
 import {
   JoinMeetingRoomDTO,
   LeaveMeetingRoomDTO,
@@ -12,7 +11,7 @@ import {
 export let userOnlines = [] as any
 
 const addUserOnline = (socket: any) => {
-  return (data: ObjectId) => {
+  return (data: string) => {
     if (!!data) {
       const user = userOnlines.find((i: any) => i.UserID === data)
       if (!user) {
@@ -28,7 +27,9 @@ const addUserOnline = (socket: any) => {
 
 const sendNotification = (socket: any) => {
   return (data: SendNotificationDTO) => {
+    console.log("data", data);
     const user = userOnlines.find((i: any) => i.UserID === data.Receiver)
+    console.log("user", user);
     if (!!user) {
       socket.to(user.SocketID).emit('get-notification', data)
     }
@@ -42,19 +43,19 @@ const sendComment = (io: any) => {
 }
 
 const sendDeactiveAccount = (socket: any) => {
-  return (data: ObjectId) => {
+  return (data: String) => {
     // io.sockets.emit('get-deactive', data)
   }
 }
 
 const joinRoom = (socket: any) => {
-  return (data: ObjectId) => {
+  return (data: String) => {
     socket.join(data)
   }
 }
 
 const leaveRoom = (socket: any) => {
-  return (data: ObjectId) => {
+  return (data: String) => {
     socket.leave(data)
   }
 }
@@ -69,7 +70,7 @@ const sendMessage = (socket: any) => {
 }
 
 const userLogout = () => {
-  return (data: ObjectId) => {
+  return (data: String) => {
     const index = userOnlines.findIndex((i: any) => i.UserID === data)
     userOnlines.splice(index, 1)
   }
@@ -102,7 +103,7 @@ const leaveMeetingRoom = (socket: any) => {
 }
 
 const inactiveAccount = (socket: any) => {
-  return (data: ObjectId) => {
+  return (data: String) => {
     const user = userOnlines.find((i: any) => i.UserID === data)
     if (!!user) {
       socket.to(user.SocketID).emit('listen-inactive-account', data)

@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import { getRegexObjectID } from '../utils/commonFunction'
+import { getRegexEmail, getRegexObjectID } from '../utils/commonFunction'
 import { parameterValidation } from './common.validation'
 import { NextFunction, Response, Request } from 'express'
 
@@ -7,6 +7,7 @@ const responseConfirmRegister = async (req: Request, res: Response, next: NextFu
   const trueCondition = Joi.object({
     TeacherID: Joi.string().pattern(getRegexObjectID()).required(),
     RegisterStatus: Joi.number().integer().min(1).max(4).required(),
+    Email: Joi.string().pattern(getRegexEmail()).required(),
     FullName: Joi.string().min(1).required()
   })
   try {

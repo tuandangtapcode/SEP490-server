@@ -215,7 +215,7 @@ const fncGetListTeacher = async (req: Request) => {
       { $unwind: "$Account" },
       {
         $lookup: {
-          from: "SubjectSettings",
+          from: "subjectsettings",
           localField: "_id",
           foreignField: "Teacher",
           as: "SubjectSettings",

@@ -7,7 +7,7 @@ import {
   GetMessageByChatDTO
 } from "../dtos/message.dto"
 
-export const ADMIN_ID = "664a5251b0563919ce2eba19"
+export const ADMIN_ID = "66f682358a03bbcf9bf04c03"
 
 const fncCreateMessage = async (req: Request) => {
   try {
