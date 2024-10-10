@@ -80,6 +80,19 @@ const fncRegister = async (req: Request) => {
   }
 }
 
+const fncCheckAuth = async (req: Request) => {
+  try {
+    return response(
+      !!req.cookies.token ? req.cookies.token : false,
+      false,
+      `${!!req.cookies.token ? "Có token" : "Không có token"}`,
+      200
+    )
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const fncLogin = async (req: Request, res: Response) => {
   try {
     const { Password, Email } = req.body as Login
@@ -88,13 +101,12 @@ const fncLogin = async (req: Request, res: Response) => {
     if (!getAccount.IsActive) return response({}, true, "Tài khoản đã bị khóa", 200)
     const check = bcrypt.compareSync(Password, getAccount.Password)
     if (!check) return response({}, true, "Mật khẩu không chính xác", 200)
-    const user = await getOneDocument(User, "_id", getAccount.UserID)
     const token = encodeData({
-      ID: user._id,
-      RoleID: user.RoleID,
+      ID: getAccount._id,
+      RoleID: getAccount.RoleID,
     })
     res.cookie("token", token, {
-      httpOnly: false, // cookie chỉ được truy cập bới server
+      httpOnly: true, // cookie chỉ được truy cập bới server
       secure: true, // cookie chỉ được sử dụng với https
       sameSite: "none",
       maxAge: 6 * 60 * 60 * 1000 // 8h
@@ -117,7 +129,7 @@ const fncLoginByGoogle = async (req: Request, res: Response) => {
       RoleID: user.RoleID,
     })
     res.cookie("token", token, {
-      httpOnly: false, // cookie chỉ được truy cập bới server
+      httpOnly: true, // cookie chỉ được truy cập bới server
       secure: true, // cookie chỉ được sử dụng với https
       sameSite: "none",
       maxAge: 6 * 60 * 60 * 1000 // 8h
@@ -147,6 +159,7 @@ const fncChangePassword = async (req: Request) => {
 const AccountService = {
   fncRegister,
   fncLogin,
+  fncCheckAuth,
   fncLoginByGoogle,
   fncChangePassword,
 }

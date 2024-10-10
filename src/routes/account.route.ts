@@ -79,6 +79,21 @@ AccountRoute.post("/login",
 
 /**
  *  @swagger
+ *  /account/checkAuth:
+ *    get:
+ *      tags: [Accounts]
+ *      responses:
+ *        200:
+ *          description: đăng nhập thành công
+ *        500:
+ *           description: internal server error
+ */
+AccountRoute.get("/checkAuth",
+  AccountController.checkAuth
+)
+
+/**
+ *  @swagger
  *  /account/loginByGoogle:
  *    post:
  *      tags: [Accounts]
