@@ -31,16 +31,6 @@ const SubjectSettingSchema = new Schema({
     ],
     default: []
   },
-  Schedules: {
-    type: [
-      {
-        DateAt: { type: String },
-        StartTime: { type: Date },
-        EndTime: { type: Date }
-      }
-    ],
-    default: []
-  },
   Experiences: {
     type: [
       {

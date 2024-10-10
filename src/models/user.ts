@@ -38,6 +38,16 @@ const UserSchema = new Schema({
     ],
     default: []
   },
+  Schedules: {
+    type: [
+      {
+        DateAt: { type: String },
+        StartTime: { type: Date },
+        EndTime: { type: Date }
+      }
+    ],
+    default: []
+  },
   IsByGoogle: {
     type: Boolean,
     default: false
