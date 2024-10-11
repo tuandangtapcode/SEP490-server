@@ -2,28 +2,44 @@ import mongoose from "mongoose"
 const Schema = mongoose.Schema
 
 const BlogSchema = new Schema({
-  Teacher: {
+  User: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Users',
+    required: true
+  },
+  Subject: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subjects',
     required: true
   },
   Title: {
     type: String,
     required: true
   },
+  Price: {
+    type: Number,
+    required: true
+  },
+  NumberSlot: {
+    type: Number,
+    required: true
+  },
   Content: {
     type: String,
     required: true
   },
-  AvatarPath: {
+  LearnType:{
     type: String,
     required: true
   },
-  Description: {
+  Address:{
     type: String,
-    required: true
   },
   IsDeleted: {
+    type: Boolean,
+    default: false
+  },
+  IsActivate: {
     type: Boolean,
     default: false
   },
