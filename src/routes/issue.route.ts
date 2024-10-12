@@ -1,17 +1,17 @@
 import express from "express"
-import ReportController from "../controllers/report.controller"
+import IssueController from "../controllers/issue.controller"
 import authMiddleware from "../middlewares/auth.middleware"
 import { Roles } from "../utils/constant"
-import ReportValidation from "../validations/report.validation"
+import IssueValidation from "../validations/issue.validation"
 
-const ReportRoute = express.Router()
+const IssueRoute = express.Router()
 
 // Define model trên swagger
 /**
  * @swagger
  * components:
  *  schemas:
- *    Reports:
+ *    Issues:
  *      type: object
  *      required: 
  *        - Title
@@ -33,9 +33,9 @@ const ReportRoute = express.Router()
 
 /**
  * @swagger
- * /report/createReport:
+ * /Issue/createIssue:
  *   post: 
- *     tags: [Reports]
+ *     tags: [Issues]
  *     requestBody:
  *       content:
  *         application/json:
@@ -46,23 +46,23 @@ const ReportRoute = express.Router()
  *               Context: "abcdfgh"
  *     responses:
  *       201:
- *         description: Tạo Report thành công
+ *         description: Tạo Issue thành công
  *       400:
  *         description: Bad Request
  *       500:
  *         description: Server error
  */
-ReportRoute.post("/createReport",
+IssueRoute.post("/createIssue",
     authMiddleware([, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
-    ReportValidation.createReport,
-    ReportController.createReport
+    IssueValidation.createIssue,
+    IssueController.createIssue
 )
 
 /**
  * @swagger
- * /report/getListReport:
+ * /Issue/getListIssue:
  *   post:
- *     tags: [Reports]
+ *     tags: [Issues]
  *     requestBody:
  *       content:
  *         application/json:
@@ -71,21 +71,21 @@ ReportRoute.post("/createReport",
  *               PageSize: 10
  *     responses:
  *       200:
- *         description: Lấy ra report thành công
+ *         description: Lấy ra Issue thành công
  *       500:
  *         description: Internal server error
  */
-ReportRoute.post("/getListReport",
+IssueRoute.post("/getListIssue",
     authMiddleware([Roles.ROLE_ADMIN]),
-    ReportValidation.getListReport,
-    ReportController.getListReport
+    IssueValidation.getListIssue,
+    IssueController.getListIssue
 )
 
 /**
  * @swagger
- * /report/getListReportTimeTable:
+ * /Issue/getListIssueTimeTable:
  *   post:
- *     tags: [Reports]
+ *     tags: [Issues]
  *     requestBody:
  *       content:
  *         application/json:
@@ -94,60 +94,60 @@ ReportRoute.post("/getListReport",
  *               PageSize: 10
  *     responses:
  *       200:
- *         description: Lấy ra report thành công
+ *         description: Lấy ra Issue thành công
  *       500:
  *         description: Internal server error
  */
-ReportRoute.post("/getListReportTimeTable",
+IssueRoute.post("/getListIssueTimeTable",
     authMiddleware([Roles.ROLE_ADMIN]),
-    ReportController.getListReportTimeTable
+    IssueController.getListIssueTimeTable
 )
 
 /**
  * @swagger
- * /report/deleteReport/{ReportID}:
+ * /Issue/deleteIssue/{IssueID}:
  *   get:
- *     tags: [Reports]
+ *     tags: [Issues]
  *     parameters:
  *       - in: path
- *         name: ReportID
+ *         name: IssueID
  *         schema:
  *           type: ObjectId
  *     responses:
  *       200:
- *         description: Xoá report thành công
+ *         description: Xoá Issue thành công
  *       404:
  *         description: Not Found
  *       500:
  *         description: Server error
  */
-ReportRoute.get("/deleteReport/:ReportID",
+IssueRoute.get("/deleteIssue/:IssueID",
     authMiddleware([Roles.ROLE_ADMIN]),
-    ReportController.deletedReport
+    IssueController.deletedIssue
 )
 
 /**
  * @swagger
- * /report/handleReport/{ReportID}:
+ * /Issue/handleIssue/{IssueID}:
  *   get:
- *     tags: [Reports]
+ *     tags: [Issues]
  *     parameters:
  *       - in: path
- *         name: ReportID
+ *         name: IssueID
  *         schema:
  *           type: ObjectId
  *     responses:
  *       200:
- *         description: Xoá report thành công
+ *         description: Xoá Issue thành công
  *       404:
  *         description: Not Found
  *       500:
  *         description: Server error
  */
-ReportRoute.get("/handleReport/:ReportID",
+IssueRoute.get("/handleIssue/:IssueID",
     authMiddleware([Roles.ROLE_ADMIN]),
-    ReportValidation.handleReport,
-    ReportController.handleReport
+    IssueValidation.handleIssue,
+    IssueController.handleIssue
 )
 
-export default ReportRoute
+export default IssueRoute

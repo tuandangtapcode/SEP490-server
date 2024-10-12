@@ -3,7 +3,7 @@ import { getRegexObjectID } from '../utils/commonFunction'
 import { parameterValidation } from './common.validation'
 import { NextFunction, Request, Response } from 'express'
 
-const createReport = async (req: Request, res: Response, next: NextFunction) => {
+const createIssue = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     Timetable: Joi.string().pattern(getRegexObjectID()).required(),
     Teacher: Joi.string().pattern(getRegexObjectID()).required(),
@@ -18,7 +18,7 @@ const createReport = async (req: Request, res: Response, next: NextFunction) => 
   }
 }
 
-const getListReport = async (req: Request, res: Response, next: NextFunction) => {
+const getListIssue = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     PageSize: Joi.number().integer().min(0).required(),
     CurrentPage: Joi.number().integer().min(0).required(),
@@ -32,8 +32,8 @@ const getListReport = async (req: Request, res: Response, next: NextFunction) =>
   }
 }
 
-const handleReport = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = parameterValidation("ReportID")
+const handleIssue = async (req: Request, res: Response, next: NextFunction) => {
+  const trueCondition = parameterValidation("IssueID")
   try {
     await trueCondition.validateAsync(req.params, { abortEarly: false })
     next()
@@ -42,10 +42,10 @@ const handleReport = async (req: Request, res: Response, next: NextFunction) => 
   }
 }
 
-const ReportValidation = {
-  createReport,
-  getListReport,
-  handleReport
+const IssueValidation = {
+  createIssue,
+  getListIssue,
+  handleIssue
 }
 
-export default ReportValidation
+export default IssueValidation
