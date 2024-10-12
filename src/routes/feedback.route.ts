@@ -1,17 +1,17 @@
 import express from "express"
-import CommentController from "../controllers/comment.controller"
+import FeedbackController from "../controllers/feedback.controller"
 import authMiddleware from "../middlewares/auth.middleware"
 import { Roles } from "../utils/constant"
-import CommentValidation from "../validations/comment.validation"
+import FeedbackValidation from "../validations/feedback.validation"
 
-const CommentRoute = express.Router()
+const FeedbackRoute = express.Router()
 
 // Define model trên swagger
 /**
  * @swagger
  * components:
  *  schemas:
- *    Comment:
+ *    Feedback:
  *      type: object
  *      required: 
  *        - Sender
@@ -33,9 +33,9 @@ const CommentRoute = express.Router()
 
 /**
  * @swagger
- * /comment/createComment:
+ * /Feedback/createFeedback:
  *   post:
- *     tags: [Comments]
+ *     tags: [Feedbacks]
  *     requestBody:
  *       content:
  *         multipart/form-data:
@@ -58,17 +58,17 @@ const CommentRoute = express.Router()
  *       500:
  *         description: Internal server error
  */
-CommentRoute.post("/createComment",
+FeedbackRoute.post("/createFeedback",
   authMiddleware([Roles.ROLE_STUDENT]),
-  CommentValidation.createComment,
-  CommentController.createComment
+  FeedbackValidation.createFeedback,
+  FeedbackController.createFeedback
 )
 
 /**
  * @swagger
- * /comment/getListCommentOfTeacher:
+ * /Feedback/getListFeedbackOfTeacher:
  *   post:
- *     tags: [Comments]
+ *     tags: [Feedbacks]
  *     requestBody:
  *       content:
  *         application/json:
@@ -82,19 +82,19 @@ CommentRoute.post("/createComment",
  *       500:
  *         description: Internal server error
  */
-CommentRoute.post("/getListCommentOfTeacher",
-  CommentValidation.getListCommentOfTeacher,
-  CommentController.getListCommentOfTeacher
+FeedbackRoute.post("/getListFeedbackOfTeacher",
+  FeedbackValidation.getListFeedbackOfTeacher,
+  FeedbackController.getListFeedbackOfTeacher
 )
 
 /**
  * @swagger
- * /comment/deleteComment/{CommentID}:
+ * /Feedback/deleteFeedback/{FeedbackID}:
  *   get:
- *     tags: [Comments]
+ *     tags: [Feedbacks]
  *     parameters:
  *       - in: path
- *         name: CommentID
+ *         name: FeedbackID
  *         schema:
  *           type: ObjectId
  *     responses:
@@ -105,10 +105,10 @@ CommentRoute.post("/getListCommentOfTeacher",
  *       500:
  *         description: Server error
  */
-CommentRoute.get("/deleteComment/:CommentID",
+FeedbackRoute.get("/deleteFeedback/:FeedbackID",
   authMiddleware([Roles.ROLE_STUDENT]),
-  CommentController.deletedComment
+  FeedbackController.deletedFeedback
 )
 
 
-export default CommentRoute
+export default FeedbackRoute

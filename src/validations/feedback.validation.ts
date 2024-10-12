@@ -2,7 +2,7 @@ import Joi from 'joi'
 import { getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Request, Response } from 'express'
 
-const createComment = async (req: Request, res: Response, next: NextFunction) => {
+const createFeedback = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     Teacher: Joi.string().pattern(getRegexObjectID()).required(),
     Rate: Joi.number().integer().min(1).max(5).required(),
@@ -16,7 +16,7 @@ const createComment = async (req: Request, res: Response, next: NextFunction) =>
   }
 }
 
-const getListCommentOfTeacher = async (req: Request, res: Response, next: NextFunction) => {
+const getListFeedbackOfTeacher = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     TeacherID: Joi.string().pattern(getRegexObjectID()).required(),
     PageSize: Joi.number().integer().min(0).required(),
@@ -30,9 +30,9 @@ const getListCommentOfTeacher = async (req: Request, res: Response, next: NextFu
   }
 }
 
-const CommentValidation = {
-  createComment,
-  getListCommentOfTeacher
+const FeedbackValidation = {
+  createFeedback,
+  getListFeedbackOfTeacher
 }
 
-export default CommentValidation
+export default FeedbackValidation

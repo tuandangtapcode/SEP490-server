@@ -19,7 +19,7 @@ const LearnHistorySchema = new Schema({
   },
   RegisterDate: {
     type: Date,
-    default: () => Date.now()
+    default: () => new Date()
   },
   TotalLearned: {
     type: Number,
@@ -37,6 +37,6 @@ const LearnHistorySchema = new Schema({
   timestamps: true
 })
 
-const LearnHistory = mongoose.model("LearnHistorys", LearnHistorySchema)
+const LearnHistory = mongoose.model("LearnHistories", LearnHistorySchema)
 
 export default LearnHistory

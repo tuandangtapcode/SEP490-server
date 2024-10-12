@@ -43,15 +43,33 @@ const BlogRoute = express.Router()
  *           schema:
  *             type: object
  *             properties:
- *                Teacher:
+ *                User:
+ *                  type: ObjectId
+ *                Subject:
  *                  type: ObjectId
  *                Title: 
  *                  type: string
  *                Content:
  *                  type: string
- *                Avatar:
+ *                Price:
+ *                  type: number
+ *                NumberSlot:
+ *                  type: number
+ *                LearnType:
+ *                  type: number
+ *                Address:
  *                  type: string
- *                  format: binary
+ *                 Schedules: 
+ *                  type: array
+ *                      items: 
+ *                          type: object
+ *                          properties:
+ *                          DateAt:
+ *                              type: string
+ *                          StartTime:
+ *                              type: Date
+ *                          EndTime:
+ *                              type: Date
  *     responses:
  *       201:
  *         description: Tạo bài viết thành công
@@ -145,15 +163,33 @@ BlogRoute.get("/getDetailBlog/:BlogID",
  *           schema:
  *             type: object
  *             properties:
- *                Teacher:
+ *                User:
+ *                  type: ObjectId
+ *                Subject:
  *                  type: ObjectId
  *                Title: 
  *                  type: string
  *                Content:
  *                  type: string
- *                Avatar:
+ *                Price:
+ *                  type: number
+ *                NumberSlot:
+ *                  type: number
+ *                LearnType:
+ *                  type: number
+ *                Address:
  *                  type: string
- *                  format: binary
+ *                 Schedules: 
+ *                  type: array
+ *                      items: 
+ *                          type: object
+ *                          properties:
+ *                          DateAt:
+ *                              type: string
+ *                          StartTime:
+ *                              type: Date
+ *                          EndTime:
+ *                              type: Date
  *     responses:
  *       201:
  *         description: Tạo bài viết thành công
@@ -163,7 +199,6 @@ BlogRoute.get("/getDetailBlog/:BlogID",
  *         description: Internal server error
  */
 BlogRoute.post("/updateBlog",
-    authMiddleware([Roles.ROLE_TEACHER]),
     BlogValidation.createUpdateBlog,
     BlogController.updateBlog
 )
@@ -185,10 +220,9 @@ BlogRoute.post("/updateBlog",
  *       500:
  *         description: Internal server error
  */
-BlogRoute.post("/getListBlogOfTeacher",
-    authMiddleware([Roles.ROLE_TEACHER]),
+BlogRoute.post("/getListBlogOfUser",
     BlogValidation.getListBlog,
-    BlogController.getListBlogOfTeacher
+    BlogController.getListBlogOfUser
 )
 
 export default BlogRoute
