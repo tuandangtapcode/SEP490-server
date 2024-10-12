@@ -1,13 +1,13 @@
 import { ObjectId } from "mongoose"
 
-export interface CreateReportDTO {
+export interface CreateIssueDTO {
   Title: string,
   Content: string,
   Timetable: ObjectId,
   Teacher: ObjectId
 }
 
-export interface ReportDTO {
+export interface IssueDTO {
   _id: ObjectId,
   Sender: {
     _id: ObjectId,

@@ -1,12 +1,12 @@
 import { ObjectId } from "mongoose"
 import { PaginationDTO } from "./common.dto"
 
-export interface CreateCommentDTO {
+export interface CreateFeedbackDTO {
   Teacher: ObjectId,
   Content: string,
   Rate: number
 }
 
-export interface GetListCommentOfTeacherDTO extends PaginationDTO {
+export interface GetListFeedbackOfTeacherDTO extends PaginationDTO {
   TeacherID: ObjectId
 }

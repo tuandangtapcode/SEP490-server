@@ -36,7 +36,7 @@ const PaymentSchema = new Schema({
   },
   PaymentTime: {
     type: Date,
-    default: () => Date.now()
+    default: () => new Date()
   },
   RequestAxplanationAt: {
     type: Date,

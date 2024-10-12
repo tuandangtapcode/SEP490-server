@@ -1,33 +1,39 @@
 import mongoose from "mongoose"
 const Schema = mongoose.Schema
 
-const CommentSchema = new Schema({
-  User: {
+const IssueSchema = new Schema({
+  Sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Users',
-    required: true
+  },
+  Timetable: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'TimeTables'
   },
   Teacher: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Users',
+    ref: 'Users'
+  },
+  Title: {
+    type: String,
     required: true
   },
   Content: {
     type: String,
     required: true
   },
-  Rate: {
-    type: Number,
-    require: true
-  },
   IsDeleted: {
     type: Boolean,
     default: false
   },
+  IsHandle: {
+    type: Boolean,
+    default: false
+  }
 }, {
   timestamps: true
 })
 
-const Comment = mongoose.model("Comments", CommentSchema)
+const Issue = mongoose.model("Issues", IssueSchema)
 
-export default Comment
+export default Issue
