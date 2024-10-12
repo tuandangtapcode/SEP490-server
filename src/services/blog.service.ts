@@ -13,7 +13,7 @@ const fncCreateBlog = async (req: Request) => {
     if (!!blog) return response({}, true, "Tiêu đề blog đã tồn tại", 200)
     const newCreateBlog = await Blog.create({
       ...req.body,
-      Teacher: UserID,
+      User: UserID,
     })
     return response(newCreateBlog, false, "Tạo bài viết thành công", 201)
   } catch (error: any) {
@@ -91,12 +91,12 @@ const fncUpdateBlog = async (req: Request) => {
   }
 }
 
-const fncGetListBlogOfTeacher = async (req: Request) => {
+const fncGetListBlogOfUser = async (req: Request) => {
   try {
     const UserID = req.user.ID
     const { CurrentPage, PageSize } = req.body as PaginationDTO
     const query = {
-      Teacher: UserID,
+      User: UserID,
       IsDeleted: false,
     }
     const blogs = Blog
@@ -122,7 +122,7 @@ const BlogService = {
   fncDeleteBlog,
   fncGetDetailBlog,
   fncUpdateBlog,
-  fncGetListBlogOfTeacher
+  fncGetListBlogOfUser
 }
 
 export default BlogService
