@@ -32,52 +32,7 @@ const BlogRoute = express.Router()
  *            type: boolean
  */
 
-/**
- * @swagger
- * /blog/createBlog:
- *   post: 
- *     tags: [Blogs]
- *     requestBody:
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *                User:
- *                  type: ObjectId
- *                Subject:
- *                  type: ObjectId
- *                Title: 
- *                  type: string
- *                Content:
- *                  type: string
- *                Price:
- *                  type: number
- *                NumberSlot:
- *                  type: number
- *                LearnType:
- *                  type: number
- *                Address:
- *                  type: string
- *                 Schedules: 
- *                  type: array
- *                      items: 
- *                          type: object
- *                          properties:
- *                          DateAt:
- *                              type: string
- *                          StartTime:
- *                              type: Date
- *                          EndTime:
- *                              type: Date
- *     responses:
- *       201:
- *         description: Tạo bài viết thành công
- *       400:
- *         description: Bad Request
- *       500:
- *         description: Internal server error
- */
+
 BlogRoute.post("/createBlog",
     authMiddleware([Roles.ROLE_TEACHER]),
     BlogValidation.createUpdateBlog,
@@ -152,52 +107,7 @@ BlogRoute.get("/getDetailBlog/:BlogID",
     BlogController.getDetailBlog
 )
 
-/**
- * @swagger
- * /blog/updateBlog:
- *   post: 
- *     tags: [Blogs]
- *     requestBody:
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *                User:
- *                  type: ObjectId
- *                Subject:
- *                  type: ObjectId
- *                Title: 
- *                  type: string
- *                Content:
- *                  type: string
- *                Price:
- *                  type: number
- *                NumberSlot:
- *                  type: number
- *                LearnType:
- *                  type: number
- *                Address:
- *                  type: string
- *                 Schedules: 
- *                  type: array
- *                      items: 
- *                          type: object
- *                          properties:
- *                          DateAt:
- *                              type: string
- *                          StartTime:
- *                              type: Date
- *                          EndTime:
- *                              type: Date
- *     responses:
- *       201:
- *         description: Tạo bài viết thành công
- *       400:
- *         description: Bad Request
- *       500:
- *         description: Internal server error
- */
+
 BlogRoute.post("/updateBlog",
     BlogValidation.createUpdateBlog,
     BlogController.updateBlog
