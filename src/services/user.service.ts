@@ -92,7 +92,6 @@ const fncGetDetailProfile = async (req: Request) => {
         }
       }
     ])
-    if (!user[0]) return response({}, true, "Có lỗi xảy ra", 200)
     return response(user[0], false, "Lấy ra thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -603,6 +602,61 @@ const fncConfirmSubjectSetting = async (req: Request) => {
   }
 }
 
+const fncGetListTopTeacherBySubject = async (req: Request) => {
+  try {
+    const { SubjectID } = req.params
+    const topTeachers = await User.aggregate([
+      {
+        $match: {
+          RoleID: Roles.ROLE_TEACHER,
+          IsActive: true,
+          RegisterStatus: 3
+        }
+      },
+      {
+        $addFields: {
+          TotalVotes: { $size: "$Votes" }
+        }
+      },
+      {
+        $sort: {
+          TotalVotes: -1
+        }
+      },
+      {
+        $lookup: {
+          from: "subjectsettings",
+          localField: "_id",
+          foreignField: "Teacher",
+          as: "SubjectSetting",
+          pipeline: [
+            {
+              $project: {
+                Subject: 1,
+                Levels: 1,
+                Price: 1,
+                LearnTypes: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$SubjectSetting" },
+      {
+        $match: {
+          "SubjectSetting.Subject": new mongoose.Types.ObjectId(`${SubjectID}`)
+        }
+      },
+      {
+        $limit: 4
+      }
+    ])
+    return response(topTeachers, false, "Lấy data thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const UserSerivce = {
   fncGetDetailProfile,
   fncChangeProfile,
@@ -617,7 +671,8 @@ const UserSerivce = {
   fncCreateSubjectSetting,
   fncUpdateSubjectSetting,
   fncDeleteSubjectSetting,
-  fncConfirmSubjectSetting
+  fncConfirmSubjectSetting,
+  fncGetListTopTeacherBySubject
 }
 
 export default UserSerivce

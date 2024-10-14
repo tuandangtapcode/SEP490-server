@@ -46,12 +46,22 @@ const getDetailSubject = async (req: Request, res: Response) => {
   }
 }
 
+const getListRecommendSubject = async (req: Request, res: Response) => {
+  try {
+    const response = await SubjectService.fncGetListRecommendSubject(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
 const SubjectController = {
   createSubject,
   getListSubject,
   updateSubject,
   deleteSubject,
-  getDetailSubject
+  getDetailSubject,
+  getListRecommendSubject
 }
 
 export default SubjectController

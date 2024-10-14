@@ -2,8 +2,6 @@ import express from "express"
 import http from "http"
 import { Server } from 'socket.io'
 import * as dotenv from 'dotenv'
-import swaggerjsdoc from "swagger-jsdoc"
-import swaggerui from "swagger-ui-express"
 import cookieParser from "cookie-parser"
 import helmet from "helmet"
 import { rateLimit } from "express-rate-limit"
@@ -12,7 +10,6 @@ dotenv.config()
 import cors from 'cors'
 import connect from './config/DBConfig'
 import routes from './routes/index'
-import { optionSwagger } from "./utils/constant"
 import schedule from "node-schedule"
 import getListPaymentInCurrentWeek from "./tools/getListPaymentInCurrentWeek"
 import socket from "./sockets/index"
@@ -60,12 +57,6 @@ schedule.scheduleJob('0 23 * * 0', () => {
 })
 
 socket(io)
-
-const spacs = swaggerjsdoc(optionSwagger)
-app.use("/api-docs",
-  swaggerui.serve,
-  swaggerui.setup(spacs)
-)
 
 server.listen(process.env.PORT, async () => {
   await connect()

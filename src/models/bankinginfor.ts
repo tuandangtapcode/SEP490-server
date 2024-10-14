@@ -5,6 +5,7 @@ const BankingInforSchema = new Schema({
   User: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Users',
+    required: true
   },
   BankID: {
     type: Number,

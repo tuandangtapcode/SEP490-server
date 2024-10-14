@@ -453,7 +453,7 @@ const fncGetListTransfer = async (req: Request) => {
 const fncSendRequestExplanation = async (req: Request) => {
   try {
     const UserID = req.user.ID
-    const { PaymentID, Email, FullName, Reports } = req.body as SendRequestExplanationDTO
+    const { PaymentID, Email, FullName, Issues } = req.body as SendRequestExplanationDTO
     const updatePayment = await Payment.findOneAndUpdate({ _id: PaymentID, Sender: UserID }, { RequestAxplanationAt: Date.now() })
     if (!updatePayment) return response({}, true, "Có lỗi xảy ra", 200)
     const subject = "THÔNG BÁO GIẢI TRÌNH BUỔI HỌC BỊ REPORT"
@@ -470,7 +470,7 @@ const fncSendRequestExplanation = async (req: Request) => {
                   <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO GIẢI TRÌNH BUỔI HỌC BỊ REPORT</p>
                   <p style="margin-bottom:10px">Xin chào ${FullName},</p>
                   <p style="margin-bottom:10px">Talent LearningHub thông báo: Chúng tôi xin thông báo về các buổi học bạn bị report trong tuần qua:</p>
-                  ${Reports.map((i, idx) =>
+                  ${Issues.map((i, idx) =>
       `<div>
                     <p style="font-weight: 600; font-size: 17px">Lần report thứ ${idx + 1}</p>
                     <div>

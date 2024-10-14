@@ -6,6 +6,7 @@ import {
   CreateUpdateSubjectDTO,
   GetListSubjectDTO,
 } from "../dtos/subject.dto"
+import mongoose, { ObjectId } from "mongoose"
 
 const fncCreateSubject = async (req: Request) => {
   try {
@@ -99,12 +100,33 @@ const fncGetDetailSubject = async (req: Request) => {
   }
 }
 
+const fncGetListRecommendSubject = async (req: Request) => {
+  try {
+    // const { Subjects } = req.body as { Subjects: [ObjectId] }
+    // let query = {} as any
+    // if (!!Subjects) {
+    //   query = {
+    //     _id: {
+    //       $in: Subjects.map((i: any) => new mongoose.Types.ObjectId(`${i}`))
+    //     }
+    //   }
+    // }
+    const subjects = await Subject
+      .find()
+      .limit(8)
+    return response(subjects, false, "Lấy data thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const Subjectervice = {
   fncCreateSubject,
   fncGetListSubject,
   fncUpdateSubject,
   fncDeleteSubject,
-  fncGetDetailSubject
+  fncGetDetailSubject,
+  fncGetListRecommendSubject
 }
 
 export default Subjectervice

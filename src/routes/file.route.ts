@@ -8,12 +8,10 @@ FileRoute.post("/uploadFileList",
   upload("FileList").fields([{ name: 'FileList[]' }]),
   FileController.uploadFileList
 )
-
 FileRoute.post("/uploadFileSingle",
   upload("FileSingle").single("FileSingle"),
   FileController.uploadFileList
 )
-
 FileRoute.post("/uploadDocumentList",
   upload("DocumentList").fields([{ name: "DocumentList[]" }]),
   FileController.uploadDocumentList
