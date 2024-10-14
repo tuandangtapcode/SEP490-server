@@ -5,14 +5,17 @@ const IssueSchema = new Schema({
   Sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Users',
+    required: true
   },
   Timetable: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'TimeTables'
+    ref: 'TimeTables',
+    required: true
   },
   Teacher: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Users'
+    ref: 'Users',
+    required: true
   },
   Title: {
     type: String,

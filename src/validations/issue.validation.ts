@@ -1,6 +1,5 @@
 import Joi from 'joi'
 import { getRegexObjectID } from '../utils/commonFunction'
-import { parameterValidation } from './common.validation'
 import { NextFunction, Request, Response } from 'express'
 
 const createIssue = async (req: Request, res: Response, next: NextFunction) => {
@@ -32,20 +31,9 @@ const getListIssue = async (req: Request, res: Response, next: NextFunction) => 
   }
 }
 
-const handleIssue = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = parameterValidation("IssueID")
-  try {
-    await trueCondition.validateAsync(req.params, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
 const IssueValidation = {
   createIssue,
   getListIssue,
-  handleIssue
 }
 
 export default IssueValidation

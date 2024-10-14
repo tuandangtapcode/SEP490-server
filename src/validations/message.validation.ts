@@ -1,6 +1,5 @@
 import Joi from "joi"
 import { getRegexObjectID } from '../utils/commonFunction'
-import { parameterValidation } from "./common.validation"
 import { NextFunction, Request, Response } from "express"
 
 const createMessage = async (req: Request, res: Response, next: NextFunction) => {
@@ -43,21 +42,10 @@ const getChatWithUser = async (req: Request, res: Response, next: NextFunction) 
   }
 }
 
-const seenMessage = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = parameterValidation("ChatID")
-  try {
-    await trueCondition.validateAsync(req.params, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
 const MessageValidation = {
   createMessage,
   getMessageByChat,
   getChatWithUser,
-  seenMessage
 }
 
 export default MessageValidation

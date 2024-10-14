@@ -8,7 +8,7 @@ export interface SendNotificationDTO {
   createdAt: Date
 }
 
-export interface SendCommentDTO {
+export interface SendFeedbackDTO {
   Rate: number,
   Content: string,
   User: {

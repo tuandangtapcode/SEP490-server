@@ -55,7 +55,8 @@ const fncRegister = async (req: Request) => {
     await Account.create({
       UserID: user._id,
       Email,
-      Password: !IsByGoogle ? hashPassword : null
+      Password: !IsByGoogle ? hashPassword : null,
+      RoleID: RoleID
     })
     if (RoleID === Roles.ROLE_TEACHER) {
       await SubjectSetting.create({
@@ -102,7 +103,7 @@ const fncLogin = async (req: Request, res: Response) => {
     const check = bcrypt.compareSync(Password, getAccount.Password)
     if (!check) return response({}, true, "Mật khẩu không chính xác", 200)
     const token = encodeData({
-      ID: getAccount._id,
+      ID: getAccount.UserID,
       RoleID: getAccount.RoleID,
     })
     res.cookie("token", token, {

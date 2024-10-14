@@ -39,7 +39,7 @@ export interface SendRequestExplanationDTO {
   PaymentID: ObjectId,
   Email: string,
   FullName: string,
-  Reports: {
+  Issues: {
     DateAt: string,
     Time: string,
     Title: string,
