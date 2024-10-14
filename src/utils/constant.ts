@@ -9,38 +9,6 @@ export const Roles = {
   ROLE_STUDENT: 4,
 }
 
-export const optionSwagger = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Talent LearningHub',
-      version: '1.0.0',
-      description: 'Talent LearningHub covered Create, Read, Update, and Delete operations using a Node.js API',
-    },
-    components: {
-      securitySchemes: {
-        Authorization: {
-          type: "apiKey",
-          in: "header",
-          name: "Authorization",
-          description: "Bearer token to access these api endpoints",
-        }
-      }
-    },
-    security: [
-      {
-        Authorization: [
-          "http://localhost:9999/systemkey/getListSystemkey"
-        ]
-      }
-    ],
-    servers: [
-      { url: 'http://localhost:9999' },
-    ],
-  },
-  apis: ['./src/routes/*.route.ts', "./src/models/*.ts", './dist/routes/*.route.js', "./dist/models/*.js"],
-}
-
 // ------------------------------------
 // Tài liệu để group socket id
 // https://socket.io/docs/v4/emit-cheatsheet/

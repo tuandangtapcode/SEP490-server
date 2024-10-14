@@ -1,6 +1,5 @@
 import Joi from 'joi'
 import { getRegexEmail, getRegexObjectID } from '../utils/commonFunction'
-import { parameterValidation } from './common.validation'
 import { NextFunction, Response, Request } from 'express'
 
 const responseConfirmRegister = async (req: Request, res: Response, next: NextFunction) => {
@@ -97,16 +96,6 @@ const inactiveOrActiveAccount = async (req: Request, res: Response, next: NextFu
   }
 }
 
-const createSubjectSetting = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = parameterValidation("SubjectID")
-  try {
-    await trueCondition.validateAsync(req.params, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
 const updateSubjectSetting = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     SubjectSettingID: Joi.string().pattern(getRegexObjectID()).optional(),
@@ -158,16 +147,6 @@ const updateSubjectSetting = async (req: Request, res: Response, next: NextFunct
   }
 }
 
-const deleteSubjectSetting = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = parameterValidation("SubjectSettingID")
-  try {
-    await trueCondition.validateAsync(req.params, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
 const confirmSubjectSetting = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     SubjectSettingID: Joi.string().pattern(getRegexObjectID()).required(),
@@ -189,9 +168,7 @@ const UserValidation = {
   getDetailTeacher,
   getListStudent,
   inactiveOrActiveAccount,
-  createSubjectSetting,
   updateSubjectSetting,
-  deleteSubjectSetting,
   confirmSubjectSetting
 }
 

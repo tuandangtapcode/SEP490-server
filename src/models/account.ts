@@ -5,6 +5,7 @@ const AccountSchema = new Schema({
   UserID: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Users',
+    required: true
   },
   Email: {
     type: String,
@@ -12,6 +13,10 @@ const AccountSchema = new Schema({
   },
   Password: {
     type: String,
+  },
+  RoleID: {
+    type: Number,
+    required: true
   },
   IsActive: {
     type: Boolean,

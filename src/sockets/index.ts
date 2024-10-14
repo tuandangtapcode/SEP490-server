@@ -10,7 +10,7 @@ const socket = (io: any) => {
 
     socket.on('send-notification', SocketService.sendNotification(socket))
 
-    socket.on('send-comment', SocketService.sendComment(io))
+    socket.on('send-feedback', SocketService.sendFeedback(io))
 
     socket.on('send-deactive', SocketService.sendDeactiveAccount(socket))
 

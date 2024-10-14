@@ -89,7 +89,7 @@ const sendRequestExplanation = async (req: Request, res: Response, next: NextFun
     PaymentID: Joi.string().pattern(getRegexObjectID()).required(),
     Email: Joi.string().pattern(getRegexEmail()).required(),
     FullName: Joi.string().min(1).required(),
-    Reports: Joi.array().items(
+    Issues: Joi.array().items(
       Joi.object({
         DateAt: Joi.string().min(1).required(),
         Time: Joi.string().min(1).required(),

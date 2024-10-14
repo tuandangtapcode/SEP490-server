@@ -1,7 +1,7 @@
 import {
   JoinMeetingRoomDTO,
   LeaveMeetingRoomDTO,
-  SendCommentDTO,
+  SendFeedbackDTO,
   SendMessageDTO,
   SendMessageMeetingRoomDTO,
   SendNotificationDTO,
@@ -36,9 +36,9 @@ const sendNotification = (socket: any) => {
   }
 }
 
-const sendComment = (io: any) => {
-  return (data: SendCommentDTO) => {
-    io.to(data.RoomID).emit("get-comment", data)
+const sendFeedback = (io: any) => {
+  return (data: SendFeedbackDTO) => {
+    io.to(data.RoomID).emit("get-feedback", data)
   }
 }
 
@@ -120,7 +120,7 @@ const sendMessageMeetingRoom = (io: any) => {
 const SocketService = {
   addUserOnline,
   sendNotification,
-  sendComment,
+  sendFeedback,
   sendDeactiveAccount,
   joinRoom,
   leaveRoom,

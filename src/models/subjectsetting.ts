@@ -4,11 +4,13 @@ import mongoose, { Schema } from "mongoose"
 const SubjectSettingSchema = new Schema({
   Subject: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Subjects"
+    ref: "Subjects",
+    required: true
   },
   Teacher: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Users"
+    ref: "Users",
+    required: true
   },
   Quote: {
     type: {

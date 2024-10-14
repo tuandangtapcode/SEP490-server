@@ -1,7 +1,8 @@
 import Joi from 'joi'
 import { getRegexObjectID } from '../utils/commonFunction'
+import { NextFunction, Response, Request } from 'express'
 
-const getValidFile = (type) => {
+const getValidFile = (type: string) => {
   let listValid
   switch (type) {
     case "application":
@@ -17,7 +18,7 @@ const getValidFile = (type) => {
   return listValid
 }
 
-export const fileValidation = (name, type) => {
+export const fileValidation = (name: string, type: string) => {
   return Joi.object({
     fieldname: Joi.string().valid(name).required(),
     originalname: Joi.string().required(),
@@ -29,8 +30,16 @@ export const fileValidation = (name, type) => {
   })
 }
 
-export const parameterValidation = (key) => {
-  return Joi.object({
-    [key]: Joi.string().pattern(getRegexObjectID()).required()
-  })
+export const parameterValidation = (key: string) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const trueCondition = Joi.object({
+      [key]: Joi.string().pattern(getRegexObjectID()).required()
+    })
+    try {
+      await trueCondition.validateAsync(req.params, { abortEarly: false })
+      next()
+    } catch (error: any) {
+      return res.status(400).json(error.toString())
+    }
+  }
 }

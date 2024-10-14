@@ -1,6 +1,5 @@
 import Joi from 'joi'
 import { getRegexObjectID } from '../utils/commonFunction'
-import { parameterValidation } from './common.validation'
 import { NextFunction, Request, Response } from 'express'
 
 const createUpdateSubject = async (req: Request, res: Response, next: NextFunction) => {
@@ -33,10 +32,12 @@ const getListSubject = async (req: Request, res: Response, next: NextFunction) =
   }
 }
 
-const getDetailSubject = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = parameterValidation("SubjectID")
+const getListRecommendSubject = async (req: Request, res: Response, next: NextFunction) => {
+  const trueCondition = Joi.object({
+    Subjects: Joi.array().items(Joi.string().pattern(getRegexObjectID())).optional()
+  })
   try {
-    await trueCondition.validateAsync(req.params, { abortEarly: false })
+    await trueCondition.validateAsync(req.body, { abortEarly: false })
     next()
   } catch (error: any) {
     return res.status(400).json(error.toString())
@@ -46,7 +47,7 @@ const getDetailSubject = async (req: Request, res: Response, next: NextFunction)
 const SubjectValidation = {
   createUpdateSubject,
   getListSubject,
-  getDetailSubject
+  getListRecommendSubject
 }
 
 export default SubjectValidation
