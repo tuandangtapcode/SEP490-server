@@ -28,20 +28,8 @@ const getAllFiedls = {
   Subjects: 1,
   Description: 1,
   Votes: 1,
-  IsByGoogle: 1,
-  RegisterStatus: 1,
-  Quotes: 1,
-  Experiences: 1,
-  IntroductVideos: 1,
-  Price: 1,
   Schedules: 1,
-  Educations: 1,
-  IsActive: 1,
-  LearnTypes: 1,
   Address: 1,
-  createdAt: 1,
-  Certificates: 1,
-  IntroVideos: 1,
   DateOfBirth: 1,
   Phone: 1
 }
@@ -321,39 +309,65 @@ const fncGetDetailTeacher = async (req: Request) => {
   try {
     const { TeacherID, SubjectID } = req.body as GetDetailTeacherDTO
     const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress
-    console.log("ipAddress", ipAddress);
-
-    const user = await User.aggregate([
+    const user = await SubjectSetting.aggregate([
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(`${TeacherID}`),
-          RegisterStatus: 3,
+          Teacher: new mongoose.Types.ObjectId(`${TeacherID}`),
           IsActive: true,
-          Subjects: {
-            $elemMatch: { $eq: new mongoose.Types.ObjectId(`${SubjectID}`) }
-          }
+          Subject: new mongoose.Types.ObjectId(`${SubjectID}`),
         }
       },
       {
         $lookup: {
-          from: "accounts",
-          localField: "_id",
-          foreignField: "UserID",
-          as: "Account"
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $addFields: {
+                TotalVotes: { $size: "$Votes" }
+              }
+            },
+            {
+              $match: {
+                RegisterStatus: 3
+              }
+            },
+            {
+              $project: {
+                FullName: 1,
+                Address: 1,
+                Schedules: 1,
+                TotalVotes: 1,
+                Votes: 1,
+                AvatarPath: 1
+              }
+            },
+            // {
+            //   $lookup: {
+            //     from: "accounts",
+            //     localField: "_id",
+            //     foreignField: "UserID",
+            //     as: "Account"
+            //   }
+            // },
+            // { $unwind: '$Account' },
+            // {
+            //   $addFields: {
+            //     Email: "$Account.Email"
+            //   }
+            // },
+          ]
         }
       },
-      { $unwind: '$Account' },
-      {
-        $addFields: {
-          Email: "$Account.Email"
-        }
-      },
+      { $unwind: "$Teacher" },
       {
         $lookup: {
           from: "subjects",
-          localField: "Subjects",
+          localField: "Subject",
           foreignField: "_id",
-          as: "Subjects",
+          as: "Subject",
           pipeline: [
             {
               $project: {
@@ -364,14 +378,14 @@ const fncGetDetailTeacher = async (req: Request) => {
           ]
         }
       },
+      { $unwind: "$Subject" },
       {
         $project: {
-          ...getAllFiedls,
-          Email: 1,
+          IsActive: 0
         }
       }
     ])
-    if (!user[0]) return response({}, true, "Có lỗi xảy ra", 200)
+    if (!user[0]) return response({}, true, "Giáo viên không tồn tại", 200)
     return response({ ...user[0], ipAddress }, false, "Lấy data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -657,6 +671,21 @@ const fncGetListTopTeacherBySubject = async (req: Request) => {
   }
 }
 
+const fncGetListSubjectOfTeacher = async (req: Request) => {
+  try {
+    const { TeacherID } = req.params
+    const list = await SubjectSetting
+      .find({
+        Teacher: TeacherID
+      })
+      .populate("Subject", ["_id", "SubjectName"])
+      .select("Subject")
+    return response(list, false, "Lấy data thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const UserSerivce = {
   fncGetDetailProfile,
   fncChangeProfile,
@@ -672,7 +701,8 @@ const UserSerivce = {
   fncUpdateSubjectSetting,
   fncDeleteSubjectSetting,
   fncConfirmSubjectSetting,
-  fncGetListTopTeacherBySubject
+  fncGetListTopTeacherBySubject,
+  fncGetListSubjectOfTeacher
 }
 
 export default UserSerivce
