@@ -83,5 +83,9 @@ UserRoute.get("/getListTopTeacherBySubject/:SubjectID",
   parameterValidation("SubjectID"),
   UserController.getListTopTeacherBySubject
 )
+UserRoute.get("/getListSubjectOfTeacher/:TeacherID",
+  parameterValidation("TeacherID"),
+  UserController.getListSubjectOfTeacher
+)
 
 export default UserRoute
