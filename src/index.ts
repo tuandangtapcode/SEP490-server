@@ -24,7 +24,7 @@ const io = new Server(server, {
 
 const allowOrigins = [
   "http://localhost:5173",
-  "https://tatuboo.edu.vn",
+  "https://tatuboo.io.vn",
   "https://client.tatuboo.io.vn",
 ]
 

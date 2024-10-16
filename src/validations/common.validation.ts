@@ -1,6 +1,8 @@
 import Joi from 'joi'
 import { getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Response, Request } from 'express'
+import mongoose from 'mongoose'
+import response from '../utils/response'
 
 const getValidFile = (type: string) => {
   let listValid
@@ -31,15 +33,13 @@ export const fileValidation = (name: string, type: string) => {
 }
 
 export const parameterValidation = (key: string) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    const trueCondition = Joi.object({
-      [key]: Joi.string().pattern(getRegexObjectID()).required()
-    })
-    try {
-      await trueCondition.validateAsync(req.params, { abortEarly: false })
-      next()
-    } catch (error: any) {
-      return res.status(400).json(error.toString())
+  return (req: Request, res: Response, next: NextFunction) => {
+    const ID = req.params[key]
+    if (!mongoose.Types.ObjectId.isValid(`${ID}`)) {
+      return res.status(200).json(
+        response({}, true, "ObjectID không đúng định dạng", 200)
+      )
     }
+    next()
   }
 }

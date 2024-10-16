@@ -56,10 +56,6 @@ const UserSchema = new Schema({
     type: Number,
     default: 1
   },
-  IsActive: {
-    type: Boolean,
-    default: true
-  },
 }, {
   timestamps: true
 })

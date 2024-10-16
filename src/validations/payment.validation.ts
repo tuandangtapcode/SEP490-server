@@ -19,71 +19,6 @@ const createPayment = async (req: Request, res: Response, next: NextFunction) =>
   }
 }
 
-const getListPaymentHistoryByUser = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = Joi.object({
-    PageSize: Joi.number().integer().min(0).required(),
-    CurrentPage: Joi.number().integer().min(0).required(),
-    TraddingCode: Joi.string().empty(""),
-    PaymentType: Joi.number().valid(0, 1, 2, 3).required(),
-    PaymentStatus: Joi.number().valid(0, 1, 2, 3).required(),
-  })
-  try {
-    await trueCondition.validateAsync(req.body, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
-const changePaymentStatus = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = Joi.object({
-    PaymentID: Joi.string().pattern(getRegexObjectID()).required(),
-    Email: Joi.string().pattern(getRegexEmail()).required(),
-    PaymentStatus: Joi.number().min(1).max(3).required(),
-    TotalFee: Joi.number().min(1).required(),
-    FullName: Joi.string().min(1).required(),
-    RoleID: Joi.number().integer().valid(3, 4).required(),
-    Image: Joi.string().min(1).required(),
-  })
-  try {
-    await trueCondition.validateAsync(req.body, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
-const getListPayment = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = Joi.object({
-    PageSize: Joi.number().integer().min(0).required(),
-    CurrentPage: Joi.number().integer().min(0).required(),
-    TextSearch: Joi.string().empty(""),
-    PaymentType: Joi.number().valid(0, 1, 2, 3).required(),
-    // PaymentStatus: Joi.number().valid(0, 1, 2, 3).required(),
-  })
-  try {
-    await trueCondition.validateAsync(req.body, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
-const getListTransfer = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = Joi.object({
-    PageSize: Joi.number().integer().min(0).required(),
-    CurrentPage: Joi.number().integer().min(0).required(),
-    FromDate: Joi.date().required(),
-    ToDate: Joi.date().required()
-  })
-  try {
-    await trueCondition.validateAsync(req.body, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
 const sendRequestExplanation = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     PaymentID: Joi.string().pattern(getRegexObjectID()).required(),
@@ -108,10 +43,6 @@ const sendRequestExplanation = async (req: Request, res: Response, next: NextFun
 
 const PaymentValidation = {
   createPayment,
-  getListPaymentHistoryByUser,
-  changePaymentStatus,
-  getListPayment,
-  getListTransfer,
   sendRequestExplanation
 }
 

@@ -22,7 +22,6 @@ BankingInforRoute.post("/getListBankingInfor",
 )
 BankingInforRoute.get("/deleteBankingInfor/:BankingInforID",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
-  parameterValidation("BankingInforID"),
   BankingInforController.deleteBankingInfor
 )
 BankingInforRoute.post("/updateBankingInfor",
@@ -32,7 +31,6 @@ BankingInforRoute.post("/updateBankingInfor",
 )
 BankingInforRoute.post("/getBankingInforOfUser",
   authMiddleware([Roles.ROLE_ADMIN]),
-  BankInforValidation.getBankingInforOfUser,
   BankingInforController.getBankingInforOfUser
 )
 

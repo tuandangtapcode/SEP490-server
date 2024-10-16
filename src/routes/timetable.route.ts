@@ -18,7 +18,6 @@ TimeTableRoute.get("/getTimeTableByUser",
 )
 TimeTableRoute.get("/attendanceTimeTable/:TimeTableID",
   authMiddleware([Roles.ROLE_TEACHER]),
-  parameterValidation("TimeTableID"),
   TimeTableController.attendanceTimeTable
 )
 TimeTableRoute.post("/updateTimeTable",

@@ -3,7 +3,6 @@ import SubjectCateController from "../controllers/subjectcate.controller"
 import authMiddleware from "../middlewares/auth.middleware"
 import { Roles } from "../utils/constant"
 import SubjectCateValidation from "../validations/subjectcate.validation"
-import { parameterValidation } from "../validations/common.validation"
 
 const SubjectCateRoute = express.Router()
 
@@ -13,7 +12,6 @@ SubjectCateRoute.post("/createSubjectCate",
   SubjectCateController.createSubjectCate
 )
 SubjectCateRoute.post("/getListSubjectCate",
-  SubjectCateValidation.getListSubjectCate,
   SubjectCateController.getListSubjectCate
 )
 SubjectCateRoute.post("/updateSubjectCate",
@@ -23,11 +21,9 @@ SubjectCateRoute.post("/updateSubjectCate",
 )
 SubjectCateRoute.get("/deleteSubjectCate/:SubjectCateID",
   authMiddleware([Roles.ROLE_ADMIN]),
-  parameterValidation("SubjectCateID"),
   SubjectCateController.deleteSubjectCate
 )
 SubjectCateRoute.post("/getDetailSubjectCate",
-  SubjectCateValidation.getDetailSubjectCate,
   SubjectCateController.getDetailSubjectCate
 )
 SubjectCateRoute.get("/getListSubjectCateAndSubject",

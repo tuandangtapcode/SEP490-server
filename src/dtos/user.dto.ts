@@ -35,7 +35,6 @@ export interface GetListStudentDTO extends CommonDTO {
 export interface InactiveOrActiveAccountDTO {
   UserID: ObjectId,
   IsActive: boolean,
-  RegisterStatus: number
 }
 export interface UpdateSubjectSettingDTO {
   SubjectSettingID: ObjectId,
