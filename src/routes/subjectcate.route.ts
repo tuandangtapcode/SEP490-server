@@ -21,7 +21,7 @@ SubjectCateRoute.post("/updateSubjectCate",
   SubjectCateValidation.createUpdateSubjectCate,
   SubjectCateController.updateSubjectCate
 )
-SubjectCateRoute.get("/deleteSubjectcate/:SubjectCateID",
+SubjectCateRoute.get("/deleteSubjectCate/:SubjectCateID",
   authMiddleware([Roles.ROLE_ADMIN]),
   parameterValidation("SubjectCateID"),
   SubjectCateController.deleteSubjectCate

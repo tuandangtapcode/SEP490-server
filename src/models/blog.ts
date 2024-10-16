@@ -35,6 +35,16 @@ const BlogSchema = new Schema({
   Address:{
     type: String,
   },
+  Schedules: {
+    type: [
+      {
+        DateAt: { type: String },
+        StartTime: { type: Date },
+        EndTime: { type: Date }
+      }
+    ],
+    default: []
+  },
   IsDeleted: {
     type: Boolean,
     default: false

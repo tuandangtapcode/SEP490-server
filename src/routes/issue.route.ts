@@ -17,10 +17,10 @@ IssueRoute.post("/getListIssue",
   IssueValidation.getListIssue,
   IssueController.getListIssue
 )
-IssueRoute.post("/getListIssueTimeTable",
-  authMiddleware([Roles.ROLE_ADMIN]),
-  IssueController.getListIssueTimeTable
-)
+// IssueRoute.post("/getListIssueTimeTable",
+//   authMiddleware([Roles.ROLE_ADMIN]),
+//   IssueController.getListIssueTimeTable
+// )
 IssueRoute.get("/deleteIssue/:IssueID",
   authMiddleware([Roles.ROLE_ADMIN]),
   IssueController.deletedIssue
@@ -30,5 +30,12 @@ IssueRoute.get("/handleIssue/:IssueID",
   parameterValidation("IssueID"),
   IssueController.handleIssue
 )
+
+IssueRoute.get("/getIssueDetail/:IssueID",
+  authMiddleware([Roles.ROLE_ADMIN]),
+  parameterValidation("IssueID"),
+  IssueController.getIssueDetail
+)
+
 
 export default IssueRoute
