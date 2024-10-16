@@ -3,43 +3,20 @@ import ProfitPercent from "../models/profitpercent"
 import SystemKey from "../models/systemkey"
 import response from "../utils/response"
 import checkPayment from "../tools/checkPayment"
-// import CacheService from "./redis.service"
+import CacheService from "./redis.service"
 
 const ProfitPercentID = "66f92e193657dfff3345aa0f"
-
-const list = [
-  {
-    email: "tuanpham081102@gmail.com",
-    password: "Ab12345"
-  },
-  {
-    email: "tuanpham081102@gmail.com",
-    password: "Ab123456"
-  },
-  {
-    email: "tuanpham081103@gmail.com",
-    password: "Ab123456"
-  }
-]
 
 const fncGetListSystemKey = async () => {
   try {
     let systemKeys
-    // const dataCache = await CacheService.getCache("systemkey")
-    // if (!!dataCache) {
-    //   systemKeys = JSON.parse(dataCache)
-    // } else {
-    // const promises = [] as any
-    systemKeys = await SystemKey.find()
-    // for (let i = 0; i < list.length; i++) {
-    //   promises.push(
-    //     checkPayment(list[i].email, list[i].password)
-    //   )
-    // }
-    // await Promise.all(promises)
-    // await checkPayment()
-    //   CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
-    // }
+    const dataCache = await CacheService.getCache("systemkey")
+    if (!!dataCache) {
+      systemKeys = JSON.parse(dataCache)
+    } else {
+      systemKeys = await SystemKey.find()
+      CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
+    }
     return response(systemKeys, false, "Lấy ra thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

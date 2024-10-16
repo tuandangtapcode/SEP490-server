@@ -25,8 +25,7 @@ const io = new Server(server, {
 const allowOrigins = [
   "http://localhost:5173",
   "https://tatuboo.edu.vn",
-  "http://localhost:8000",
-  "https://tatuboo.edu.vn/api",
+  "https://client.tatuboo.io.vn",
 ]
 
 app.use(cors({
