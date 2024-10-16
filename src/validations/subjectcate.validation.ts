@@ -16,39 +16,8 @@ const createUpdateSubjectCate = async (req: Request, res: Response, next: NextFu
   }
 }
 
-const getListSubjectCate = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = Joi.object({
-    PageSize: Joi.number().integer().min(0).required(),
-    CurrentPage: Joi.number().integer().min(0).required(),
-    TextSearch: Joi.string().empty(""),
-  })
-  try {
-    await trueCondition.validateAsync(req.body, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
-const getDetailSubjectCate = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = Joi.object({
-    SubjectCateID: Joi.string().pattern(getRegexObjectID()).required(),
-    PageSize: Joi.number().integer().min(0).required(),
-    CurrentPage: Joi.number().integer().min(0).required(),
-    TextSearch: Joi.string().empty(""),
-  })
-  try {
-    await trueCondition.validateAsync(req.body, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
 const SubjectCateValidation = {
   createUpdateSubjectCate,
-  getListSubjectCate,
-  getDetailSubjectCate,
 }
 
 export default SubjectCateValidation

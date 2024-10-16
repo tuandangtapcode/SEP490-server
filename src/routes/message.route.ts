@@ -14,12 +14,10 @@ MessageRoute.post("/createMessage",
 )
 MessageRoute.post("/getMessageByChat",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
-  MessageValidation.getMessageByChat,
   MessageController.getMessageByChat
 )
 MessageRoute.post("/getChatWithUser",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
-  MessageValidation.getChatWithUser,
   MessageController.getChatWithUser
 )
 MessageRoute.get("/getChatOfAdmin",
@@ -28,7 +26,6 @@ MessageRoute.get("/getChatOfAdmin",
 )
 MessageRoute.get("/seenMessage/:ChatID",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
-  parameterValidation("ChatID"),
   MessageController.seenMessage
 )
 MessageRoute.get("/getChatOfUser",

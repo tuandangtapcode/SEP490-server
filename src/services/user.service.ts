@@ -20,7 +20,7 @@ import response from "../utils/response"
 import ProfitPercent from "../models/profitpercent"
 import SubjectSetting from "../models/subjectsetting"
 
-const getAllFiedls = {
+const defaultSelectField = {
   _id: 1,
   FullName: 1,
   AvatarPath: 1,
@@ -75,7 +75,7 @@ const fncGetDetailProfile = async (req: Request) => {
       },
       {
         $project: {
-          ...getAllFiedls,
+          ...defaultSelectField,
           Email: 1,
         }
       }
@@ -164,6 +164,9 @@ const fncGetListTeacher = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, SubjectID, Level, RegisterStatus } =
       req.body as GetListTeacherDTO
+    if (!mongoose.Types.ObjectId.isValid(`${SubjectID}`)) {
+      return response({}, true, "Môn học không tồn tại", 200)
+    }
     let queryUser = {
       FullName: { $regex: TextSearch, $options: "i" },
       RoleID: Roles.ROLE_TEACHER
@@ -196,7 +199,15 @@ const fncGetListTeacher = async (req: Request) => {
           from: "accounts",
           localField: "_id",
           foreignField: "UserID",
-          as: "Account"
+          as: "Account",
+          pipeline: [
+            {
+              $project: {
+                Email: 1,
+                IsActive: 1
+              }
+            }
+          ]
         }
       },
       { $unwind: "$Account" },
@@ -232,9 +243,10 @@ const fncGetListTeacher = async (req: Request) => {
       },
       {
         $project: {
-          ...getAllFiedls,
-          "Account.Email": 1,
-          SubjectSettings: 1
+          ...defaultSelectField,
+          RegisterStatus: 1,
+          SubjectSettings: 1,
+          Account: 1
         }
       }
     ])
@@ -258,6 +270,7 @@ const fncGetListTeacherByUser = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, SubjectID, Level, FromPrice, ToPrice, LearnType, SortByPrice } =
       req.body as GetListTeacherByUserDTO
+    // if
     let query = {
       FullName: { $regex: TextSearch, $options: "i" },
       RoleID: Roles.ROLE_TEACHER,
@@ -307,8 +320,24 @@ const fncGetListTeacherByUser = async (req: Request) => {
 
 const fncGetDetailTeacher = async (req: Request) => {
   try {
-    const { TeacherID, SubjectID } = req.body as GetDetailTeacherDTO
+    const { TeacherID, SubjectID, IsBookingPage } = req.body
+    if (!mongoose.Types.ObjectId.isValid(`${SubjectID}`)) {
+      return response({}, true, "Môn học không tồn tại", 200)
+    }
+    if (!mongoose.Types.ObjectId.isValid(`${TeacherID}`)) {
+      return response({}, true, "Giáo viên không tồn tại", 200)
+    }
     const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+    const projectField = !!IsBookingPage
+      ? {
+        Experiences: 0,
+        Educations: 0,
+        Certificates: 0,
+        IntroVideos: 0,
+        Levels: 0,
+        Quote: 0
+      }
+      : {}
     const user = await SubjectSetting.aggregate([
       {
         $match: {
@@ -381,12 +410,29 @@ const fncGetDetailTeacher = async (req: Request) => {
       { $unwind: "$Subject" },
       {
         $project: {
-          IsActive: 0
+          IsActive: 0,
+          ...projectField
         }
       }
     ])
+    const listSubjects = await SubjectSetting
+      .find({
+        Teacher: TeacherID
+      })
+      .populate("Subject", ["_id", "SubjectName"])
+      .select("Subject")
     if (!user[0]) return response({}, true, "Giáo viên không tồn tại", 200)
-    return response({ ...user[0], ipAddress }, false, "Lấy data thành công", 200)
+    return response(
+      !!IsBookingPage
+        ? { ...user[0], ipAddress }
+        : {
+          TeacherInfor: { ...user[0], ipAddress },
+          Subjects: listSubjects
+        },
+      false,
+      "Lấy data thành công",
+      200
+    )
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -423,6 +469,7 @@ const fncGetListStudent = async (req: Request) => {
       {
         $addFields: {
           Email: "$Account.Email",
+          IsActive: "$Account.IsActive",
           BookQuantity: { $size: "$LearnHistory" }
         }
       },
@@ -441,7 +488,9 @@ const fncGetListStudent = async (req: Request) => {
       },
       {
         $project: {
-          ...getAllFiedls,
+          ...defaultSelectField,
+          RegisterStatus: 1,
+          IsActive: 1,
           Email: 1,
           BookQuantity: 1
         }
@@ -501,13 +550,12 @@ const fncGetListStudent = async (req: Request) => {
 
 const fncInactiveOrActiveAccount = async (req: Request) => {
   try {
-    const { UserID, IsActive, RegisterStatus } =
+    const { UserID, IsActive } =
       req.body as InactiveOrActiveAccountDTO
-    const updateAccount = await User.findOneAndUpdate(
-      { _id: UserID },
+    const updateAccount = await Account.findOneAndUpdate(
+      { UserID: UserID },
       {
         IsActive: IsActive,
-        RegisterStatus: RegisterStatus
       },
       { new: true }
     )
@@ -619,11 +667,13 @@ const fncConfirmSubjectSetting = async (req: Request) => {
 const fncGetListTopTeacherBySubject = async (req: Request) => {
   try {
     const { SubjectID } = req.params
+    if (!mongoose.Types.ObjectId.isValid(`${SubjectID}`)) {
+      return response({}, true, "Môn học không tồn tại", 200)
+    }
     const topTeachers = await User.aggregate([
       {
         $match: {
           RoleID: Roles.ROLE_TEACHER,
-          IsActive: true,
           RegisterStatus: 3
         }
       },
@@ -671,21 +721,6 @@ const fncGetListTopTeacherBySubject = async (req: Request) => {
   }
 }
 
-const fncGetListSubjectOfTeacher = async (req: Request) => {
-  try {
-    const { TeacherID } = req.params
-    const list = await SubjectSetting
-      .find({
-        Teacher: TeacherID
-      })
-      .populate("Subject", ["_id", "SubjectName"])
-      .select("Subject")
-    return response(list, false, "Lấy data thành công", 200)
-  } catch (error: any) {
-    return response({}, true, error.toString(), 500)
-  }
-}
-
 const UserSerivce = {
   fncGetDetailProfile,
   fncChangeProfile,
@@ -702,7 +737,6 @@ const UserSerivce = {
   fncDeleteSubjectSetting,
   fncConfirmSubjectSetting,
   fncGetListTopTeacherBySubject,
-  fncGetListSubjectOfTeacher
 }
 
 export default UserSerivce

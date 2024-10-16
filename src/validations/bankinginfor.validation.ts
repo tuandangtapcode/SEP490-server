@@ -17,23 +17,8 @@ const createUpdateBankingInfor = async (req: Request, res: Response, next: NextF
   }
 }
 
-const getBankingInforOfUser = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = Joi.object({
-    FullName: Joi.string().min(1).required(),
-    UserID: Joi.string().pattern(getRegexObjectID()).required(),
-    Email: Joi.string().pattern(getRegexEmail()).required()
-  })
-  try {
-    await trueCondition.validateAsync(req.body, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
 const BankInforValidation = {
   createUpdateBankingInfor,
-  getBankingInforOfUser
 }
 
 export default BankInforValidation

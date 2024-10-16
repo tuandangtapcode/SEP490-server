@@ -14,7 +14,6 @@ IssueRoute.post("/createIssue",
 )
 IssueRoute.post("/getListIssue",
   authMiddleware([Roles.ROLE_ADMIN]),
-  IssueValidation.getListIssue,
   IssueController.getListIssue
 )
 IssueRoute.post("/getListIssueTimeTable",
@@ -27,7 +26,6 @@ IssueRoute.get("/deleteIssue/:IssueID",
 )
 IssueRoute.get("/handleIssue/:IssueID",
   authMiddleware([Roles.ROLE_ADMIN]),
-  parameterValidation("IssueID"),
   IssueController.handleIssue
 )
 

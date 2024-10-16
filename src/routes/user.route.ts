@@ -29,30 +29,25 @@ UserRoute.get("/requestConfirmRegister",
 )
 UserRoute.post("/responseConfirmRegister",
   authMiddleware([Roles.ROLE_ADMIN,]),
-  UserValidation.responseConfirmRegister,
   UserController.responseConfirmRegister
 )
 UserRoute.post("/getListTeacher",
   authMiddleware([Roles.ROLE_ADMIN]),
-  UserValidation.getListTeacher,
   UserController.getListTeacher
 )
 UserRoute.post("/getListTeacherByUser",
-  UserValidation.getListTeacherByUser,
   UserController.getListTeacherByUser
 )
 UserRoute.post("/getDetailTeacher",
-  UserValidation.getDetailTeacher,
+  // UserValidation.getDetailTeacher,
   UserController.getDetailTeacher
 )
 UserRoute.post("/getListStudent",
   authMiddleware([Roles.ROLE_ADMIN]),
-  UserValidation.getListStudent,
   UserController.getListStudent
 )
 UserRoute.post("/inactiveOrActiveAccount",
   authMiddleware([Roles.ROLE_ADMIN]),
-  UserValidation.inactiveOrActiveAccount,
   UserController.inactiveOrActiveAccount
 )
 UserRoute.get("/getListSubjectSettingByTeacher",
@@ -76,16 +71,11 @@ UserRoute.get("/deleteSubjectSetting/:SubjectSettingID",
 )
 UserRoute.post("/confirmSubjectSetting",
   authMiddleware([Roles.ROLE_ADMIN]),
-  UserValidation.confirmSubjectSetting,
   UserController.confirmSubjectSetting
 )
 UserRoute.get("/getListTopTeacherBySubject/:SubjectID",
   parameterValidation("SubjectID"),
   UserController.getListTopTeacherBySubject
-)
-UserRoute.get("/getListSubjectOfTeacher/:TeacherID",
-  parameterValidation("TeacherID"),
-  UserController.getListSubjectOfTeacher
 )
 
 export default UserRoute
