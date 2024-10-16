@@ -13,7 +13,6 @@ LearnHistoryRoute.post("/createLearnHistory",
 )
 LearnHistoryRoute.post("/getListLearnHistory",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
-  LearnhistoryValidation.getListLearnHistory,
   LearnHistoryController.getListLearnHistory
 )
 

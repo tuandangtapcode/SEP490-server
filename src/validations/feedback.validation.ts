@@ -16,23 +16,8 @@ const createFeedback = async (req: Request, res: Response, next: NextFunction) =
   }
 }
 
-const getListFeedbackOfTeacher = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = Joi.object({
-    TeacherID: Joi.string().pattern(getRegexObjectID()).required(),
-    PageSize: Joi.number().integer().min(0).required(),
-    CurrentPage: Joi.number().integer().min(0).required(),
-  })
-  try {
-    await trueCondition.validateAsync(req.body, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
 const FeedbackValidation = {
   createFeedback,
-  getListFeedbackOfTeacher
 }
 
 export default FeedbackValidation

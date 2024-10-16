@@ -13,17 +13,14 @@ PaymentRoute.post("/createPayment",
 )
 PaymentRoute.post("/getListPaymentHistoryByUser",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
-  PaymentValidation.getListPaymentHistoryByUser,
   PaymentController.getListPaymentHistoryByUser
 )
 PaymentRoute.post("/changePaymentStatus",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
-  PaymentValidation.changePaymentStatus,
   PaymentController.changePaymentStatus
 )
 PaymentRoute.post("/getListPayment",
   authMiddleware([Roles.ROLE_ADMIN]),
-  PaymentValidation.getListPayment,
   PaymentController.getListPayment
 )
 PaymentRoute.get("/exportExcel",
@@ -32,7 +29,6 @@ PaymentRoute.get("/exportExcel",
 )
 PaymentRoute.post("/getListTransfer",
   authMiddleware([Roles.ROLE_ADMIN]),
-  PaymentValidation.getListTransfer,
   PaymentController.getListTransfer
 )
 PaymentRoute.post("/sendRequestExplanation",

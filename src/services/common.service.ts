@@ -10,9 +10,10 @@ const ProfitPercentID = "66f92e193657dfff3345aa0f"
 const fncGetListSystemKey = async () => {
   try {
     let systemKeys
-    const dataCache = await CacheService.getCache("systemkey")
-    if (!!dataCache) {
-      systemKeys = JSON.parse(dataCache)
+    const dataCacheRaw = await CacheService.getCache("systemkey") as string
+    const dataCache = JSON.parse(dataCacheRaw)
+    if (!!dataCache.length) {
+      systemKeys = dataCache
     } else {
       systemKeys = await SystemKey.find()
       CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)

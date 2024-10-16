@@ -14,7 +14,6 @@ SubjectRoute.post("/createSubject",
   SubjectController.createSubject
 )
 SubjectRoute.post("/getListSubject",
-  SubjectValidation.getListSubject,
   SubjectController.getListSubject
 )
 SubjectRoute.post("/updateSubject",
@@ -24,15 +23,12 @@ SubjectRoute.post("/updateSubject",
 )
 SubjectRoute.get("/deleteSubject/:SubjectID",
   authMiddleware([Roles.ROLE_ADMIN]),
-  parameterValidation("SubjectID"),
   SubjectController.deleteSubject
 )
 SubjectRoute.get("/getDetailSubject/:SubjectID",
-  parameterValidation("SubjectID"),
   SubjectController.getDetailSubject
 )
 SubjectRoute.post("/getListRecommendSubject",
-  SubjectValidation.getListRecommendSubject,
   SubjectController.getListRecommendSubject
 )
 

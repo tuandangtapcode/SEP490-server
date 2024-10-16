@@ -13,12 +13,10 @@ FeedbackRoute.post("/createFeedback",
   FeedbackController.createFeedback
 )
 FeedbackRoute.post("/getListFeedbackOfTeacher",
-  FeedbackValidation.getListFeedbackOfTeacher,
   FeedbackController.getListFeedbackOfTeacher
 )
 FeedbackRoute.get("/deleteFeedback/:FeedbackID",
   authMiddleware([Roles.ROLE_STUDENT]),
-  parameterValidation("FeedbackID"),
   FeedbackController.deletedFeedback
 )
 

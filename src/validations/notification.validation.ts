@@ -16,22 +16,8 @@ const createNotificaiton = async (req: Request, res: Response, next: NextFunctio
   }
 }
 
-const seenNotification = async (req: Request, res: Response, next: NextFunction) => {
-  const trueCondition = Joi.object({
-    NotificationID: Joi.string().regex(getRegexObjectID()).required(),
-    ReceiverID: Joi.string().regex(getRegexObjectID()).required(),
-  })
-  try {
-    await trueCondition.validateAsync(req.body, { abortEarly: false })
-    next()
-  } catch (error: any) {
-    return res.status(400).json(error.toString())
-  }
-}
-
 const NotificaitonValidation = {
   createNotificaiton,
-  seenNotification
 }
 
 export default NotificaitonValidation

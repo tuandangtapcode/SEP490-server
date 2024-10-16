@@ -14,17 +14,14 @@ NotificationRoute.post('/createNotification',
 )
 NotificationRoute.get('/changeStatusNotification/:ReceiverID',
   authMiddleware([, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER, Roles.ROLE_ADMIN]),
-  parameterValidation("ReceiverID"),
   NotificationController.changeStatusNotification
 )
 NotificationRoute.get('/getListNotification/:ReceiverID',
   authMiddleware([, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER, Roles.ROLE_ADMIN]),
-  parameterValidation("ReceiverID"),
   NotificationController.getListNotification
 )
 NotificationRoute.post('/seenNotification',
   authMiddleware([, Roles.ROLE_STUDENT, Roles.ROLE_TEACHER, Roles.ROLE_ADMIN]),
-  NotificaitonValidation.seenNotification,
   NotificationController.seenNotification
 )
 

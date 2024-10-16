@@ -136,15 +136,6 @@ const getListTopTeacherBySubject = async (req: Request, res: Response) => {
   }
 }
 
-const getListSubjectOfTeacher = async (req: Request, res: Response) => {
-  try {
-    const response = await UserSerivce.fncGetListSubjectOfTeacher(req)
-    return res.status(response.statusCode).json(response)
-  } catch (error: any) {
-    return res.status(500).json(error.toString())
-  }
-}
-
 const UserController = {
   getDetailProfile,
   changeProfile,
@@ -161,7 +152,6 @@ const UserController = {
   deleteSubjectSetting,
   confirmSubjectSetting,
   getListTopTeacherBySubject,
-  getListSubjectOfTeacher
 }
 
 export default UserController
