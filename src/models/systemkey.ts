@@ -16,8 +16,6 @@ const SystemKeySchema = new Schema({
     type: Boolean,
     default: false
   },
-}, {
-  timestamps: true
 })
 
 const SystemKey = mongoose.model("SystemKeys", SystemKeySchema)

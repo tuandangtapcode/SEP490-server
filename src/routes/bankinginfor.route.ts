@@ -3,7 +3,6 @@ import BankingInforController from "../controllers/bankinginfor.controller"
 import authMiddleware from "../middlewares/auth.middleware"
 import { Roles } from "../utils/constant"
 import BankInforValidation from "../validations/bankinginfor.validation"
-import { parameterValidation } from "../validations/common.validation"
 
 const BankingInforRoute = express.Router()
 

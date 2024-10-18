@@ -3,7 +3,6 @@ import MessageController from "../controllers/message.controller"
 import authMiddleware from "../middlewares/auth.middleware"
 import { Roles } from "../utils/constant"
 import MessageValidation from "../validations/message.validation"
-import { parameterValidation } from "../validations/common.validation"
 
 const MessageRoute = express.Router()
 

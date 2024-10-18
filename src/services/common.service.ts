@@ -12,13 +12,22 @@ const fncGetListSystemKey = async () => {
     let systemKeys
     const dataCacheRaw = await CacheService.getCache("systemkey") as string
     const dataCache = JSON.parse(dataCacheRaw)
-    if (!!dataCache.length) {
+    if (!!dataCache) {
       systemKeys = dataCache
     } else {
       systemKeys = await SystemKey.find()
       CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
     }
     return response(systemKeys, false, "Lấy ra thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncCreateSystemKey = async (req: Request) => {
+  try {
+    const newSystemKey = await SystemKey.create(req.body)
+    return response(newSystemKey, false, "Thêm mới systemkey thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -55,6 +64,7 @@ const fncChangeProfitPercent = async (req: Request) => {
 
 const CommonService = {
   fncGetListSystemKey,
+  fncCreateSystemKey,
   fncGetProfitPercent,
   fncChangeProfitPercent
 }
