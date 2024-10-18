@@ -46,12 +46,12 @@ const handleIssue = async (req: Request, res: Response) => {
   }
 }
 
-const getIssueDetail = async (req: Request, res: Response) => {
+const getDetailIssue = async (req: Request, res: Response) => {
   try {
-    const response = await IssueService.fncGetIssueDetail(req)
+    const response = await IssueService.fncGetDetailIssue(req)
     return res.status(response.statusCode).json(response)
   } catch (error: any) {
-    return res.status(500). json(error.toString())
+    return res.status(500).json(error.toString())
   }
 }
 
@@ -61,7 +61,7 @@ const IssueController = {
   deletedIssue,
   getListIssueTimeTable,
   handleIssue,
-  getIssueDetail
+  getDetailIssue
 }
 
 export default IssueController

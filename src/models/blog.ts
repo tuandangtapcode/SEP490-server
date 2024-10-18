@@ -28,17 +28,18 @@ const BlogSchema = new Schema({
     type: String,
     required: true
   },
-  LearnType:{
+  LearnType: {
     type: String,
     required: true
   },
-  Address:{
+  Address: {
     type: String,
+    default: null
   },
   Schedules: {
     type: [
       {
-        DateAt: { type: String },
+        DateAt: { type: Date },
         StartTime: { type: Date },
         EndTime: { type: Date }
       }

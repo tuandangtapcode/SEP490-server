@@ -3,7 +3,6 @@ import BlogController from "../controllers/blog.controller"
 import authMiddleware from "../middlewares/auth.middleware"
 import { Roles } from "../utils/constant"
 import BlogValidation from "../validations/blog.validation"
-import { parameterValidation } from "../validations/common.validation"
 
 const BlogRoute = express.Router()
 

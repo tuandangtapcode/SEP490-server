@@ -3,7 +3,6 @@ import TimeTableController from "../controllers/timetable.controller"
 import authMiddleware from '../middlewares/auth.middleware'
 import { Roles } from "../utils/constant"
 import TimeTableValidation from "../validations/timetable.validation"
-import { parameterValidation } from "../validations/common.validation"
 
 const TimeTableRoute = express.Router()
 

@@ -115,11 +115,11 @@ const fcnHandleIssue = async (req: Request) => {
   }
 }
 
-const fncGetIssueDetail = async (req: Request) => {
+const fncGetDetailIssue = async (req: Request) => {
   try {
     const IssueID = req.params.IssueID
     const issueDetail = await Issue.findById(IssueID)
-    if(!issueDetail) return response({}, true, "Issue không tồn tại", 200)
+    if (!issueDetail) return response({}, true, "Issue không tồn tại", 200)
     return response(issueDetail, false, "Issue lấy thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -132,7 +132,7 @@ const IssueService = {
   fncDeleteIssue,
   fncGetListIssueTimeTable,
   fcnHandleIssue,
-  fncGetIssueDetail
+  fncGetDetailIssue
 }
 
 export default IssueService

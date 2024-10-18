@@ -3,7 +3,6 @@ import IssueController from "../controllers/issue.controller"
 import authMiddleware from "../middlewares/auth.middleware"
 import { Roles } from "../utils/constant"
 import IssueValidation from "../validations/issue.validation"
-import { parameterValidation } from "../validations/common.validation"
 
 const IssueRoute = express.Router()
 
@@ -29,10 +28,9 @@ IssueRoute.get("/handleIssue/:IssueID",
   IssueController.handleIssue
 )
 
-IssueRoute.get("/getIssueDetail/:IssueID",
+IssueRoute.get("/getDetailIssue/:IssueID",
   authMiddleware([Roles.ROLE_ADMIN]),
-  parameterValidation("IssueID"),
-  IssueController.getIssueDetail
+  IssueController.getDetailIssue
 )
 
 

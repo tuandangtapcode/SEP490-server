@@ -8,6 +8,9 @@ const CommonRoute = express.Router()
 CommonRoute.get("/getListSystemkey",
   CommonController.getListSystemKey
 )
+CommonRoute.post("/createSystemKey",
+  CommonController.createSystemKey
+)
 CommonRoute.get("/getProfitPercent",
   CommonController.getProfitPercent
 )
