@@ -4,6 +4,7 @@ import { CommonDTO, PaginationDTO } from "./common.dto"
 export interface CreatePaymentDTO {
   PaymentType: number,
   PaymentStatus: number,
+  PaymentMethod: number,
   Description: string,
   TotalFee: number,
   TraddingCode: number,
@@ -13,7 +14,8 @@ export interface CreatePaymentDTO {
 export interface GetListPaymentHistoryByUserDTO extends PaginationDTO {
   TraddingCode: string,
   PaymentStatus: number,
-  PaymentType: number
+  PaymentType: number,
+  PaymentMethod: number,
 }
 
 export interface ChangePaymentStatusDTO {
@@ -27,7 +29,8 @@ export interface ChangePaymentStatusDTO {
 }
 
 export interface GetListPaymentDTO extends CommonDTO {
-  PaymentType: number
+  PaymentType: number,
+  PaymentMethod: number,
 }
 
 export interface GetListTransferDTO extends PaginationDTO {
