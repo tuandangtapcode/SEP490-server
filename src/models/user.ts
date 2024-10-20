@@ -26,6 +26,10 @@ const UserSchema = new Schema({
     type: Number,
     required: true
   },
+  Gender: {
+    type: Number,
+    required: true
+  },
   Subjects: {
     type: [
       { type: mongoose.Schema.Types.ObjectId, ref: "Subjects" }

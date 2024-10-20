@@ -32,7 +32,11 @@ const PaymentSchema = new Schema({
   },
   PaymentStatus: {
     type: Number,
-    default: 2
+    default: 1
+  },
+  PaymentMethod: {
+    type: Number,
+    required: true
   },
   PaymentTime: {
     type: Date,

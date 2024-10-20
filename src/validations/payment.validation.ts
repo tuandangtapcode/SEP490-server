@@ -9,7 +9,7 @@ const createPayment = async (req: Request, res: Response, next: NextFunction) =>
     TotalFee: Joi.number().min(1).required(),
     TraddingCode: Joi.number().min(1).required(),
     Receiver: Joi.string().pattern(getRegexObjectID()).optional(),
-    PaymentStatus: Joi.number().min(1).max(3).required().optional()
+    PaymentMethod: Joi.number().valid(1, 2).required(),
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })
