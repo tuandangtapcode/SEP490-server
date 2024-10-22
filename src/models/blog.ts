@@ -12,6 +12,10 @@ const BlogSchema = new Schema({
     ref: 'Subjects',
     required: true
   },
+  Gender: {
+    type: Number,
+    required: true
+  },
   Title: {
     type: String,
     required: true
