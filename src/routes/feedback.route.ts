@@ -3,7 +3,6 @@ import FeedbackController from "../controllers/feedback.controller"
 import authMiddleware from "../middlewares/auth.middleware"
 import { Roles } from "../utils/constant"
 import FeedbackValidation from "../validations/feedback.validation"
-import { parameterValidation } from "../validations/common.validation"
 
 const FeedbackRoute = express.Router()
 

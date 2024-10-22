@@ -1,10 +1,8 @@
 import express from "express"
 import SubjectController from "../controllers/subject.controller"
-import upload from '../middlewares/clouddinary.middleware'
 import authMiddleware from "../middlewares/auth.middleware"
 import { Roles } from "../utils/constant"
 import SubjectValidation from "../validations/subject.validation"
-import { parameterValidation } from "../validations/common.validation"
 
 const SubjectRoute = express.Router()
 

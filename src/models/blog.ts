@@ -12,6 +12,10 @@ const BlogSchema = new Schema({
     ref: 'Subjects',
     required: true
   },
+  Gender: {
+    type: Number,
+    required: true
+  },
   Title: {
     type: String,
     required: true
@@ -28,17 +32,18 @@ const BlogSchema = new Schema({
     type: String,
     required: true
   },
-  LearnType:{
+  LearnType: {
     type: String,
     required: true
   },
-  Address:{
+  Address: {
     type: String,
+    default: null
   },
   Schedules: {
     type: [
       {
-        DateAt: { type: String },
+        DateAt: { type: Date },
         StartTime: { type: Date },
         EndTime: { type: Date }
       }

@@ -364,29 +364,30 @@ const fncGetDetailTeacher = async (req: Request) => {
               }
             },
             {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email"
+              }
+            },
+            {
               $project: {
                 FullName: 1,
                 Address: 1,
                 Schedules: 1,
                 TotalVotes: 1,
                 Votes: 1,
-                AvatarPath: 1
+                AvatarPath: 1,
+                Email: 1
               }
             },
-            // {
-            //   $lookup: {
-            //     from: "accounts",
-            //     localField: "_id",
-            //     foreignField: "UserID",
-            //     as: "Account"
-            //   }
-            // },
-            // { $unwind: '$Account' },
-            // {
-            //   $addFields: {
-            //     Email: "$Account.Email"
-            //   }
-            // },
           ]
         }
       },

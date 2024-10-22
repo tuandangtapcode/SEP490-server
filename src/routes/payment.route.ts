@@ -17,6 +17,7 @@ PaymentRoute.post("/getListPaymentHistoryByUser",
 )
 PaymentRoute.post("/changePaymentStatus",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
+  PaymentValidation.changePaymentStatus,
   PaymentController.changePaymentStatus
 )
 PaymentRoute.post("/getListPayment",

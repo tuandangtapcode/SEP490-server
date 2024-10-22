@@ -3,7 +3,6 @@ import NotificationController from "../controllers/notification.controller"
 import authMiddleware from '../middlewares/auth.middleware'
 import { Roles } from '../utils/constant'
 import NotificaitonValidation from "../validations/notification.validation"
-import { parameterValidation } from "../validations/common.validation"
 
 const NotificationRoute = express.Router()
 

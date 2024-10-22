@@ -4,7 +4,6 @@ import authMiddleware from "../middlewares/auth.middleware"
 import upload from '../middlewares/clouddinary.middleware'
 import { Roles } from "../utils/constant"
 import UserValidation from "../validations/user.validation"
-import { parameterValidation } from "../validations/common.validation"
 
 const UserRoute = express.Router()
 
@@ -56,7 +55,6 @@ UserRoute.get("/getListSubjectSettingByTeacher",
 )
 UserRoute.get("/createSubjectSetting/:SubjectID",
   authMiddleware([Roles.ROLE_TEACHER]),
-  parameterValidation("SubjectID"),
   UserController.createSubjectSetting
 )
 UserRoute.post("/updateSubjectSetting",
@@ -66,7 +64,6 @@ UserRoute.post("/updateSubjectSetting",
 )
 UserRoute.get("/deleteSubjectSetting/:SubjectSettingID",
   authMiddleware([Roles.ROLE_TEACHER]),
-  parameterValidation("SubjectSettingID"),
   UserController.deleteSubjectSetting
 )
 UserRoute.post("/confirmSubjectSetting",
@@ -74,7 +71,6 @@ UserRoute.post("/confirmSubjectSetting",
   UserController.confirmSubjectSetting
 )
 UserRoute.get("/getListTopTeacherBySubject/:SubjectID",
-  parameterValidation("SubjectID"),
   UserController.getListTopTeacherBySubject
 )
 

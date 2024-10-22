@@ -14,6 +14,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
     Address: Joi.string().min(3).max(30).required(),
     DateOfBirth: Joi.date().required(),
     RoleID: Joi.number().integer().valid(3, 4).required(),
+    Gender: Joi.number().integer().valid(1, 2).required(),
     FullName: Joi.string().min(3).max(30).required(),
     AvatarPath: Joi.string().optional(),
     Subject: Joi.string().pattern(getRegexObjectID()).optional(),

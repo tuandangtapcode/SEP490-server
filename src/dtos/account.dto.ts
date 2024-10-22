@@ -8,7 +8,8 @@ export interface RegisterDTO {
   DateOfBirth: Date,
   Subjects?: ObjectId[]
   IsByGoogle?: Boolean,
-  Subject?: ObjectId
+  Subject?: ObjectId,
+  Gender: number
 }
 
 export interface Login {
