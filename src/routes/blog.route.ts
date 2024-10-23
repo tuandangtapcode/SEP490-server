@@ -25,6 +25,7 @@ BlogRoute.post("/updateBlog",
   BlogController.updateBlog
 )
 BlogRoute.post("/getListBlogOfUser",
+  authMiddleware([Roles.ROLE_STUDENT]),
   BlogController.getListBlogOfUser
 )
 
