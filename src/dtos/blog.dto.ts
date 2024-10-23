@@ -1,9 +1,19 @@
 import { ObjectId } from "mongoose"
 
 export interface CreateUpdateBlogDTO {
+  UserID: ObjectId,
+  Subject: ObjectId,
+  Gender: number,
   Title: string,
-  Description: string,
-  Avatar: string,
-  Content: string
+  Price: number,
+  Content: string,
+  NumberSlot: number,
+  LearnType: string,
+  Address: string,
+  Schedules: {
+    DateAt: string,
+    StartTime: Date,
+    EndTime: Date
+  }[],
   BlogID?: ObjectId
 }
