@@ -4,7 +4,8 @@ import { CommonDTO } from "./common.dto"
 export interface CreateUpdateSubjectDTO {
   SubjectCateID: ObjectId,
   SubjectName: string,
-  Avatar: string,
+  AvatarPath: string,
+  Description: string,
   SubjectID?: ObjectId
 }
 
