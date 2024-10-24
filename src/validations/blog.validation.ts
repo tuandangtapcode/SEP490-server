@@ -8,7 +8,7 @@ const createUpdateBlog = async (req: Request, res: Response, next: NextFunction)
     Price: Joi.number().integer().min(0).required(),
     Content: Joi.string().min(1).required(),
     NumberSlot: Joi.number().integer().min(0).required(),
-    LearnType: Joi.number().integer().min(0).max(2).required(),
+    LearnTypes: Joi.array().items(Joi.number().valid(1, 2).optional()).optional(),
     Address: Joi.string().min(1),
     Schedules: Joi
       .array().items(
