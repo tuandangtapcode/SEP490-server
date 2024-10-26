@@ -67,3 +67,5 @@ server.listen(process.env.PORT, async () => {
   await connect()
   console.log(`App listening at http://localhost:${process.env.PORT}`)
 })
+
+export default app

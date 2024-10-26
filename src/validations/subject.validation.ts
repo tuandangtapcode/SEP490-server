@@ -6,7 +6,8 @@ const createUpdateSubject = async (req: Request, res: Response, next: NextFuncti
   const trueCondition = Joi.object({
     SubjectCateID: Joi.string().pattern(getRegexObjectID()).required(),
     SubjectName: Joi.string().min(1).required(),
-    Avatar: Joi.string().min(1).required(),
+    AvatarPath: Joi.string().min(1).required(),
+    Description: Joi.string().min(1).required(),
     SubjectID: Joi.string().pattern(getRegexObjectID()).optional()
   })
   try {
