@@ -7,7 +7,7 @@ import BlogValidation from "../validations/blog.validation"
 const BlogRoute = express.Router()
 
 BlogRoute.post("/createBlog",
-  authMiddleware([Roles.ROLE_TEACHER]),
+  authMiddleware([Roles.ROLE_STUDENT]),
   BlogValidation.createUpdateBlog,
   BlogController.createBlog
 )
@@ -25,6 +25,7 @@ BlogRoute.post("/updateBlog",
   BlogController.updateBlog
 )
 BlogRoute.post("/getListBlogOfUser",
+  authMiddleware([Roles.ROLE_STUDENT]),
   BlogController.getListBlogOfUser
 )
 

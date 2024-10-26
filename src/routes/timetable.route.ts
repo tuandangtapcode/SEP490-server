@@ -11,9 +11,9 @@ TimeTableRoute.post("/createTimeTable",
   TimeTableValidation.createTimeTable,
   TimeTableController.createTimeTable
 )
-TimeTableRoute.get("/getTimeTableByUser",
+TimeTableRoute.post("/getTimeTableOfTeacherAndStudent",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
-  TimeTableController.getTimeTableByUser
+  TimeTableController.getTimeTableOfTeacherAndStudent
 )
 TimeTableRoute.get("/attendanceTimeTable/:TimeTableID",
   authMiddleware([Roles.ROLE_TEACHER]),
@@ -23,6 +23,10 @@ TimeTableRoute.post("/updateTimeTable",
   authMiddleware([Roles.ROLE_TEACHER]),
   TimeTableValidation.updateTimeTable,
   TimeTableController.updateTimeTable
+)
+TimeTableRoute.get("/getTimeTableByUser",
+  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
+  TimeTableController.getTimeTableByUser
 )
 
 export default TimeTableRoute

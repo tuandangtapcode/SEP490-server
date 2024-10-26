@@ -27,9 +27,7 @@ const addUserOnline = (socket: any) => {
 
 const sendNotification = (socket: any) => {
   return (data: SendNotificationDTO) => {
-    console.log("data", data);
     const user = userOnlines.find((i: any) => i.UserID === data.Receiver)
-    console.log("user", user);
     if (!!user) {
       socket.to(user.SocketID).emit('get-notification', data)
     }

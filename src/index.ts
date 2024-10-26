@@ -13,6 +13,7 @@ import routes from './routes/index'
 import schedule from "node-schedule"
 import getListPaymentInCurrentWeek from "./tools/getListPaymentInCurrentWeek"
 import socket from "./sockets/index"
+import checkConfirmExpire from "./tools/checkConfirmExpire"
 
 const app = express()
 const server = http.createServer(app)
@@ -55,9 +56,16 @@ schedule.scheduleJob('0 23 * * 0', () => {
   getListPaymentInCurrentWeek()
 })
 
+// đặt lịch tự động gọi hàm kiểm tra confirm hết hạn và update trạng thái
+schedule.scheduleJob('0 0 * * *', () => {
+  checkConfirmExpire()
+})
+
 socket(io)
 
 server.listen(process.env.PORT, async () => {
   await connect()
   console.log(`App listening at http://localhost:${process.env.PORT}`)
 })
+
+export default app

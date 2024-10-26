@@ -7,7 +7,7 @@ import SubjectValidation from "../validations/subject.validation"
 const SubjectRoute = express.Router()
 
 SubjectRoute.post("/createSubject",
-  authMiddleware([Roles.ROLE_ADMIN]),
+  //authMiddleware([Roles.ROLE_ADMIN]),
   SubjectValidation.createUpdateSubject,
   SubjectController.createSubject
 )

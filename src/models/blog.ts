@@ -32,9 +32,11 @@ const BlogSchema = new Schema({
     type: String,
     required: true
   },
-  LearnType: {
-    type: String,
-    required: true
+  LearnTypes: {
+    type: [
+      { type: Number }
+    ],
+    default: []
   },
   Address: {
     type: String,

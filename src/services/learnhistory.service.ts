@@ -39,7 +39,7 @@ const fncCreateLearnHistory = async (req: Request) => {
                 </body>
                 </html>
                 `
-    const checkSendMail = await sendEmail(TeacherName, subject, content)
+    const checkSendMail = await sendEmail(TeacherEmail, subject, content)
     if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     const newLearnHistory = await LearnHistory.create({ ...remainBody, Student: UserID })
     return response(newLearnHistory, false, "Thêm thành công", 200)
@@ -153,9 +153,13 @@ const fncGetListLearnHistory = async (req: Request) => {
       }
     ])
     const result = await Promise.all([list, total])
+    const data = result[0].map((i: any) => ({
+      ...i,
+      isFeedback: i.LearnedStatus === 2 ? true : false
+    }))
     return response(
       {
-        List: result[0],
+        List: data,
         Total: !!result[1].length ? result[1][0].total : 0
       },
       false,

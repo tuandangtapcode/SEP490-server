@@ -120,7 +120,7 @@ const fncGetListRecommendSubject = async (req: Request) => {
   }
 }
 
-const Subjectervice = {
+const SubjectService = {
   fncCreateSubject,
   fncGetListSubject,
   fncUpdateSubject,
@@ -129,4 +129,4 @@ const Subjectervice = {
   fncGetListRecommendSubject
 }
 
-export default Subjectervice
+export default SubjectService

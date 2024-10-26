@@ -46,6 +46,10 @@ const ConfirmSchema = new Schema({
     type: Number,
     default: 1
   },
+  IsPaid: {
+    type: Boolean,
+    default: false
+  }
 }, {
   timestamps: true
 }
