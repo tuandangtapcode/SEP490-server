@@ -21,3 +21,8 @@ export interface UpdateTimeTableDTO {
     DocPath: string
   }[]
 }
+
+export interface GetTimeTableOfTeacherAndStudentDTO {
+  TeacherID: ObjectId,
+  IsBookingPage: Boolean
+}
