@@ -13,6 +13,7 @@ import routes from './routes/index'
 import schedule from "node-schedule"
 import getListPaymentInCurrentWeek from "./tools/getListPaymentInCurrentWeek"
 import socket from "./sockets/index"
+import checkConfirmExpire from "./tools/checkConfirmExpire"
 
 const app = express()
 const server = http.createServer(app)
@@ -53,6 +54,11 @@ routes(app)
 // đặt lịch tự động gọi hàm lấy danh sách payment cho giáo viên trong tuần
 schedule.scheduleJob('0 23 * * 0', () => {
   getListPaymentInCurrentWeek()
+})
+
+// đặt lịch tự động gọi hàm kiểm tra confirm hết hạn và update trạng thái
+schedule.scheduleJob('0 0 * * *', () => {
+  checkConfirmExpire()
 })
 
 socket(io)

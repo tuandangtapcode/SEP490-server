@@ -8,6 +8,7 @@ import {
   GetDetailSubjectCateDTO,
 } from "../dtos/subjectcate.dto"
 import { CommonDTO } from "../dtos/common.dto"
+import mongoose from "mongoose"
 
 const fncCreateSubjectCate = async (req: Request) => {
   try {
@@ -92,6 +93,9 @@ const fncGetDetailSubjectCate = async (req: Request) => {
   try {
     const { SubjectCateID, PageSize, CurrentPage, TextSearch } =
       req.body as GetDetailSubjectCateDTO
+    if (!mongoose.Types.ObjectId.isValid(`${SubjectCateID}`)) {
+      return response({}, true, "Môn học không tồn tại", 200)
+    }
     const subjectcate = await getOneDocument(SubjectCate, "_id", SubjectCateID)
     if (!subjectcate) return response({}, true, "Không tìm thấy danh mục", 200)
     const query = {

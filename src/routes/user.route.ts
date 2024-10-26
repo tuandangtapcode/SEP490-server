@@ -20,6 +20,7 @@ UserRoute.get("/getDetailProfile",
 )
 UserRoute.post("/changeProfile",
   authMiddleware([Roles.ROLE_TEACHER, Roles.ROLE_STUDENT]),
+  UserValidation.changeProfile,
   UserController.changeProfile
 )
 UserRoute.get("/requestConfirmRegister",

@@ -8,7 +8,7 @@ export interface CreateUpdateBlogDTO {
   Price: number,
   Content: string,
   NumberSlot: number,
-  LearnType: string,
+  LearnType: number[],
   Address: string,
   Schedules: {
     DateAt: string,

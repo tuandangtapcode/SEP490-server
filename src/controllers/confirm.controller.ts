@@ -37,11 +37,31 @@ const getListConfirm = async (req: Request, res: Response) => {
   }
 }
 
+const getDetailConfirm = async (req: Request, res: Response) => {
+  try {
+    const response = await ConfirmService.fncGetDetailConfirm(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const changeConfirmPaid = async (req: Request, res: Response) => {
+  try {
+    const response = await ConfirmService.fncChangeConfirmPaid(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
 const ConfirmController = {
   createConfirm,
   updateConfirm,
   changeConfirmStatus,
-  getListConfirm
+  getListConfirm,
+  getDetailConfirm,
+  changeConfirmPaid
 }
 
 export default ConfirmController

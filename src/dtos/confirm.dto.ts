@@ -1,7 +1,6 @@
 import { ObjectId } from "mongoose"
 
-export interface CreateUpdateConfirmDTO {
-  ConfirmID?: ObjectId,
+export interface CreateConfirmDTO {
   Sender: ObjectId,
   StudentName: string,
   Receiver: ObjectId,
@@ -19,8 +18,26 @@ export interface CreateUpdateConfirmDTO {
     EndTime: Date
   }[]
 }
+export interface UpdateConfirmDTO {
+  ConfirmID?: ObjectId,
+  Sender: ObjectId,
+  Receiver: ObjectId,
+  Subject: ObjectId,
+  TotalFee: number,
+  LearnType: number,
+  Address?: string,
+  Schedules: {
+    DateAt: Date,
+    StartTime: Date,
+    EndTime: Date
+  }[]
+}
 
 export interface ChangeConfirmStatusDTO {
   ConfirmID: ObjectId,
-  ConfirmStatus: number
+  ConfirmStatus: number,
+  Recevier: ObjectId,
+  RecevierName: string,
+  SenderName: string,
+  SenderEmail: string,
 }

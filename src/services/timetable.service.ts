@@ -5,9 +5,11 @@ import { getOneDocument } from "../utils/queryFunction"
 import { Request } from "express"
 import {
   CreateTimeTableDTO,
+  GetTimeTableOfTeacherAndStudentDTO,
   UpdateTimeTableDTO
 } from "../dtos/timetable.dto"
 import response from "../utils/response"
+import moment from "moment"
 
 const fncCreateTimeTable = async (req: Request) => {
   try {
@@ -42,22 +44,36 @@ const fncCreateTimeTable = async (req: Request) => {
   }
 }
 
-const fncGetTimeTableByUser = async (req: Request) => {
+const fncGetTimeTableOfTeacherAndStudent = async (req: Request) => {
   try {
-    const { ID, RoleID } = req.user
-    const ButtonShow = {
-      isAttendance: RoleID === Roles.ROLE_STUDENT ? false : true,
-      isUpdateTimeTable: RoleID === Roles.ROLE_STUDENT ? false : true
+    const { TeacherID, IsBookingPage } = req.body as GetTimeTableOfTeacherAndStudentDTO
+    let timetablesStudent
+    if (!!IsBookingPage) {
+      const UserID = req.user.ID
+      timetablesStudent = await TimeTable.find({
+        Student: UserID,
+        StartTime: { $gte: new Date() }
+      })
     }
-
-    const timetables = await TimeTable
+    const timetablesTeacher = await TimeTable
       .find({
-        [RoleID === Roles.ROLE_STUDENT ? "Student" : "Teacher"]: ID
+        Teacher: TeacherID,
+        StartTime: { $gte: new Date() }
       })
       .populate("Teacher", ["_id", "FullName"])
       .populate("Student", ["_id", "FullName"])
       .populate("Subject", ["_id", "SubjectName"])
-    return response({ List: timetables, ButtonShow }, false, "Lấy data thành công", 200)
+    return response(
+      !!IsBookingPage
+        ? {
+          Teacher: timetablesTeacher,
+          Student: timetablesStudent
+        }
+        : timetablesTeacher,
+      false,
+      "Lấy data thành công",
+      200
+    )
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -98,14 +114,15 @@ const fncAttendanceTimeTable = async (req: Request) => {
 
 const fncUpdateTimeTable = async (req: Request) => {
   try {
-    const { TimeTableID, StartTime, EndTime } =
+    const { TimeTableID, StartTime } =
       req.body as UpdateTimeTableDTO
-    const timetable = await getOneDocument(TimeTable, "_id", TimeTableID)
-    if (!timetable) return response({}, true, "Lịch học không tồn tại", 200)
-    const checkDateTime = await TimeTable.findOne({
-      StartTime, EndTime
+    const checkExistTimetable = await TimeTable.findOne({
+      StartTime,
+      _id: {
+        $ne: TimeTableID
+      }
     })
-    if (!!checkDateTime && !timetable._id.equals(checkDateTime._id))
+    if (!!checkExistTimetable)
       return response({}, true, "Bạn đã có lịch học vào thời điểm này", 200)
     const updateTimetable = await TimeTable.findOneAndUpdate(
       { _id: TimeTableID },
@@ -118,11 +135,47 @@ const fncUpdateTimeTable = async (req: Request) => {
   }
 }
 
+const fncGetTimeTableByUser = async (req: Request) => {
+  try {
+    const { ID, RoleID } = req.user
+    const ButtonShow = {
+      isShowBtnAttendance: RoleID === Roles.ROLE_TEACHER ? true : false,
+      isShowBtnUpdateTimeTable: RoleID === Roles.ROLE_TEACHER ? true : false
+    }
+
+    const timetables = await TimeTable
+      .find({
+        [RoleID === Roles.ROLE_STUDENT ? "Student" : "Teacher"]: ID
+      })
+      .populate("Teacher", ["_id", "FullName"])
+      .populate("Student", ["_id", "FullName"])
+      .populate("Subject", ["_id", "SubjectName"])
+      .lean()
+    const data = timetables.map((i: any) => ({
+      ...i,
+      isAttendance: (moment().isAfter(i.StartTime) &&
+        moment().isBefore(moment(i.EndTime).add(24, "hours")) &&
+        !i.Status)
+        ? true
+        : false,
+      isUpdateTimeTable: true,
+      isSubmitIssue: (moment().isAfter(i.EndTime) &&
+        moment().isBefore(moment(i.EndTime).add(24, "hours")))
+        ? true
+        : false
+    }))
+    return response({ List: data, ButtonShow }, false, "Lấy data thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const TimeTableService = {
   fncCreateTimeTable,
-  fncGetTimeTableByUser,
+  fncGetTimeTableOfTeacherAndStudent,
   fncAttendanceTimeTable,
-  fncUpdateTimeTable
+  fncUpdateTimeTable,
+  fncGetTimeTableByUser
 }
 
 export default TimeTableService

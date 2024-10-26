@@ -3,7 +3,7 @@ import { CommonDTO, PaginationDTO } from "./common.dto"
 
 export interface CreatePaymentDTO {
   PaymentType: number,
-  PaymentStatus: number,
+  PaymentStatus?: number,
   PaymentMethod: number,
   Description: string,
   TotalFee: number,
