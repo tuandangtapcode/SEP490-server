@@ -2,15 +2,31 @@ import response from "../utils/response"
 import { Request } from "express"
 import Confirm from "../models/confirm"
 import { CommonDTO } from "../dtos/common.dto"
-import { ChangeConfirmStatusDTO, CreateUpdateConfirmDTO } from "../dtos/confirm.dto"
+import { ChangeConfirmStatusDTO, CreateConfirmDTO, UpdateConfirmDTO } from "../dtos/confirm.dto"
 import sendEmail from "../utils/send-mail"
 import mongoose from "mongoose"
 import { Roles } from "../utils/constant"
+import TimeTable from "../models/timetable"
+import moment from "moment"
 
 const fncCreateConfirm = async (req: Request) => {
   try {
     const { TeacherName, StudentName, SubjectName, TeacherEmail, Times, ...remainBody } =
-      req.body as CreateUpdateConfirmDTO
+      req.body as CreateConfirmDTO
+    const checkExistTimeTable = await TimeTable.findOne({
+      Student: remainBody.Sender,
+      StartTime: {
+        $in: remainBody.Schedules.map((i: any) => i.StartTime)
+      }
+    })
+    if (!!checkExistTimeTable) {
+      return response(
+        {},
+        true,
+        `Bạn đã có lịch học vào ngày ${moment(checkExistTimeTable.DateAt).format("DD/MM/YYYY")} ${moment(checkExistTimeTable.StartTime).format("HH:mm")} - ${moment(checkExistTimeTable.EndTime).format("HH:mm")}`,
+        200
+      )
+    }
     const subject = "THÔNG BÁO HỌC SINH ĐĂNG KÝ HỌC"
     const content = `
                 <html>
@@ -28,10 +44,12 @@ const fncCreateConfirm = async (req: Request) => {
                   <p>Tên học sinh: ${StudentName}</p>
                   <p>Môn học: ${SubjectName}</p>
                   <p>Thời gian học:</p>
-                  ${Times.map(i =>
-      `<div>${i}</div>`
-    )}
-                  <p>Giáo viên hãy vào lịch dạy của mình để kiểm tra thông tin lịch dạy.</p>
+                  ${Times.map(i => `<div>${i}</div>`).join('')}
+                  <p>Giáo viên hãy vào lịch booking của mình để kiểm tra thông tin booking.</p>
+                  <div>
+                    <span style="color:red; margin-right: 4px">Lưu ý:</span>
+                    <span>Trong vòng 48h nếu bạn không xác nhận booking này thì booking này sẽ tự động chuyển thành "Hủy xác nhận".</span>
+                  </div>
                 </body>
                 </html>
                 `
@@ -46,7 +64,21 @@ const fncCreateConfirm = async (req: Request) => {
 
 const fncUpdateConfirm = async (req: Request) => {
   try {
-    const { ConfirmID } = req.body as CreateUpdateConfirmDTO
+    const { ConfirmID, Sender, Schedules } = req.body as UpdateConfirmDTO
+    const checkExistTimeTable = await TimeTable.findOne({
+      Student: Sender,
+      StartTime: {
+        $in: Schedules.map((i: any) => i.StartTime)
+      }
+    })
+    if (!!checkExistTimeTable) {
+      return response(
+        {},
+        true,
+        `Bạn đã có lịch học vào ngày ${moment(checkExistTimeTable.DateAt).format("DD/MM/YYYY")} ${moment(checkExistTimeTable.StartTime).format("HH:mm")} - ${moment(checkExistTimeTable.EndTime).format("HH:mm")}`,
+        200
+      )
+    }
     const updateConfirm = await Confirm.findOneAndUpdate(
       {
         _id: ConfirmID
@@ -63,17 +95,54 @@ const fncUpdateConfirm = async (req: Request) => {
 
 const fncChangeConfirmStatus = async (req: Request) => {
   try {
-    const { ConfirmID, ConfirmStatus } = req.body as ChangeConfirmStatusDTO
-    const updateConfirm = await Confirm.findOneAndUpdate(
-      {
-        _id: ConfirmID
-      },
-      { ConfirmStatus: ConfirmStatus },
-      { new: true }
+    const { ConfirmID, ConfirmStatus, Recevier, RecevierName, SenderName, SenderEmail } = req.body as ChangeConfirmStatusDTO
+    const confirm = await Confirm.findOne({ _id: ConfirmID }).lean()
+    if (!confirm) return response({}, true, "Có lỗi xảy ra", 200)
+    if (ConfirmStatus === 2) {
+      const checkExistTimeTable = await TimeTable.findOne({
+        Teacher: Recevier,
+        StartTime: {
+          $in: confirm.Schedules.map((i: any) => i.StartTime)
+        }
+      })
+      if (!!checkExistTimeTable) {
+        return response(
+          {},
+          true,
+          `Bạn đã có lịch dạy vào ngày ${moment(checkExistTimeTable.DateAt).format("DD/MM/YYYY")} ${moment(checkExistTimeTable.StartTime).format("HH:mm")} - ${moment(checkExistTimeTable.EndTime).format("HH:mm")}`,
+          200
+        )
+      }
+      const subject = "THÔNG BÁO TRẠNG THÁI ĐĂNG KÝ HỌC"
+      const content = `
+      <html>
+      <head>
+      <style>
+          p {
+              color: #333;
+          }
+      </style>
+      </head>
+      <body>
+        <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO TRẠNG THÁI ĐĂNG KÝ HỌC</p>
+        <p style="margin-bottom:10px">Xin chào ${SenderName},</p>
+        <p style="margin-bottom:10px">Giáo viên ${RecevierName} đã xác nhận booking của bạn. Bạn hãy truy cập vào lịch sử booking của mình để tiến hành thanh toán và hoàn tất booking.</p>
+        <div>
+          <span style="color:red; margin-right: 4px">Lưu ý:</span>
+          <span>Trong vòng 48h nếu bạn không thanh toán booking này thì booking này sẽ tự động chuyển thành "Hủy xác nhận".</span>
+        </div>
+      </body>
+      </html>
+      `
+      const checkSendMail = await sendEmail(SenderEmail, subject, content)
+      if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
+    }
+    await Confirm.updateOne(
+      { _id: ConfirmID },
+      { ConfirmStatus: ConfirmStatus }
     )
-    if (!updateConfirm) return response({}, true, "Có lỗi xảy ra", 200)
     return response(
-      updateConfirm,
+      {},
       false,
       ConfirmStatus === 2
         ? "Xác nhận thành công"
@@ -110,11 +179,26 @@ const fncGetListConfirm = async (req: Request) => {
             : "Receiver",
           pipeline: [
             {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email"
+              }
+            },
+            {
               $project: {
                 _id: 1,
-                FullName: 1
+                FullName: 1,
+                Email: 1
               }
-            }
+            },
           ]
         }
       },
@@ -229,9 +313,10 @@ const fncGetListConfirm = async (req: Request) => {
     const data = result[0].map((i: any) => ({
       ...i,
       IsView: true,
-      IsUpdate: RoleID === Roles.ROLE_TEACHER ? false : true,
-      IsAccept: RoleID === Roles.ROLE_TEACHER ? true : false,
-      IsReject: true
+      IsUpdate: (RoleID === Roles.ROLE_TEACHER || i.ConfirmStatus !== 1) ? false : true,
+      IsAccept: (RoleID !== Roles.ROLE_TEACHER || [2, 3].includes(i.ConfirmStatus)) ? false : true,
+      IsReject: [2, 3].includes(i.ConfirmStatus) ? false : true,
+      IsPaid: (RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 2 && !i.IsPaid) ? true : false
     }))
     return response(
       { List: data, Total: !!result[1].length ? result[1][0].total : 0 },
@@ -244,11 +329,97 @@ const fncGetListConfirm = async (req: Request) => {
   }
 }
 
+const fncGetDetailConfirm = async (req: Request) => {
+  try {
+    const { ConfirmID } = req.params
+    if (!mongoose.Types.ObjectId.isValid(`${ConfirmID}`)) {
+      return response({}, true, "Booking không tồn tại", 200)
+    }
+    const confirm = await Confirm.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(`${ConfirmID}`)
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Receiver",
+          foreignField: "_id",
+          as: "Receiver",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email"
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                FullName: 1,
+                Email: 1
+              }
+            },
+          ]
+        }
+      },
+      { $unwind: "$Receiver" },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+    ])
+    if (!confirm[0]) return response({}, true, "Booking không tồn tại", 200)
+    return response(confirm[0], false, "Lấy dữ liệu thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncChangeConfirmPaid = async (req: Request) => {
+  try {
+    const { ConfirmID } = req.params
+    const updateConfirm = await Confirm.updateOne(
+      { _id: ConfirmID },
+      { IsPaid: true },
+      { new: true }
+    )
+    if (!updateConfirm) return response({}, true, "Có lỗi xảy ra", 200)
+    return response(updateConfirm, false, "Thanh toán thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const ConfirmService = {
   fncCreateConfirm,
   fncUpdateConfirm,
   fncChangeConfirmStatus,
-  fncGetListConfirm
+  fncGetListConfirm,
+  fncGetDetailConfirm,
+  fncChangeConfirmPaid
 }
 
 export default ConfirmService

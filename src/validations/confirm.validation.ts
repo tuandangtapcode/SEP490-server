@@ -33,7 +33,11 @@ const createUpdateConfirm = async (req: Request, res: Response, next: NextFuncti
 const changeConfirmStatus = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     ConfirmID: Joi.string().pattern(getRegexObjectID()).required(),
-    ConfirmStatus: Joi.number().valid(2, 3).required()
+    ConfirmStatus: Joi.number().valid(2, 3).required(),
+    Recevier: Joi.string().pattern(getRegexObjectID()).required(),
+    RecevierName: Joi.string().min(1).required(),
+    SenderName: Joi.string().min(1).required(),
+    SenderEmail: Joi.string().pattern(getRegexEmail()).required(),
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })

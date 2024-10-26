@@ -2,6 +2,29 @@ import Joi from 'joi'
 import { getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Response, Request } from 'express'
 
+const changeProfile = async (req: Request, res: Response, next: NextFunction) => {
+  const trueCondition = Joi.object({
+    FullName: Joi.string().min(1).optional(),
+    Address: Joi.string().min(1).optional(),
+    Avatar: Joi.string().min(1).optional(),
+    Schedules: Joi
+      .array().items(
+        Joi.object({
+          DateAt: Joi.string().min(1).required(),
+          StartTime: Joi.date().required(),
+          EndTime: Joi.date().required(),
+        })
+      )
+      .optional(),
+  })
+  try {
+    await trueCondition.validateAsync(req.body, { abortEarly: false })
+    next()
+  } catch (error: any) {
+    return res.status(400).json(error.toString())
+  }
+}
+
 const updateSubjectSetting = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     SubjectSettingID: Joi.string().pattern(getRegexObjectID()).optional(),
@@ -55,6 +78,7 @@ const updateSubjectSetting = async (req: Request, res: Response, next: NextFunct
 
 const UserValidation = {
   updateSubjectSetting,
+  changeProfile
 }
 
 export default UserValidation

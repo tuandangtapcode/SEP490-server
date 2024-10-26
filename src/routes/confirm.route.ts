@@ -25,5 +25,13 @@ ConfirmRoute.post("/getListConfirm",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
   ConfirmController.getListConfirm
 )
+ConfirmRoute.get("/getDetailConfirm/:ConfirmID",
+  authMiddleware([Roles.ROLE_STUDENT]),
+  ConfirmController.getDetailConfirm
+)
+ConfirmRoute.get("/changeConfirmPaid/:ConfirmID",
+  authMiddleware([Roles.ROLE_STUDENT]),
+  ConfirmController.changeConfirmPaid
+)
 
 export default ConfirmRoute

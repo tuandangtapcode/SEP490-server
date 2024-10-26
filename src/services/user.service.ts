@@ -270,7 +270,9 @@ const fncGetListTeacherByUser = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, SubjectID, Level, FromPrice, ToPrice, LearnType, SortByPrice } =
       req.body as GetListTeacherByUserDTO
-    // if
+    if (!mongoose.Types.ObjectId.isValid(`${SubjectID}`)) {
+      return response({}, true, "Môn học không tồn tại", 200)
+    }
     let query = {
       FullName: { $regex: TextSearch, $options: "i" },
       RoleID: Roles.ROLE_TEACHER,

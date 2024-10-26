@@ -12,7 +12,7 @@ const fncGetListSystemKey = async () => {
     let systemKeys
     const dataCacheRaw = await CacheService.getCache("systemkey") as string
     const dataCache = JSON.parse(dataCacheRaw)
-    if (!!dataCache) {
+    if (!!dataCache?.length) {
       systemKeys = dataCache
     } else {
       systemKeys = await SystemKey.find()
