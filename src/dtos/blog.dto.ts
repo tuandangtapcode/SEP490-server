@@ -8,12 +8,13 @@ export interface CreateUpdateBlogDTO {
   Price: number,
   Content: string,
   NumberSlot: number,
+  NumberSlotOfWeek: number,
   LearnType: number[],
   Address: string,
   Schedules: {
     DateAt: string,
-    StartTime: Date,
-    EndTime: Date
+    StartTime: String,
+    EndTime: String
   }[],
   BlogID?: ObjectId
 }
