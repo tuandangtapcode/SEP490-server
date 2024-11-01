@@ -7,6 +7,7 @@ const createUpdateBlog = async (req: Request, res: Response, next: NextFunction)
     Title: Joi.string().min(1).required(),
     Price: Joi.number().integer().min(0).required(),
     Content: Joi.string().min(1).required(),
+    Gender: Joi.number().integer().valid(1, 2).required(),
     NumberSlot: Joi.number().integer().min(0).required(),
     NumberSlotOfWeek: Joi.number().integer().min(0).required(),
     Subject: Joi.string().pattern(getRegexObjectID()).required(),
