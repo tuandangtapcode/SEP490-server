@@ -11,7 +11,6 @@ const createUpdateBlog = async (req: Request, res: Response, next: NextFunction)
     NumberSlot: Joi.number().integer().min(0).required(),
     NumberSlotOfWeek: Joi.number().integer().min(0).required(),
     Subject: Joi.string().pattern(getRegexObjectID()).required(),
-    Gender: Joi.number().integer().valid(0, 1).required(),
     LearnTypes: Joi.array().items(Joi.number().valid(1, 2).optional()).optional(),
     Address: Joi.string().min(1),
     Schedules: Joi
