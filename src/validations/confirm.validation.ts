@@ -17,7 +17,6 @@ const createUpdateConfirm = async (req: Request, res: Response, next: NextFuncti
     Address: Joi.string().min(1).optional(),
     Times: Joi.array().items(Joi.string().min(1)).required(),
     Schedules: Joi.array().items(Joi.object({
-      DateAt: Joi.date().required(),
       StartTime: Joi.date().required(),
       EndTime: Joi.date().required()
     }))

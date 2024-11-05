@@ -24,21 +24,23 @@ const CourseSchema = new Schema({
     required: true
   },
   Description: {
-    type: String
+    type: String,
+    required: true
   },
   Level: {
-    type: Number
-  },
-  Votes: {
-    type: [
-      { type: Number }
-    ],
-    default: []
+    type: Number,
+    required: true
   },
   QuantityLearner: {
     type: Number,
     default: 0
-  }
+  },
+  IsDeleted: {
+    type: Boolean,
+    default: false
+  },
+}, {
+  timestamps: true
 })
 
 const Course = mongoose.model("Course", CourseSchema)

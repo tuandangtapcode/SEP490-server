@@ -13,20 +13,6 @@ const fncCreateConfirm = async (req: Request) => {
   try {
     const { TeacherName, StudentName, SubjectName, TeacherEmail, Times, ...remainBody } =
       req.body as CreateConfirmDTO
-    const checkExistTimeTable = await TimeTable.findOne({
-      Student: remainBody.Sender,
-      StartTime: {
-        $in: remainBody.Schedules.map((i: any) => i.StartTime)
-      }
-    })
-    if (!!checkExistTimeTable) {
-      return response(
-        {},
-        true,
-        `Bạn đã có lịch học vào ngày ${moment(checkExistTimeTable.DateAt).format("DD/MM/YYYY")} ${moment(checkExistTimeTable.StartTime).format("HH:mm")} - ${moment(checkExistTimeTable.EndTime).format("HH:mm")}`,
-        200
-      )
-    }
     const subject = "THÔNG BÁO HỌC SINH ĐĂNG KÝ HỌC"
     const content = `
                 <html>
@@ -75,7 +61,7 @@ const fncUpdateConfirm = async (req: Request) => {
       return response(
         {},
         true,
-        `Bạn đã có lịch học vào ngày ${moment(checkExistTimeTable.DateAt).format("DD/MM/YYYY")} ${moment(checkExistTimeTable.StartTime).format("HH:mm")} - ${moment(checkExistTimeTable.EndTime).format("HH:mm")}`,
+        `Bạn đã có lịch học vào ngày ${moment(checkExistTimeTable.StartTime).format("DD/MM/YYYY")} ${moment(checkExistTimeTable.StartTime).format("HH:mm")} - ${moment(checkExistTimeTable.EndTime).format("HH:mm")}`,
         200
       )
     }
@@ -109,7 +95,7 @@ const fncChangeConfirmStatus = async (req: Request) => {
         return response(
           {},
           true,
-          `Bạn đã có lịch dạy vào ngày ${moment(checkExistTimeTable.DateAt).format("DD/MM/YYYY")} ${moment(checkExistTimeTable.StartTime).format("HH:mm")} - ${moment(checkExistTimeTable.EndTime).format("HH:mm")}`,
+          `Bạn đã có lịch dạy vào ngày ${moment(checkExistTimeTable.StartTime).format("DD/MM/YYYY")} ${moment(checkExistTimeTable.StartTime).format("HH:mm")} - ${moment(checkExistTimeTable.EndTime).format("HH:mm")}`,
           200
         )
       }
