@@ -4,7 +4,6 @@ export interface CreateTimeTableDTO {
   LearnHistory: ObjectId,
   Teacher: ObjectId,
   Subject: ObjectId,
-  DateAt: Date
   StartTime: Date,
   EndTime: Date,
   LearnType: number,
@@ -13,16 +12,10 @@ export interface CreateTimeTableDTO {
 
 export interface UpdateTimeTableDTO {
   TimeTableID: ObjectId,
-  DateAt: Date
   StartTime: Date,
   EndTime: Date,
   Documents: {
     DocName: string
     DocPath: string
   }[]
-}
-
-export interface GetTimeTableOfTeacherAndStudentDTO {
-  TeacherID: ObjectId,
-  IsBookingPage: Boolean
 }
