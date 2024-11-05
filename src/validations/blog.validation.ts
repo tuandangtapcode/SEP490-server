@@ -7,15 +7,18 @@ const createUpdateBlog = async (req: Request, res: Response, next: NextFunction)
     Title: Joi.string().min(1).required(),
     Price: Joi.number().integer().min(0).required(),
     Content: Joi.string().min(1).required(),
+    Gender: Joi.number().integer().valid(1, 2).required(),
     NumberSlot: Joi.number().integer().min(0).required(),
+    NumberSlotOfWeek: Joi.number().integer().min(0).required(),
+    Subject: Joi.string().pattern(getRegexObjectID()).required(),
     LearnTypes: Joi.array().items(Joi.number().valid(1, 2).optional()).optional(),
     Address: Joi.string().min(1),
     Schedules: Joi
       .array().items(
         Joi.object({
-          DateAt: Joi.string().min(1).required(),
-          StartTime: Joi.date().required(),
-          EndTime: Joi.date().required(),
+          DateAt: Joi.date().required(),
+          StartTime: Joi.string().min(1).required(),
+          EndTime: Joi.string().min(1).required(),
         })
       )
       .optional(),
