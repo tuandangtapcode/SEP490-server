@@ -10,7 +10,7 @@ const fncCreateBlog = async (req: Request) => {
     const { Title } = req.body as CreateUpdateBlogDTO
     const UserID = req.user.ID
     const blog = await getOneDocument(Blog, "Title", Title)
-    if (!!blog) return response({}, true, "Tiêu đề blog đã tồn tại", 200)
+    // if (!!blog) return response({}, true, "Tiêu đề blog đã tồn tại", 200)
     const newCreateBlog = await Blog.create({
       ...req.body,
       User: UserID,

@@ -28,6 +28,10 @@ const BlogSchema = new Schema({
     type: Number,
     required: true
   },
+  NumberSlotInWeek:{
+    type: Number,
+    require : true,
+  },
   Content: {
     type: String,
     required: true
@@ -45,7 +49,7 @@ const BlogSchema = new Schema({
   Schedules: {
     type: [
       {
-        DateAt: { type: Date },
+        // DateAt: { type: Date },
         StartTime: { type: Date },
         EndTime: { type: Date }
       }
