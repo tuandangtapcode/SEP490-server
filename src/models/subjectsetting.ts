@@ -21,7 +21,7 @@ const SubjectSettingSchema = new Schema({
   },
   Certificates: {
     type: [String],
-    default: []
+    required: true
   },
   IntroVideos: {
     type: [String],

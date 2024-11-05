@@ -13,11 +13,10 @@ const checkConfirmExpire = async () => {
           }
         ],
         createdAt: {
-          $lte: moment().subtract(48, 'hours').toDate()
+          $lt: moment().subtract(48, 'hours').toDate()
         }
       })
       .lean()
-    console.log("confirms", confirms);
     const promiseUpdate = confirms.map((i: any) =>
       Confirm.updateOne(
         { _id: i._id },
