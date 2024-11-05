@@ -1,11 +1,9 @@
 import TimeTable from "../models/timetable"
 import LearnHistory from "../models/learnhistory"
 import { Roles } from "../utils/constant"
-import { getOneDocument } from "../utils/queryFunction"
 import { Request } from "express"
 import {
   CreateTimeTableDTO,
-  GetTimeTableOfTeacherAndStudentDTO,
   UpdateTimeTableDTO
 } from "../dtos/timetable.dto"
 import response from "../utils/response"
@@ -44,36 +42,17 @@ const fncCreateTimeTable = async (req: Request) => {
   }
 }
 
-const fncGetTimeTableOfTeacherAndStudent = async (req: Request) => {
+const fncGetTimeTableOfTeacherOrStudent = async (req: Request) => {
   try {
-    const { TeacherID, IsBookingPage } = req.body as GetTimeTableOfTeacherAndStudentDTO
-    let timetablesStudent
-    if (!!IsBookingPage) {
-      const UserID = req.user.ID
-      timetablesStudent = await TimeTable.find({
-        Student: UserID,
-        StartTime: { $gte: new Date() }
-      })
-    }
-    const timetablesTeacher = await TimeTable
+    const { RoleID } = req.user
+    const { UserID } = req.params
+    const timetables = await TimeTable
       .find({
-        Teacher: TeacherID,
+        [RoleID === Roles.ROLE_TEACHER ? "Student" : "Teacher"]: UserID,
         StartTime: { $gte: new Date() }
       })
-      .populate("Teacher", ["_id", "FullName"])
-      .populate("Student", ["_id", "FullName"])
-      .populate("Subject", ["_id", "SubjectName"])
-    return response(
-      !!IsBookingPage
-        ? {
-          Teacher: timetablesTeacher,
-          Student: timetablesStudent
-        }
-        : timetablesTeacher,
-      false,
-      "Lấy data thành công",
-      200
-    )
+      .select("StartTime EndTime")
+    return response(timetables, false, "Lấy data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -172,7 +151,7 @@ const fncGetTimeTableByUser = async (req: Request) => {
 
 const TimeTableService = {
   fncCreateTimeTable,
-  fncGetTimeTableOfTeacherAndStudent,
+  fncGetTimeTableOfTeacherOrStudent,
   fncAttendanceTimeTable,
   fncUpdateTimeTable,
   fncGetTimeTableByUser

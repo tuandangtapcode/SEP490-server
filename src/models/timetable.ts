@@ -31,10 +31,6 @@ const TimeTableSchema = new Schema({
     ],
     default: []
   },
-  DateAt: {
-    type: Date,
-    required: true
-  },
   StartTime: {
     type: Date,
     required: true

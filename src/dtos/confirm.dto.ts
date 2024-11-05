@@ -13,7 +13,6 @@ export interface CreateConfirmDTO {
   Address?: string,
   Times: string[],
   Schedules: {
-    DateAt: Date,
     StartTime: Date,
     EndTime: Date
   }[]
@@ -27,7 +26,6 @@ export interface UpdateConfirmDTO {
   LearnType: number,
   Address?: string,
   Schedules: {
-    DateAt: Date,
     StartTime: Date,
     EndTime: Date
   }[]

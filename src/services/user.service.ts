@@ -164,9 +164,6 @@ const fncGetListTeacher = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, SubjectID, Level, RegisterStatus } =
       req.body as GetListTeacherDTO
-    if (!mongoose.Types.ObjectId.isValid(`${SubjectID}`)) {
-      return response({}, true, "Môn học không tồn tại", 200)
-    }
     let queryUser = {
       FullName: { $regex: TextSearch, $options: "i" },
       RoleID: Roles.ROLE_TEACHER
@@ -324,10 +321,10 @@ const fncGetDetailTeacher = async (req: Request) => {
   try {
     const { TeacherID, SubjectID, IsBookingPage } = req.body
     if (!mongoose.Types.ObjectId.isValid(`${SubjectID}`)) {
-      return response({}, true, "Môn học không tồn tại", 200)
+      return response({}, true, "ID môn học không tồn tại", 200)
     }
     if (!mongoose.Types.ObjectId.isValid(`${TeacherID}`)) {
-      return response({}, true, "Giáo viên không tồn tại", 200)
+      return response({}, true, "ID giáo viên không tồn tại", 200)
     }
     const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress
     const projectField = !!IsBookingPage
@@ -671,7 +668,7 @@ const fncGetListTopTeacherBySubject = async (req: Request) => {
   try {
     const { SubjectID } = req.params
     if (!mongoose.Types.ObjectId.isValid(`${SubjectID}`)) {
-      return response({}, true, "Môn học không tồn tại", 200)
+      return response({}, true, "ID môn học không tồn tại", 200)
     }
     const topTeachers = await User.aggregate([
       {
@@ -702,7 +699,8 @@ const fncGetListTopTeacherBySubject = async (req: Request) => {
                 Subject: 1,
                 Levels: 1,
                 Price: 1,
-                LearnTypes: 1
+                LearnTypes: 1,
+                IsActive: 1
               }
             }
           ]
@@ -711,7 +709,8 @@ const fncGetListTopTeacherBySubject = async (req: Request) => {
       { $unwind: "$SubjectSetting" },
       {
         $match: {
-          "SubjectSetting.Subject": new mongoose.Types.ObjectId(`${SubjectID}`)
+          "SubjectSetting.Subject": new mongoose.Types.ObjectId(`${SubjectID}`),
+          "SubjectSetting.IsActive": true
         }
       },
       {

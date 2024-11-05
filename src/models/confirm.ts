@@ -31,7 +31,6 @@ const ConfirmSchema = new Schema({
   Schedules: {
     type: [
       {
-        DateAt: { type: Date },
         StartTime: { type: Date },
         EndTime: { type: Date }
       }
