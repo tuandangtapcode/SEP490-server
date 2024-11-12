@@ -10,9 +10,9 @@ const createTimeTable = async (req: Request, res: Response) => {
   }
 }
 
-const getTimeTableOfTeacherAndStudent = async (req: Request, res: Response) => {
+const getTimeTableOfTeacherOrStudent = async (req: Request, res: Response) => {
   try {
-    const response = await TimeTableService.fncGetTimeTableOfTeacherAndStudent(req)
+    const response = await TimeTableService.fncGetTimeTableOfTeacherOrStudent(req)
     return res.status(response.statusCode).json(response)
   } catch (error: any) {
     return res.status(500).json(error.toString())
@@ -48,7 +48,7 @@ const getTimeTableByUser = async (req: Request, res: Response) => {
 
 const TimeTableController = {
   createTimeTable,
-  getTimeTableOfTeacherAndStudent,
+  getTimeTableOfTeacherOrStudent,
   attendanceTimeTable,
   updateTimeTable,
   getTimeTableByUser

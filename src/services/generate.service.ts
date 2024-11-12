@@ -15,13 +15,12 @@ const safetySettings = [
       category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
       threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
     },
-  ];
+];
   
 const model = genAI.getGenerativeModel({ 
     model: "gemini-1.5-flash",
     generationConfig: {
         candidateCount: 1,
-        stopSequences: ["x"],
         temperature: 1.0,
     },
     safetySettings 
