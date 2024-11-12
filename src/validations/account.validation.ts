@@ -11,7 +11,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
     Phone: Joi.string().min(3).max(100).pattern(getRegexPhoneNumber()).required(),
-    Address: Joi.string().min(3).max(30).required(),
+    Address: Joi.string().min(3).required(),
     DateOfBirth: Joi.date().required(),
     RoleID: Joi.number().integer().valid(3, 4).required(),
     Gender: Joi.number().integer().valid(1, 2).required(),
