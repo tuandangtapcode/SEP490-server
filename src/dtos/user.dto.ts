@@ -20,7 +20,8 @@ export interface GetListTeacherByUserDTO extends CommonDTO {
   FromPrice: string,
   ToPrice: string,
   LearnType: number[],
-  SortByPrice: any
+  SortByPrice: 1 | -1,
+  Gender: number
 }
 
 export interface GetDetailTeacherDTO {

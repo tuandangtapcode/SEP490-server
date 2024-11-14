@@ -8,7 +8,6 @@ const createTimeTable = async (req: Request, res: Response, next: NextFunction) 
       LearnHistory: Joi.string().pattern(getRegexObjectID()).required(),
       Teacher: Joi.string().pattern(getRegexObjectID()).required(),
       Subject: Joi.string().pattern(getRegexObjectID()).required(),
-      DateAt: Joi.date().required(),
       StartTime: Joi.date().required(),
       EndTime: Joi.date().required(),
       LearnType: Joi.number().integer().valid(1, 2).required(),
@@ -26,7 +25,6 @@ const createTimeTable = async (req: Request, res: Response, next: NextFunction) 
 const updateTimeTable = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     TimeTableID: Joi.string().pattern(getRegexObjectID()).required(),
-    DateAt: Joi.date().required(),
     StartTime: Joi.date().required(),
     EndTime: Joi.date().required(),
     Documents: Joi.array().items(

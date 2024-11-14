@@ -265,48 +265,139 @@ const fncGetListTeacher = async (req: Request) => {
 
 const fncGetListTeacherByUser = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, SubjectID, Level, FromPrice, ToPrice, LearnType, SortByPrice } =
+    const { TextSearch, CurrentPage, PageSize, SubjectID, Level, FromPrice, ToPrice, LearnType, SortByPrice, Gender } =
       req.body as GetListTeacherByUserDTO
     if (!mongoose.Types.ObjectId.isValid(`${SubjectID}`)) {
       return response({}, true, "Môn học không tồn tại", 200)
     }
     let query = {
-      FullName: { $regex: TextSearch, $options: "i" },
-      RoleID: Roles.ROLE_TEACHER,
-      RegisterStatus: 3,
+      Subject: new mongoose.Types.ObjectId(`${SubjectID}`),
+      Price: {
+        $gte: +FromPrice,
+        $lte: +ToPrice
+      },
       IsActive: true,
-      Price: { $gte: FromPrice, $lte: ToPrice },
-      Subjects: {
-        $elemMatch: { $eq: SubjectID }
-      }
     } as any
     const subject = await getOneDocument(Subject, "_id", SubjectID)
     if (!subject) return response({}, true, "Có lỗi xảy ra", 200)
     if (!!Level.length) {
       query = {
         ...query,
-        "Quotes.Levels": { $all: Level }
+        Levels: { $in: Level }
       }
     }
     if (!!LearnType.length) {
       query = {
         ...query,
-        LearnTypes: { $all: LearnType }
+        LearnTypes: { $in: LearnType }
       }
     }
-    const users = User
-      .find(query)
-      .sort({ Price: SortByPrice })
-      .populate("Subjects", ["_id", "SubjectName"])
-      .skip((CurrentPage - 1) * PageSize)
-      .limit(PageSize)
-    const total = User.countDocuments(query)
-    const result = await Promise.all([users, total])
+    let teacherQuery = {
+      "Teacher.FullName": { $regex: TextSearch, $options: "i" },
+      "Teacher.RoleID": Roles.ROLE_TEACHER,
+      "Teacher.RegisterStatus": 3,
+    } as any
+    if (!!Gender) {
+      teacherQuery = {
+        ...teacherQuery,
+        "Teacher.Gender": Gender
+      }
+    }
+    const teachers = SubjectSetting.aggregate([
+      {
+        $match: query
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $addFields: {
+                TotalVotes: { $size: "$Votes" }
+              }
+            },
+            {
+              $project: {
+                FullName: 1,
+                RoleID: 1,
+                RegisterStatus: 1,
+                Gender: 1,
+                AvatarPath: 1,
+                Address: 1,
+                Votes: 1,
+                TotalVotes: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: teacherQuery
+      },
+      {
+        $project: {
+          Price: 1,
+          "Teacher.FullName": 1,
+          "Teacher.AvatarPath": 1,
+          "Teacher.Address": 1,
+          "Teacher.TotalVotes": 1,
+          "Teacher.Votes": 1,
+        }
+      },
+      {
+        $sort: { Price: SortByPrice }
+      },
+      { $skip: (CurrentPage - 1) * PageSize },
+      { $limit: PageSize }
+    ])
+    const total = SubjectSetting.aggregate([
+      {
+        $match: query
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $project: {
+                FullName: 1,
+                RoleID: 1,
+                RegisterStatus: 1,
+                Gender: 1,
+                AvatarPath: 1,
+                Address: 1,
+                Votes: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: teacherQuery
+      },
+      {
+        $group: {
+          _id: "$_id"
+        }
+      },
+      {
+        $count: "total"
+      }
+    ])
+    const result = await Promise.all([teachers, total])
     return response(
       {
         Subject: subject,
         List: result[0],
-        Total: result[1]
+        Total: !!result[1].length ? result[1][0].total : 0
       },
       false,
       "Lay dat thanh cong",
