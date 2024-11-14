@@ -4,7 +4,6 @@ import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/ge
 import * as dotenv from 'dotenv'
 
 // const fetch = require('node-fetch');
-// import fetch from 'node-fetch'
 // const { Headers } = fetch;
 // declare global {
 //     var fetch: any;
