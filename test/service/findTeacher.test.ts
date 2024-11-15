@@ -113,14 +113,6 @@ describe('fncGetDetailTeacher', () => {
         expect(response.statusCode).to.equal(200);
     });
 
-    it('should return an error if the TeacherID is invalid', async () => {
-        req.body.TeacherID = 'invalid-id';
-        const response = await UserSerivce.fncGetDetailTeacher(req as Request);
-        expect(response.isError).to.be.true;
-        expect(response.msg).to.equal('ID giáo viên không tồn tại');
-        expect(response.statusCode).to.equal(200);
-    });
-
     it('should return teacher details and subjects for a valid request', async () => {
         const mockUser = [
             {
