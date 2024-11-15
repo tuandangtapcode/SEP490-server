@@ -5,7 +5,7 @@ import LearnHistory from '../../src/models/learnhistory';
 import LearnHistoryService from '../../src/services/learnhistory.service';
 import * as sendEmail from '../../src/utils/send-mail';
 
-describe('LearnHistoryService.fncCreateLearnHistory', () => {
+describe('fncCreateLearnHistory', () => {
     let sandbox: sinon.SinonSandbox;
   
     beforeEach(() => {
