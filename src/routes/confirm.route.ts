@@ -8,12 +8,12 @@ const ConfirmRoute = express.Router()
 
 ConfirmRoute.post("/createConfirm",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
-  ConfirmValidation.createUpdateConfirm,
+  ConfirmValidation.createConfirm,
   ConfirmController.createConfirm
 )
 ConfirmRoute.post("/updateConfirm",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
-  ConfirmValidation.createUpdateConfirm,
+  ConfirmValidation.updateConfirm,
   ConfirmController.updateConfirm
 )
 ConfirmRoute.post("/changeConfirmStatus",

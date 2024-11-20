@@ -8,15 +8,15 @@ const UserSchema = new Schema({
   },
   Address: {
     type: String,
-    required: true
+    default: null
   },
   Phone: {
     type: String,
-    required: true
+    default: null
   },
   DateOfBirth: {
     type: Date,
-    required: true
+    default: null
   },
   AvatarPath: {
     type: String,
@@ -28,19 +28,33 @@ const UserSchema = new Schema({
   },
   Gender: {
     type: Number,
-    required: true
+    default: null
   },
   Subjects: {
     type: [
       { type: mongoose.Schema.Types.ObjectId, ref: "Subjects" }
     ],
-    required: true
+    default: []
   },
   Votes: {
     type: [
       { type: Number }
     ],
     default: []
+  },
+  Experiences: {
+    type: [
+      { type: String }
+    ],
+    default: []
+  },
+  Educations: {
+    type: [{ type: String }],
+    default: []
+  },
+  Description: {
+    type: String,
+    default: null
   },
   Schedules: {
     type: [
@@ -52,9 +66,17 @@ const UserSchema = new Schema({
     ],
     default: []
   },
+  Certificates: {
+    type: [String],
+    default: []
+  },
   IsByGoogle: {
     type: Boolean,
     default: false
+  },
+  IsFirstLogin: {
+    type: Boolean,
+    default: true
   },
   RegisterStatus: {
     type: Number,

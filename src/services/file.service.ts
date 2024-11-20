@@ -20,7 +20,7 @@ const fncUploadFileList = async (req: Request) => {
 const fncUploadFileSingle = async (req: Request) => {
   try {
     return response(
-      (req.file as any)["FileSingle"],
+      (req.file as any).path,
       false,
       "Upload file thành công",
       200

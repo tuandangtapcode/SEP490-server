@@ -119,9 +119,13 @@ const fncGetTimeTableByUser = async (req: Request) => {
         !i.Status)
         ? true
         : false,
-      isUpdateTimeTable: true,
-      isSubmitIssue: (moment().isAfter(i.EndTime) &&
-        moment().isBefore(moment(i.EndTime).add(24, "hours")))
+      isUpdateTimeTable: moment().isAfter(i.StartTime) &&
+        moment().isBefore(moment(i.EndTime))
+        ? true
+        : false,
+      isSubmitIssue: RoleID === Roles.ROLE_STUDENT &&
+        (moment().isAfter(i.EndTime) &&
+          moment().isBefore(moment(i.EndTime).add(24, "hours")))
         ? true
         : false
     }))
