@@ -4,12 +4,8 @@ export interface RegisterDTO {
   Email: string,
   RoleID: number,
   FullName: string,
-  Phone: string,
-  DateOfBirth: Date,
-  Subjects?: ObjectId[]
   IsByGoogle?: Boolean,
-  Subject?: ObjectId,
-  Gender: number
+  AvatarPath: string
 }
 
 export interface Login {

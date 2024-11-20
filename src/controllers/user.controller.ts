@@ -118,9 +118,9 @@ const deleteSubjectSetting = async (req: Request, res: Response) => {
   }
 }
 
-const confirmSubjectSetting = async (req: Request, res: Response) => {
+const responseConfirmSubjectSetting = async (req: Request, res: Response) => {
   try {
-    const response = await UserSerivce.fncConfirmSubjectSetting(req)
+    const response = await UserSerivce.fncResponseConfirmSubjectSetting(req)
     return res.status(response.statusCode).json(response)
   } catch (error: any) {
     return res.status(500).json(error.toString())
@@ -130,6 +130,33 @@ const confirmSubjectSetting = async (req: Request, res: Response) => {
 const getListTopTeacherBySubject = async (req: Request, res: Response) => {
   try {
     const response = await UserSerivce.fncGetListTopTeacherBySubject(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const changeCareerInformation = async (req: Request, res: Response) => {
+  try {
+    const response = await UserSerivce.fncChangeCareerInformation(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const updateSchedule = async (req: Request, res: Response) => {
+  try {
+    const response = await UserSerivce.fncUpdateSchedule(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const getListSubjectSetting = async (req: Request, res: Response) => {
+  try {
+    const response = await UserSerivce.fncGetListSubjectSetting(req)
     return res.status(response.statusCode).json(response)
   } catch (error: any) {
     return res.status(500).json(error.toString())
@@ -150,8 +177,11 @@ const UserController = {
   createSubjectSetting,
   updateSubjectSetting,
   deleteSubjectSetting,
-  confirmSubjectSetting,
+  responseConfirmSubjectSetting,
   getListTopTeacherBySubject,
+  changeCareerInformation,
+  updateSchedule,
+  getListSubjectSetting
 }
 
 export default UserController

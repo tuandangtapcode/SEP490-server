@@ -27,5 +27,8 @@ AccountRoute.post("/changePassword",
   AccountValidation.changePassword,
   AccountController.changePassword
 )
+AccountRoute.post("/forgotPassword",
+  AccountController.forgotPassword
+)
 
 export default AccountRoute

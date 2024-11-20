@@ -2,7 +2,7 @@ import Joi from 'joi'
 import { getRegexEmail, getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Request, Response } from 'express'
 
-const createUpdateConfirm = async (req: Request, res: Response, next: NextFunction) => {
+const createConfirm = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     ConfirmID: Joi.string().pattern(getRegexObjectID()).optional(),
     Sender: Joi.string().pattern(getRegexObjectID()).required(),
@@ -29,10 +29,32 @@ const createUpdateConfirm = async (req: Request, res: Response, next: NextFuncti
   }
 }
 
+const updateConfirm = async (req: Request, res: Response, next: NextFunction) => {
+  const trueCondition = Joi.object({
+    ConfirmID: Joi.string().pattern(getRegexObjectID()).required(),
+    Sender: Joi.string().pattern(getRegexObjectID()).required(),
+    Receiver: Joi.string().pattern(getRegexObjectID()).required(),
+    Subject: Joi.string().pattern(getRegexObjectID()).required(),
+    TotalFee: Joi.number().integer().min(1).required(),
+    LearnType: Joi.number().valid(1, 2).required(),
+    Address: Joi.string().min(1).optional(),
+    Schedules: Joi.array().items(Joi.object({
+      StartTime: Joi.date().required(),
+      EndTime: Joi.date().required()
+    }))
+  })
+  try {
+    await trueCondition.validateAsync(req.body, { abortEarly: false })
+    next()
+  } catch (error: any) {
+    return res.status(400).json(error.toString())
+  }
+}
+
 const changeConfirmStatus = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     ConfirmID: Joi.string().pattern(getRegexObjectID()).required(),
-    ConfirmStatus: Joi.number().valid(2, 3).required(),
+    ConfirmStatus: Joi.number().valid(2, 3, 4).required(),
     Recevier: Joi.string().pattern(getRegexObjectID()).required(),
     RecevierName: Joi.string().min(1).required(),
     SenderName: Joi.string().min(1).required(),
@@ -47,7 +69,8 @@ const changeConfirmStatus = async (req: Request, res: Response, next: NextFuncti
 }
 
 const ConfirmValidation = {
-  createUpdateConfirm,
+  createConfirm,
+  updateConfirm,
   changeConfirmStatus
 }
 

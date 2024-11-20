@@ -12,12 +12,11 @@ import {
   RegisterDTO
 } from "../dtos/account.dto"
 import response from "../utils/response"
-import SubjectSetting from "../models/subjectsetting"
 const saltRounds = 10
 
-const fncRegister = async (req: Request) => {
+const fncRegister = async (req: Request, res: Response) => {
   try {
-    const { Email, RoleID, FullName, IsByGoogle, Subject } = req.body as RegisterDTO
+    const { Email, RoleID, FullName, IsByGoogle } = req.body as RegisterDTO
     let password, hashPassword
     const checkExist = await getOneDocument(Account, "Email", Email)
     if (!!checkExist) return response({}, true, "Email đã tồn tại", 200)
@@ -46,36 +45,37 @@ const fncRegister = async (req: Request) => {
                   </html>
                   `
       const checkSendMail = await sendEmail(Email, subject, content)
-      if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
+      if (!checkSendMail) return response(`Send mail status: ${checkSendMail}`, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     }
-    const user = await User.create({
-      ...req.body,
-      RegisterStatus: RoleID === Roles.ROLE_STUDENT ? 3 : 1
-    })
+    const user = await User.create(req.body)
     await Account.create({
       UserID: user._id,
       Email,
       Password: !IsByGoogle ? hashPassword : null,
       RoleID: RoleID
     })
-    if (RoleID === Roles.ROLE_TEACHER) {
-      await SubjectSetting.create({
-        Teacher: user._id,
-        Subject: Subject
+    if (!!IsByGoogle) {
+      const token = encodeData({
+        ID: user._id,
+        RoleID: user.RoleID,
       })
+      res.cookie("token", token, {
+        httpOnly: true, // cookie chỉ được truy cập bới server
+        secure: true, // cookie chỉ được sử dụng với https
+        sameSite: "none",
+        maxAge: 6 * 60 * 60 * 1000 // 8h
+      })
+      return response(token, false, "Login thành công", 200)
+    } else {
+      return response(
+        {},
+        false,
+        RoleID === Roles.ROLE_STUDENT
+          ? "Đăng ký tài khoản thành công. Hãy truy cập email để lấy thông tin mật khẩu"
+          : "Đăng ký tài khoản thành công. Hãy truy cập email để lấy thông tin mật khẩu sau đó đăng nhập, chỉnh sửa profile và thông tin nghề nghiệp để trở thành giáo viên chính thức.",
+        201
+      )
     }
-    return response(
-      {},
-      false,
-      RoleID === Roles.ROLE_STUDENT
-        ? !!IsByGoogle
-          ? "Đăng ký tài khoản thành công"
-          : "Đăng ký tài khoản thành công. Hãy truy cập email để lấy thông tin mật khẩu"
-        : !!IsByGoogle
-          ? "Đăng ký tài khoản thành công. Hãy đăng nhập và chỉnh sửa profile để trở thành giáo viên chính thức."
-          : "Đăng ký tài khoản thành công. Hãy truy cập email để lấy thông tin mật khẩu sau đó đăng nhập và chỉnh sửa profile để trở thành giáo viên chính thức.",
-      201
-    )
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -157,12 +157,56 @@ const fncChangePassword = async (req: Request) => {
   }
 }
 
+const fncForgotPassword = async (req: Request) => {
+  try {
+    const { Email, Step, Password } = req.body as { Email: string, Step: number, Password: string }
+    if (Step === 0) {
+      const getAccount = await getOneDocument(Account, "Email", Email)
+      if (!getAccount) return response({}, true, "Email không tồn tại", 200)
+      return response({ Email }, false, "Kiểm tra email thành công", 200)
+    }
+    if (Step === 2) {
+      const password = randomPassword()
+      const hashPassword = bcrypt.hashSync(password, saltRounds)
+      const subject = "THÔNG BÁO CẤP LẠI MẬT KHẨU"
+      const content = `
+                <html>
+                <head>
+                <style>
+                    p {
+                        color: #333;
+                    }
+                </style>
+                </head>
+                <body>
+                  <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO CẤP LẠI MẬT KHẨU</p>
+                  <p style="margin-bottom:10px">Xin chào,</p>
+                  <p style="margin-bottom:10px">Chúng tôi đã nhận được yêu cầu cấp lại mật khẩu của bạn.</p>
+                  <p>Mật khẩu mới: ${password}</p>
+                </body>
+                </html>
+                `
+      const checkSendMail = await sendEmail(Email, subject, content)
+      if (!checkSendMail) return response(`Send mail status: ${checkSendMail}`, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
+      await Account.updateOne(
+        { Email },
+        { Password: hashPassword },
+        { new: true }
+      )
+      return response({}, false, "Mật khẩu đã được cấp lại. Hãy kiểm tra email để nhận mật khẩu mới", 200)
+    }
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const AccountService = {
   fncRegister,
   fncLogin,
   fncCheckAuth,
   fncLoginByGoogle,
   fncChangePassword,
+  fncForgotPassword
 }
 
 export default AccountService
