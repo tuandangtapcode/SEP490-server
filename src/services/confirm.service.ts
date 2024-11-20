@@ -123,16 +123,23 @@ const fncChangeConfirmStatus = async (req: Request) => {
       const checkSendMail = await sendEmail(SenderEmail, subject, content)
       if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     }
-    await Confirm.updateOne(
-      { _id: ConfirmID },
-      { ConfirmStatus: ConfirmStatus }
-    )
+    const updateConfirm = await Confirm
+      .findOneAndUpdate(
+        { _id: ConfirmID },
+        { ConfirmStatus: ConfirmStatus },
+        { new: true }
+      )
+      .populate("Receiver", ["_id", "FullName"])
+      .populate("Subject", ["_id", "SubjectName"])
     return response(
-      {},
+      updateConfirm,
       false,
       ConfirmStatus === 2
         ? "Xác nhận thành công"
-        : "Hủy thành công",
+        : ConfirmStatus === 3
+          ? "Hủy thành công"
+          : "Ghi nhận thành công"
+      ,
       200
     )
   } catch (error: any) {
@@ -298,14 +305,20 @@ const fncGetListConfirm = async (req: Request) => {
     const result = await Promise.all([confirms, total])
     const data = result[0].map((i: any) => ({
       ...i,
-      IsView: true,
-      IsUpdate: (RoleID === Roles.ROLE_TEACHER || i.ConfirmStatus !== 1) ? false : true,
-      IsAccept: (RoleID !== Roles.ROLE_TEACHER || [2, 3].includes(i.ConfirmStatus)) ? false : true,
-      IsReject: [2, 3].includes(i.ConfirmStatus) ? false : true,
-      IsPaid: (RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 2 && !i.IsPaid) ? true : false
+      IsUpdate: RoleID === Roles.ROLE_TEACHER || i.ConfirmStatus !== 1 ? false : true,
+      IsConfirm: RoleID !== Roles.ROLE_TEACHER || [1, 2, 3].includes(i.ConfirmStatus) ? false : true,
+      IsPaid: RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 2 && !i.IsPaid ? true : false,
+      IsReject: (RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 1) ||
+        (RoleID === Roles.ROLE_TEACHER && i.ConfirmStatus === 4)
+        ? true
+        : false,
+      IsNoted: RoleID !== Roles.ROLE_TEACHER || [2, 3, 4].includes(i.ConfirmStatus) ? false : true
     }))
     return response(
-      { List: data, Total: !!result[1].length ? result[1][0].total : 0 },
+      {
+        List: data,
+        Total: !!result[1].length ? result[1][0].total : 0
+      },
       false,
       "Lấy data thành công",
       200
@@ -319,7 +332,7 @@ const fncGetDetailConfirm = async (req: Request) => {
   try {
     const { ConfirmID } = req.params
     if (!mongoose.Types.ObjectId.isValid(`${ConfirmID}`)) {
-      return response({}, true, "Booking không tồn tại", 200)
+      return response({}, true, "ID Booking không tồn tại", 200)
     }
     const confirm = await Confirm.aggregate([
       {

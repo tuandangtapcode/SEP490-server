@@ -18,5 +18,8 @@ CommonRoute.post("/changeProfitPercent",
   authMiddleware([Roles.ROLE_ADMIN]),
   CommonController.changeProfitPercent
 )
+CommonRoute.post("/insertParentKey",
+  CommonController.insertParentKey
+)
 
 export default CommonRoute

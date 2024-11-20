@@ -10,7 +10,7 @@ FileRoute.post("/uploadFileList",
 )
 FileRoute.post("/uploadFileSingle",
   upload("FileSingle").single("FileSingle"),
-  FileController.uploadFileList
+  FileController.uploadFileSingle
 )
 FileRoute.post("/uploadDocumentList",
   upload("DocumentList").fields([{ name: "DocumentList[]" }]),
