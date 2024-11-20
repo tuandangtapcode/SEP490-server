@@ -6,7 +6,7 @@ const changeProfile = async (req: Request, res: Response, next: NextFunction) =>
   const trueCondition = Joi.object({
     FullName: Joi.string().min(1).required(),
     Address: Joi.string().min(1).required(),
-    Avatar: Joi.string().min(1).required(),
+    AvatarPath: Joi.string().min(1).required(),
     Phone: Joi.string().min(1).required(),
     DateOfBirth: Joi.date().required(),
     Gender: Joi.number().integer().valid(1, 2).required(),
