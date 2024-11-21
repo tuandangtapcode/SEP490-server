@@ -1,13 +1,12 @@
-import { Pinecone } from "@pinecone-database/pinecone";
-import { Console } from "console";
+import { Pinecone } from "@pinecone-database/pinecone"
 
 // Initialize Pinecone client
-const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! });
+const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! })
 
 // Replace "INDEX_NAME" and "INDEX_HOST" with your actual index name and host
-const index = pinecone.index(process.env.PINECONE_INDEX_NAME!, process.env.PINECONE_INDEX_HOST!);
+const index = pinecone.index(process.env.PINECONE_INDEX_NAME!, process.env.PINECONE_INDEX_HOST!)
 
-export const upsertVector = async (
+const upsertVector = async (
   id: string,
   values: number[],
   metadata: Record<string, any> = {}
@@ -20,22 +19,30 @@ export const upsertVector = async (
         values, // Embedding values
         metadata, // Optional metadata
       },
-    ];
+    ]
     // Upsert the vector into the Pinecone index
-    await index.upsert(vectors);
+    await index.upsert(vectors)
 
-    console.log(`Successfully upserted vector with id: ${id}`);
+    console.log(`Successfully upserted vector with id: ${id}`)
   } catch (error) {
-    console.error("Error upserting vector:", error);
-    throw error;
+    console.error("Error upserting vector:", error)
+    throw error
   }
-};
+}
 
-export const searchPinecone = async (queryEmbedding: number[]) => {
+const searchPinecone = async (queryEmbedding: number[]) => {
   const result = await index.query({
     vector: queryEmbedding,
     topK: 5, // Retrieve the top 5 most similar items
     includeMetadata: true, // Include metadata for recommendation
-  });
-  return result.matches; // Array of the closest matches
-};
+  })
+
+  return result.matches // Array of the closest matches
+}
+
+const PineconeService = {
+  upsertVector,
+  searchPinecone
+}
+
+export default PineconeService

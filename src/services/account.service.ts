@@ -166,34 +166,13 @@ const fncForgotPassword = async (req: Request) => {
       return response({ Email }, false, "Kiểm tra email thành công", 200)
     }
     if (Step === 2) {
-      const password = randomPassword()
-      const hashPassword = bcrypt.hashSync(password, saltRounds)
-      const subject = "THÔNG BÁO CẤP LẠI MẬT KHẨU"
-      const content = `
-                <html>
-                <head>
-                <style>
-                    p {
-                        color: #333;
-                    }
-                </style>
-                </head>
-                <body>
-                  <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO CẤP LẠI MẬT KHẨU</p>
-                  <p style="margin-bottom:10px">Xin chào,</p>
-                  <p style="margin-bottom:10px">Chúng tôi đã nhận được yêu cầu cấp lại mật khẩu của bạn.</p>
-                  <p>Mật khẩu mới: ${password}</p>
-                </body>
-                </html>
-                `
-      const checkSendMail = await sendEmail(Email, subject, content)
-      if (!checkSendMail) return response(`Send mail status: ${checkSendMail}`, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
+      const hashPassword = bcrypt.hashSync(Password, saltRounds)
       await Account.updateOne(
         { Email },
         { Password: hashPassword },
         { new: true }
       )
-      return response({}, false, "Mật khẩu đã được cấp lại. Hãy kiểm tra email để nhận mật khẩu mới", 200)
+      return response({}, false, "Mật khẩu đã được cập nhật", 200)
     }
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

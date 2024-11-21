@@ -8,10 +8,11 @@ import mongoose from "mongoose"
 import { Roles } from "../utils/constant"
 import TimeTable from "../models/timetable"
 import moment from "moment"
+import Course from "../models/course"
 
 const fncCreateConfirm = async (req: Request) => {
   try {
-    const { TeacherName, StudentName, SubjectName, TeacherEmail, Times, ...remainBody } =
+    const { TeacherName, StudentName, SubjectName, TeacherEmail, Times, CourseID, ...remainBody } =
       req.body as CreateConfirmDTO
     const subject = "THÔNG BÁO HỌC SINH ĐĂNG KÝ HỌC"
     const content = `
@@ -41,6 +42,17 @@ const fncCreateConfirm = async (req: Request) => {
                 `
     const checkSendMail = await sendEmail(TeacherEmail, subject, content)
     if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
+    if (!!CourseID) {
+      const updateCourse = await Course.findOneAndUpdate(
+        { _id: CourseID },
+        {
+          $inc: {
+            QuantityLearner: 1
+          }
+        }
+      )
+      if (!updateCourse) response({}, true, "Có lỗi xảy ra trong quá trình gửi update course", 200)
+    }
     const newConfirm = await Confirm.create(remainBody)
     return response(newConfirm, false, "Yêu cầu booking của bạn đã được gửi. Hãy chờ giáo viên xác nhận.", 201)
   } catch (error: any) {
@@ -305,7 +317,7 @@ const fncGetListConfirm = async (req: Request) => {
     const result = await Promise.all([confirms, total])
     const data = result[0].map((i: any) => ({
       ...i,
-      IsUpdate: RoleID === Roles.ROLE_TEACHER || i.ConfirmStatus !== 1 ? false : true,
+      // IsUpdate: RoleID === Roles.ROLE_TEACHER || i.ConfirmStatus !== 1 ? false : true,
       IsConfirm: RoleID !== Roles.ROLE_TEACHER || [1, 2, 3].includes(i.ConfirmStatus) ? false : true,
       IsPaid: RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 2 && !i.IsPaid ? true : false,
       IsReject: (RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 1) ||

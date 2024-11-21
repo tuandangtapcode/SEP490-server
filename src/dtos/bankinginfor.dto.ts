@@ -3,7 +3,7 @@ import { ObjectId } from "mongoose"
 export interface CreateUpdateBankingInforDTO {
   BankID: number,
   UserBankName: string,
-  UserBankAccount: number
+  UserBankAccount: string
   BankingInforID?: ObjectId
 }
 

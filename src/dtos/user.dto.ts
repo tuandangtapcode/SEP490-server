@@ -86,7 +86,6 @@ export interface ConfirmSubjectSettingDTO {
 }
 
 export interface ChangeCareerInformationDTO {
-  Email: string,
   Subjects: ObjectId[],
   Experiences: string[],
   Educations: string[],
@@ -107,4 +106,5 @@ export interface GetListSubjectSettingDTO extends CommonDTO {
   SubjectID: ObjectId,
   Level: number[],
   LearnType: number[],
+  RegisterStatus: number
 }

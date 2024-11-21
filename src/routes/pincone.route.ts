@@ -1,14 +1,13 @@
 import express from "express"
-import pineconeController from "../controllers/pinecone.controller"
+import PineconeController from "../controllers/pinecone.controller"
+
 const PineconeRoute = express.Router()
 
-
 PineconeRoute.get("/processAllSubjectSetting",
-    pineconeController.processAllSubjectSetting
+  PineconeController.processAllSubjectSetting
 )
-
 PineconeRoute.post("/teacherRecommend",
-    pineconeController.teacherRecommendation
+  PineconeController.teacherRecommendation
 )
 
 export default PineconeRoute
