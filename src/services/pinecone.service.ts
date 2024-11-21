@@ -1,4 +1,5 @@
 import { Pinecone } from "@pinecone-database/pinecone";
+import { Console } from "console";
 
 // Initialize Pinecone client
 const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! });
@@ -36,6 +37,5 @@ export const searchPinecone = async (queryEmbedding: number[]) => {
     topK: 5, // Retrieve the top 5 most similar items
     includeMetadata: true, // Include metadata for recommendation
   });
-
   return result.matches; // Array of the closest matches
 };

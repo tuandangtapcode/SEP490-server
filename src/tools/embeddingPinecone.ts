@@ -2,6 +2,7 @@ import SubjectSetting from "../models/subjectsetting"
 import { generateEmbedding, getRecommendation } from "../services/openai.service"
 import { upsertVector, searchPinecone } from "../services/pinecone.service";
 import { Request } from "express"
+import mongoose from "mongoose"
 import response from "../utils/response"
 
 const processSubjectSetting = async (subjectSettingId: string) => {
@@ -54,7 +55,7 @@ const getQueryEmbedding = async (query: string): Promise<number[]> => {
 const constructRecommendationPrompt = (matches: any[], userQuery: string) => {
   const matchedItemsDescription = matches.map((match, index) => {
     const metadata = match.metadata;
-    return `Option ${index + 1}:
+    return `ID ${match.id}:
     - Subject: ${metadata.subject}
     - Teacher: ${metadata.teacher}
     - Active: ${metadata.isActive ? "Yes" : "No"}
@@ -66,7 +67,7 @@ const constructRecommendationPrompt = (matches: any[], userQuery: string) => {
     Here are some matching options:
     ${matchedItemsDescription}
 
-    Based on the above, provide a recommendation to the user. Explain why it is a good fit.
+    Based on the above, provide a recommendation to the user. Explain why it is a good fit answer only show me ID of users like this [id1,id2,id3,...]
   `.trim();
 };
 
@@ -100,10 +101,19 @@ const teacherRecommendation = async (req: Request) => {
     const { prompt } = req.body
     const queryEmbedding = await getQueryEmbedding(prompt)
     const matches = await searchPinecone(queryEmbedding);
-    console.log(matches)
-    const query = constructRecommendationPrompt(matches, prompt);
-    const recommendation = await getRecommendation(query);
-  return response(recommendation, false, "tạo câu trả lời thành công", 200)
+    const find = constructRecommendationPrompt(matches, prompt);
+    const recommendation = await getRecommendation(find); 
+    const array = (recommendation || "").replace(/[\[\]]/g, "").split(",");
+    console.log(array)
+    let query = {} as any
+      query = {
+        _id: {
+          $in: array.map((i: any) => new mongoose.Types.ObjectId(`${i}`))
+        }
+      }
+    console.log(query)
+    const subjectsetting = await SubjectSetting.find(query)
+  return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
