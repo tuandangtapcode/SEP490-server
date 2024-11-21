@@ -86,7 +86,6 @@ export interface ConfirmSubjectSettingDTO {
 }
 
 export interface ChangeCareerInformationDTO {
-  Email: string,
   Subjects: ObjectId[],
   Experiences: string[],
   Educations: string[],

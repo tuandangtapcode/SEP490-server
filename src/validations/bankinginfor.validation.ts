@@ -6,7 +6,7 @@ const createUpdateBankingInfor = async (req: Request, res: Response, next: NextF
   const trueCondition = Joi.object({
     BankID: Joi.number().min(1).required(),
     UserBankName: Joi.string().required(),
-    UserBankAccount: Joi.number().min(1).required(),
+    UserBankAccount: Joi.string().required(),
     BankingInforID: Joi.string().pattern(getRegexObjectID()).optional()
   })
   try {
