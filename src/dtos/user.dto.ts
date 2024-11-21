@@ -107,4 +107,5 @@ export interface GetListSubjectSettingDTO extends CommonDTO {
   SubjectID: ObjectId,
   Level: number[],
   LearnType: number[],
+  RegisterStatus: number
 }

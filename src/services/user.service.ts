@@ -158,14 +158,20 @@ const fncChangeProfile = async (req: Request) => {
     const selectField = RoleID === Roles.ROLE_TEACHER
       ? `${defaultSelectField.forFind} ${selectFieldForTeacher.forFind}`
       : `${defaultSelectField.forFind} ${selectFieldForStudent.forFind}`
+    const dataUpdate = RoleID === Roles.ROLE_STUDENT
+      ? {
+        ...req.body as ChangeProfileDTO,
+        IsFirstLogin: false,
+        RegisterStatus: 3
+      }
+      : {
+        ...req.body as ChangeProfileDTO,
+        IsFirstLogin: false
+      }
     const updateProfile = await User
       .findOneAndUpdate(
         { _id: ID },
-        {
-          ...req.body as ChangeProfileDTO,
-          IsFirstLogin: false,
-          RegisterStatus: RoleID === Roles.ROLE_STUDENT ? 3 : 1
-        },
+        { ...dataUpdate },
         { new: true },
       )
       .populate("Subjects", ["_id", "SubjectName"])
@@ -866,7 +872,7 @@ const fncGetListTopTeacherBySubject = async (req: Request) => {
 
 const fncGetListSubjectSetting = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, SubjectID, Level, LearnType } =
+    const { TextSearch, CurrentPage, PageSize, SubjectID, Level, LearnType, RegisterStatus } =
       req.body as GetListSubjectSettingDTO
     let query = {} as any
     if (!!SubjectID) {
@@ -885,6 +891,12 @@ const fncGetListSubjectSetting = async (req: Request) => {
       query = {
         ...query,
         LearnTypes: { $in: LearnType }
+      }
+    }
+    if (!!RegisterStatus) {
+      query = {
+        ...query,
+        RegisterStatus: RegisterStatus
       }
     }
     let teacherQuery = {
@@ -1022,6 +1034,7 @@ const fncChangeCareerInformation = async (req: Request) => {
         { _id: ID },
         {
           ...req.body as ChangeCareerInformationDTO,
+          RegisterStatus: 2,
           Subjects: RoleID === Roles.ROLE_STUDENT
             ? Subjects
             : []
