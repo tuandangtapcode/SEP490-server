@@ -13,7 +13,9 @@ const BlogSchema = new Schema({
     required: true
   },
   Gender: {
-    type: Number,
+    type: [
+      { type: Number }
+    ],
     required: true
   },
   Title: {
@@ -28,19 +30,15 @@ const BlogSchema = new Schema({
     type: Number,
     required: true
   },
-  NumberSlotInWeek:{
-    type: Number,
-    require : true,
-  },
   Content: {
     type: String,
     required: true
   },
-  LearnTypes: {
+  LearnType: {
     type: [
       { type: Number }
     ],
-    default: []
+    required: true
   },
   Address: {
     type: String,
@@ -49,9 +47,23 @@ const BlogSchema = new Schema({
   Schedules: {
     type: [
       {
-        // DateAt: { type: Date },
         StartTime: { type: Date },
         EndTime: { type: Date }
+      }
+    ],
+    default: []
+  },
+  TeacherReceive: {
+    type: [
+      {
+        Teacher: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Users',
+        },
+        ReceiveStatus: {
+          type: Number,
+          default: 1
+        }
       }
     ],
     default: []

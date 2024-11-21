@@ -7,40 +7,72 @@ import { getOneDocument } from "../utils/queryFunction"
 import mongoose from "mongoose"
 import { Request } from "express"
 import {
+  ChangeCareerInformationDTO,
+  ChangeProfileDTO,
   ConfirmSubjectSettingDTO,
-  GetDetailTeacherDTO,
   GetListStudentDTO,
+  GetListSubjectSettingDTO,
   GetListTeacherByUserDTO,
   GetListTeacherDTO,
   InactiveOrActiveAccountDTO,
   ResponseConfirmRegisterDTO,
+  UpdateSchedulesDTO,
   UpdateSubjectSettingDTO
 } from "../dtos/user.dto"
 import response from "../utils/response"
-import ProfitPercent from "../models/profitpercent"
 import SubjectSetting from "../models/subjectsetting"
 
 const defaultSelectField = {
-  _id: 1,
-  FullName: 1,
-  AvatarPath: 1,
-  RoleID: 1,
-  Subjects: 1,
-  Description: 1,
-  Votes: 1,
-  Schedules: 1,
-  Address: 1,
-  DateOfBirth: 1,
-  Phone: 1
+  forAggregate: {
+    _id: 1,
+    FullName: 1,
+    AvatarPath: 1,
+    RoleID: 1,
+    Description: 1,
+    Votes: 1,
+    Address: 1,
+    DateOfBirth: 1,
+    Phone: 1,
+    IsFirstLogin: 1,
+    IsByGoogle: 1,
+    Gender: 1,
+    RegisterStatus: 1
+  },
+  forFind: "_id FullName AvatarPath RoleID Description Votes Address DateOfBirth Phone IsFirstLogin IsByGoogle Gender RegisterStatus"
+}
+
+const selectFieldForTeacher = {
+  forAggregate: {
+    Experiences: 1,
+    Educations: 1,
+    Description: 1,
+    Schedules: 1,
+    Certificates: 1,
+    Votes: 1,
+  },
+  forFind: "Experiences Educations Description Schedules Certificates Votes"
+}
+
+const selectFieldForStudent = {
+  forAggregate: {
+    Subjects: 1
+  },
+  forFind: "Subjects"
 }
 
 const fncGetDetailProfile = async (req: Request) => {
   try {
-    const UserID = req.user.ID
+    const { ID, RoleID } = req.user
+    const selectField = RoleID === Roles.ROLE_TEACHER
+      ? {
+        ...selectFieldForTeacher.forAggregate,
+        SubjectSettings: 1,
+      }
+      : selectFieldForStudent.forAggregate
     const user = await User.aggregate([
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(`${UserID}`)
+          _id: new mongoose.Types.ObjectId(`${ID}`)
         }
       },
       {
@@ -58,24 +90,58 @@ const fncGetDetailProfile = async (req: Request) => {
         }
       },
       {
-        $lookup: {
-          from: "subjects",
-          localField: "Subjects",
-          foreignField: "_id",
-          as: "Subjects",
-          pipeline: [
-            {
-              $project: {
-                _id: 1,
-                SubjectName: 1
+        $lookup: RoleID === Roles.ROLE_STUDENT
+          ? {
+            from: "subjects",
+            localField: "Subjects",
+            foreignField: "_id",
+            as: "Subjects",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  SubjectName: 1
+                }
               }
-            }
-          ]
-        }
+            ]
+          }
+          : {
+            from: "subjectsettings",
+            localField: "_id",
+            foreignField: "Teacher",
+            as: "SubjectSettings",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "subjects",
+                  localField: "Subject",
+                  foreignField: "_id",
+                  as: "Subject",
+                  pipeline: [
+                    {
+                      $project: {
+                        _id: 1,
+                        SubjectName: 1
+                      }
+                    }
+                  ]
+                }
+              },
+              { $unwind: "$Subject" },
+              {
+                $project: {
+                  _id: 1,
+                  Subject: 1
+                }
+              }
+            ]
+          }
       },
       {
         $project: {
-          ...defaultSelectField,
+          ...defaultSelectField.forAggregate,
+          ...selectField,
+          IsByGoogle: 1,
           Email: 1,
         }
       }
@@ -88,26 +154,31 @@ const fncGetDetailProfile = async (req: Request) => {
 
 const fncChangeProfile = async (req: Request) => {
   try {
-    const UserID = req.user.ID
-    const { Email } = req.body as { Email: string }
-    let account
-    const user = await getOneDocument(User, "_id", UserID)
-    if (!user) return response({}, true, "Có lỗi xảy ra", 200)
+    const { ID, RoleID } = req.user
+    const selectField = RoleID === Roles.ROLE_TEACHER
+      ? `${defaultSelectField.forFind} ${selectFieldForTeacher.forFind}`
+      : `${defaultSelectField.forFind} ${selectFieldForStudent.forFind}`
+    const dataUpdate = RoleID === Roles.ROLE_STUDENT
+      ? {
+        ...req.body as ChangeProfileDTO,
+        IsFirstLogin: false,
+        RegisterStatus: 3
+      }
+      : {
+        ...req.body as ChangeProfileDTO,
+        IsFirstLogin: false
+      }
     const updateProfile = await User
       .findOneAndUpdate(
-        { _id: UserID },
-        { ...req.body },
-        { new: true }
+        { _id: ID },
+        { ...dataUpdate },
+        { new: true },
       )
       .populate("Subjects", ["_id", "SubjectName"])
+      .select(selectField)
       .lean()
-    if (!!Email) {
-      account = await Account.findOneAndUpdate({ UserID }, { Email }, { new: true })
-    } else {
-      account = await getOneDocument(Account, "UserID", UserID)
-    }
-    if (!account) return response({}, true, "Có lỗi xảy ra", 200)
-    return response({ ...updateProfile, Email: account.Email }, false, "Chỉnh sửa trang cá nhân thành công thành công", 200)
+    if (!updateProfile) return response({}, true, "Có lỗi xảy ra", 200)
+    return response({ ...updateProfile, Email: req.body.Email }, false, "Chỉnh sửa thông tin nhân thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -128,12 +199,12 @@ const fncRequestConfirmRegister = async (req: Request) => {
 
 const fncResponseConfirmRegister = async (req: Request) => {
   try {
-    const { TeacherID, RegisterStatus, FullName, Email } = req.body as ResponseConfirmRegisterDTO
+    const { TeacherID, RegisterStatus, FullName, Email, Reason } = req.body as ResponseConfirmRegisterDTO
     const user = await User.findOneAndUpdate({ _id: TeacherID }, { RegisterStatus }, { new: true })
     if (!user) return response({}, true, "Có lỗi xảy ra", 200)
     const confirmContent = "Thông tin tài khoản của bạn đã được duyệt. Từ giờ bạn đã trở thành giáo viên của Talent LearningHub và bạn đã có thể nhận học viên."
     const noteContent = "LƯU Ý: Hãy tuân thủ tất cả điều khoản của Talent LearningHub. Nếu bạn vi phạm tài khoản của bạn sẽ bị khóa vĩnh viễn!"
-    const rejectContent = "Thông tin tài khoản của bạn đã bị hủy. Chúng tôi nhận thấy profile của bạn có nhiều thông tin không chứng thực. Bạn có thể phản hồi để làm rõ."
+    const rejectContent = `Thông tin tài khoản của bạn không được duyệt với lý do: ${Reason}. Bạn có thể phản hồi để làm rõ.`
     const subject = "THÔNG BÁO KIỂM DUYỆT PROFILE"
     const content = `
                 <html>
@@ -174,19 +245,6 @@ const fncGetListTeacher = async (req: Request) => {
         RegisterStatus: RegisterStatus
       }
     }
-    let querySubjectSetting = {} as any
-    if (!!SubjectID) {
-      querySubjectSetting = {
-        ...querySubjectSetting,
-        "SubjectSettings.Subject._id": new mongoose.Types.ObjectId(`${SubjectID}`)
-      }
-    }
-    if (!!Level.length) {
-      querySubjectSetting = {
-        ...querySubjectSetting,
-        "SubjectSettings.Levels": { $all: Level }
-      }
-    }
     const users = User.aggregate([
       {
         $match: queryUser
@@ -210,48 +268,42 @@ const fncGetListTeacher = async (req: Request) => {
       { $unwind: "$Account" },
       {
         $lookup: {
-          from: "subjectsettings",
+          from: "bankinginfors",
           localField: "_id",
-          foreignField: "Teacher",
-          as: "SubjectSettings",
+          foreignField: "User",
+          as: "BankingInfor",
           pipeline: [
             {
-              $lookup: {
-                from: "subjects",
-                localField: "Subject",
-                foreignField: "_id",
-                as: "Subject",
-                pipeline: [
-                  {
-                    $project: {
-                      _id: 1,
-                      SubjectName: 1
-                    }
-                  }
-                ]
+              $project: {
+                BankID: 1,
+                UserBankAccount: 1,
+                UserBankName: 1
               }
-            },
-            { $unwind: "$Subject" }
+            }
           ]
         }
       },
-      {
-        $match: querySubjectSetting
-      },
+      { $unwind: "$BankingInfor" },
       {
         $project: {
-          ...defaultSelectField,
-          RegisterStatus: 1,
-          SubjectSettings: 1,
-          Account: 1
+          ...defaultSelectField.forAggregate,
+          ...selectFieldForTeacher.forAggregate,
+          Account: 1,
+          BankingInfor: 1
         }
       }
     ])
     const total = User.countDocuments(queryUser)
     const result = await Promise.all([users, total])
+    const data = result[0].map((i: any) => ({
+      ...i,
+      IsConfirm: i.RegisterStatus !== 2 || !i.Account.IsActive,
+      IsReject: i.RegisterStatus !== 2 || !i.Account.IsActive,
+      IsLockUnLock: i.RegisterStatus !== 3 && !!i.Account.IsActive
+    }))
     return response(
       {
-        List: result[0],
+        List: data,
         Total: result[1]
       },
       false,
@@ -265,48 +317,139 @@ const fncGetListTeacher = async (req: Request) => {
 
 const fncGetListTeacherByUser = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, SubjectID, Level, FromPrice, ToPrice, LearnType, SortByPrice } =
+    const { TextSearch, CurrentPage, PageSize, SubjectID, Level, FromPrice, ToPrice, LearnType, SortByPrice, Gender } =
       req.body as GetListTeacherByUserDTO
     if (!mongoose.Types.ObjectId.isValid(`${SubjectID}`)) {
       return response({}, true, "Môn học không tồn tại", 200)
     }
     let query = {
-      FullName: { $regex: TextSearch, $options: "i" },
-      RoleID: Roles.ROLE_TEACHER,
+      Subject: new mongoose.Types.ObjectId(`${SubjectID}`),
+      Price: {
+        $gte: +FromPrice,
+        $lte: +ToPrice
+      },
       RegisterStatus: 3,
-      IsActive: true,
-      Price: { $gte: FromPrice, $lte: ToPrice },
-      Subjects: {
-        $elemMatch: { $eq: SubjectID }
-      }
     } as any
     const subject = await getOneDocument(Subject, "_id", SubjectID)
     if (!subject) return response({}, true, "Có lỗi xảy ra", 200)
     if (!!Level.length) {
       query = {
         ...query,
-        "Quotes.Levels": { $all: Level }
+        Levels: { $in: Level }
       }
     }
     if (!!LearnType.length) {
       query = {
         ...query,
-        LearnTypes: { $all: LearnType }
+        LearnTypes: { $in: LearnType }
       }
     }
-    const users = User
-      .find(query)
-      .sort({ Price: SortByPrice })
-      .populate("Subjects", ["_id", "SubjectName"])
-      .skip((CurrentPage - 1) * PageSize)
-      .limit(PageSize)
-    const total = User.countDocuments(query)
-    const result = await Promise.all([users, total])
+    let teacherQuery = {
+      "Teacher.FullName": { $regex: TextSearch, $options: "i" },
+      "Teacher.RegisterStatus": 3,
+    } as any
+    if (!!Gender) {
+      teacherQuery = {
+        ...teacherQuery,
+        "Teacher.Gender": Gender
+      }
+    }
+    const teachers = SubjectSetting.aggregate([
+      {
+        $match: query
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $addFields: {
+                TotalVotes: { $size: "$Votes" }
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                FullName: 1,
+                RegisterStatus: 1,
+                Gender: 1,
+                AvatarPath: 1,
+                Address: 1,
+                Votes: 1,
+                TotalVotes: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: teacherQuery
+      },
+      {
+        $project: {
+          Price: 1,
+          "Teacher._id": 1,
+          "Teacher.FullName": 1,
+          "Teacher.AvatarPath": 1,
+          "Teacher.Address": 1,
+          "Teacher.TotalVotes": 1,
+          "Teacher.Votes": 1,
+        }
+      },
+      {
+        $sort: { Price: SortByPrice }
+      },
+      { $skip: (CurrentPage - 1) * PageSize },
+      { $limit: PageSize }
+    ])
+    const total = SubjectSetting.aggregate([
+      {
+        $match: query
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $project: {
+                FullName: 1,
+                RoleID: 1,
+                RegisterStatus: 1,
+                Gender: 1,
+                AvatarPath: 1,
+                Address: 1,
+                Votes: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: teacherQuery
+      },
+      {
+        $group: {
+          _id: "$_id"
+        }
+      },
+      {
+        $count: "total"
+      }
+    ])
+    const result = await Promise.all([teachers, total])
     return response(
       {
         Subject: subject,
         List: result[0],
-        Total: result[1]
+        Total: !!result[1].length ? result[1][0].total : 0
       },
       false,
       "Lay dat thanh cong",
@@ -341,7 +484,7 @@ const fncGetDetailTeacher = async (req: Request) => {
       {
         $match: {
           Teacher: new mongoose.Types.ObjectId(`${TeacherID}`),
-          IsActive: true,
+          RegisterStatus: 3,
           Subject: new mongoose.Types.ObjectId(`${SubjectID}`),
         }
       },
@@ -417,7 +560,8 @@ const fncGetDetailTeacher = async (req: Request) => {
     ])
     const listSubjects = await SubjectSetting
       .find({
-        Teacher: TeacherID
+        Teacher: TeacherID,
+        RegisterStatus: 3
       })
       .populate("Subject", ["_id", "SubjectName"])
       .select("Subject")
@@ -488,8 +632,7 @@ const fncGetListStudent = async (req: Request) => {
       },
       {
         $project: {
-          ...defaultSelectField,
-          RegisterStatus: 1,
+          ...defaultSelectField.forAggregate,
           IsActive: 1,
           Email: 1,
           BookQuantity: 1
@@ -605,7 +748,10 @@ const fncUpdateSubjectSetting = async (req: Request) => {
           Teacher: UserID,
           Subject: SubjectID
         },
-        { ...req.body },
+        {
+          ...req.body,
+          RegisterStatus: 2
+        },
         { new: true }
       )
       .populate("Subject", ["_id", "SubjectName"])
@@ -629,10 +775,11 @@ const fncDeleteSubjectSetting = async (req: Request) => {
   }
 }
 
-const fncConfirmSubjectSetting = async (req: Request) => {
+const fncResponseConfirmSubjectSetting = async (req: Request) => {
   try {
-    const { SubjectSettingID, FullName, Email } = req.body as ConfirmSubjectSettingDTO
+    const { SubjectSettingID, FullName, Email, Reason, RegisterStatus } = req.body as ConfirmSubjectSettingDTO
     const confirmContent = "Môn học của bạn đã được duyệt. Từ giờ học viên có thể nhìn thấy môn học của bạn và có thể thực hiện booking."
+    const rejectContent = `Môn học của bạn không được duyệt với lý do: ${Reason}. Bạn có thể phản hồi để làm rõ.`
     const subject = "THÔNG BÁO KIỂM DUYỆT MÔN HỌC"
     const content = `
                 <html>
@@ -644,9 +791,9 @@ const fncConfirmSubjectSetting = async (req: Request) => {
                 </style>
                 </head>
                 <body>
-                  <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO KIỂM DUYỆT PROFILE</p>
+                  <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO KIỂM DUYỆT MÔN HỌC</p>
                   <p style="margin-bottom:10px">Xin chào ${FullName},</p>
-                  <p style="margin-bottom:10px">Talent LearningHub thông báo: ${confirmContent}</p>
+                  <p style="margin-bottom:10px">Talent LearningHub thông báo: ${RegisterStatus === 3 ? confirmContent : rejectContent}</p>
                 </body>
                 </html>
                 `
@@ -654,7 +801,7 @@ const fncConfirmSubjectSetting = async (req: Request) => {
     if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     const updateSubjectSetting = await SubjectSetting.findOneAndUpdate(
       { _id: SubjectSettingID },
-      { IsActive: true },
+      { RegisterStatus: RegisterStatus },
       { new: true }
     )
     if (!updateSubjectSetting) return response({}, true, "Có lỗi xảy ra", 200)
@@ -710,7 +857,7 @@ const fncGetListTopTeacherBySubject = async (req: Request) => {
       {
         $match: {
           "SubjectSetting.Subject": new mongoose.Types.ObjectId(`${SubjectID}`),
-          "SubjectSetting.IsActive": true
+          "SubjectSetting.RegisterStatus": 3
         }
       },
       {
@@ -718,6 +865,204 @@ const fncGetListTopTeacherBySubject = async (req: Request) => {
       }
     ])
     return response(topTeachers, false, "Lấy data thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncGetListSubjectSetting = async (req: Request) => {
+  try {
+    const { TextSearch, CurrentPage, PageSize, SubjectID, Level, LearnType, RegisterStatus } =
+      req.body as GetListSubjectSettingDTO
+    let query = {} as any
+    if (!!SubjectID) {
+      query = {
+        ...query,
+        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
+      }
+    }
+    if (!!Level.length) {
+      query = {
+        ...query,
+        Levels: { $in: Level }
+      }
+    }
+    if (!!LearnType.length) {
+      query = {
+        ...query,
+        LearnTypes: { $in: LearnType }
+      }
+    }
+    if (!!RegisterStatus) {
+      query = {
+        ...query,
+        RegisterStatus: RegisterStatus
+      }
+    }
+    let teacherQuery = {
+      "Teacher.FullName": { $regex: TextSearch, $options: "i" },
+    } as any
+    const teachers = SubjectSetting.aggregate([
+      {
+        $match: query
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email",
+                IsActive: "$Account.IsActive"
+              }
+            },
+            {
+              $project: {
+                FullName: 1,
+                RegisterStatus: 1,
+                Email: 1,
+                IsActive: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: teacherQuery
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                SubjectName: 1,
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      { $skip: (CurrentPage - 1) * PageSize },
+      { $limit: PageSize }
+    ])
+    const total = SubjectSetting.aggregate([
+      {
+        $match: query
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $project: {
+                FullName: 1,
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: teacherQuery
+      },
+      {
+        $group: {
+          _id: "$_id"
+        }
+      },
+      {
+        $count: "total"
+      }
+    ])
+    const result = await Promise.all([teachers, total])
+    const data = result[0].map((i: any) => ({
+      ...i,
+      IsConfirm: i.RegisterStatus !== 2 || !i.Teacher.IsActive || i.Teacher.RegisterStatus !== 3,
+      IsReject: i.RegisterStatus !== 2 || !i.Teacher.IsActive || i.Teacher.RegisterStatus !== 3
+    }))
+    return response(
+      {
+        List: data,
+        Total: !!result[1].length ? result[1][0].total : 0
+      },
+      false,
+      "Lay dat thanh cong",
+      200
+    )
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncChangeCareerInformation = async (req: Request) => {
+  try {
+    const { ID, RoleID } = req.user
+    const { Subjects, Email } = req.body as ChangeCareerInformationDTO
+    const selectField = RoleID === Roles.ROLE_TEACHER
+      ? `${defaultSelectField.forFind} ${selectFieldForTeacher.forFind}`
+      : `${defaultSelectField.forFind} ${selectFieldForStudent.forFind}`
+    let dataSubjectSetting = [] as any[]
+    if (RoleID === Roles.ROLE_TEACHER) {
+      dataSubjectSetting = Subjects.map((i: any) => ({
+        Teacher: ID,
+        Subject: i
+      }))
+      await SubjectSetting.insertMany(dataSubjectSetting, { ordered: true })
+    }
+    const updateInfor = await User
+      .findOneAndUpdate(
+        { _id: ID },
+        {
+          ...req.body as ChangeCareerInformationDTO,
+          RegisterStatus: 2,
+          Subjects: RoleID === Roles.ROLE_STUDENT
+            ? Subjects
+            : []
+        },
+        { new: true }
+      )
+      .select(selectField)
+      .lean()
+    if (!updateInfor) return response({}, true, "Có lỗi xảy ra", 200)
+    return response({ ...updateInfor, Email }, false, "Chỉnh sửa thông tin nghề nghiệp thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncUpdateSchedule = async (req: Request) => {
+  try {
+    const UserID = req.user.ID
+    const { Schedules, Email } = req.body as UpdateSchedulesDTO
+    const updateUser = await User
+      .findOneAndUpdate(
+        { _id: UserID },
+        { Schedules: Schedules },
+        { new: true }
+      )
+      .lean()
+    if (!updateUser) return response({}, true, "Có lỗi xảy ra", 200)
+    return response({ ...updateUser, Email }, false, "Chỉnh sửa lịch dạy thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -737,8 +1082,11 @@ const UserSerivce = {
   fncCreateSubjectSetting,
   fncUpdateSubjectSetting,
   fncDeleteSubjectSetting,
-  fncConfirmSubjectSetting,
+  fncResponseConfirmSubjectSetting,
   fncGetListTopTeacherBySubject,
+  fncChangeCareerInformation,
+  fncUpdateSchedule,
+  fncGetListSubjectSetting
 }
 
 export default UserSerivce

@@ -12,10 +12,6 @@ const SystemKeySchema = new Schema({
       ParentName: { type: String, required: true }
     }
   ],
-  IsDeleted: {
-    type: Boolean,
-    default: false
-  },
 })
 
 const SystemKey = mongoose.model("SystemKeys", SystemKeySchema)

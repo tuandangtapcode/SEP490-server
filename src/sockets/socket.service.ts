@@ -115,6 +115,15 @@ const sendMessageMeetingRoom = (io: any) => {
   }
 }
 
+const sendNotedConfirm = (socket: any) => {
+  return (data: any) => {
+    const user = userOnlines.find((i: any) => i.UserID === data.Sender)
+    if (!!user) {
+      socket.to(user.SocketID).emit('listen-noted-confirm', data)
+    }
+  }
+}
+
 const SocketService = {
   addUserOnline,
   sendNotification,
@@ -128,7 +137,8 @@ const SocketService = {
   toggleHandler,
   inactiveAccount,
   leaveMeetingRoom,
-  sendMessageMeetingRoom
+  sendMessageMeetingRoom,
+  sendNotedConfirm
 }
 
 export default SocketService

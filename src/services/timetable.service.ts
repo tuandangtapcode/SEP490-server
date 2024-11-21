@@ -16,25 +16,7 @@ const fncCreateTimeTable = async (req: Request) => {
       ...i,
       Student: UserID
     }))
-    const findTimeTableExist = (req.body as CreateTimeTableDTO[]).map((i) =>
-      TimeTable.findOne({
-        Teacher: i.Teacher,
-        StartTime: i.StartTime,
-        EndTime: i.EndTime
-      }).lean()
-    )
-    const checkTimeTableExist = await Promise.all(findTimeTableExist)
-    if (!!checkTimeTableExist[0])
-      return response(
-        checkTimeTableExist.map((i: any) => ({
-          StartTime: i.StartTime,
-          EndTime: i.EndTime,
-          DateAt: i.DateAt
-        })),
-        false,
-        "Lịch học đã được đăng ký",
-        200
-      )
+
     const newTimeTable = await TimeTable.insertMany(data, { ordered: true })
     return response(newTimeTable, false, "Thêm thành công", 201)
   } catch (error: any) {
@@ -137,9 +119,13 @@ const fncGetTimeTableByUser = async (req: Request) => {
         !i.Status)
         ? true
         : false,
-      isUpdateTimeTable: true,
-      isSubmitIssue: (moment().isAfter(i.EndTime) &&
-        moment().isBefore(moment(i.EndTime).add(24, "hours")))
+      isUpdateTimeTable: moment().isAfter(i.StartTime) &&
+        moment().isBefore(moment(i.EndTime))
+        ? true
+        : false,
+      isSubmitIssue: RoleID === Roles.ROLE_STUDENT &&
+        (moment().isAfter(i.EndTime) &&
+          moment().isBefore(moment(i.EndTime).add(24, "hours")))
         ? true
         : false
     }))

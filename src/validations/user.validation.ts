@@ -1,21 +1,16 @@
 import Joi from 'joi'
-import { getRegexObjectID } from '../utils/commonFunction'
+import { getRegexEmail, getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Response, Request } from 'express'
 
 const changeProfile = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
-    FullName: Joi.string().min(1).optional(),
-    Address: Joi.string().min(1).optional(),
-    Avatar: Joi.string().min(1).optional(),
-    Schedules: Joi
-      .array().items(
-        Joi.object({
-          DateAt: Joi.string().min(1).required(),
-          StartTime: Joi.date().required(),
-          EndTime: Joi.date().required(),
-        })
-      )
-      .optional(),
+    FullName: Joi.string().min(1).required(),
+    Address: Joi.string().min(1).required(),
+    AvatarPath: Joi.string().min(1).required(),
+    Phone: Joi.string().min(1).required(),
+    DateOfBirth: Joi.date().required(),
+    Gender: Joi.number().integer().valid(1, 2).required(),
+    Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })
@@ -67,9 +62,58 @@ const updateSubjectSetting = async (req: Request, res: Response, next: NextFunct
   }
 }
 
+const changeCareerInformation = async (req: Request, res: Response, next: NextFunction) => {
+  const trueCondition = Joi.object({
+    Subjects: Joi.array().items(Joi.string().pattern(getRegexObjectID())).required(),
+    Experiences: Joi.array().items(Joi.string().min(1)).required(),
+    Educations: Joi.array().items(Joi.string().min(1)).required(),
+    Certificates: Joi.array().items(Joi.string().required()).required(),
+    Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
+    Description: Joi.string().min(1).required(),
+    Schedules: Joi
+      .array().items(
+        Joi.object({
+          DateAt: Joi.string().min(1).required(),
+          StartTime: Joi.date().required(),
+          EndTime: Joi.date().required(),
+        })
+      )
+      .optional(),
+  })
+  try {
+    await trueCondition.validateAsync(req.body, { abortEarly: false })
+    next()
+  } catch (error: any) {
+    return res.status(400).json(error.toString())
+  }
+}
+
+const updateSchedule = async (req: Request, res: Response, next: NextFunction) => {
+  const trueCondition = Joi.object({
+    Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
+    Schedules: Joi
+      .array().items(
+        Joi.object({
+          DateAt: Joi.string().min(1).required(),
+          StartTime: Joi.date().required(),
+          EndTime: Joi.date().required(),
+        })
+      )
+      .required(),
+  })
+  try {
+    await trueCondition.validateAsync(req.body, { abortEarly: false })
+    next()
+  } catch (error: any) {
+    return res.status(400).json(error.toString())
+  }
+}
+
 const UserValidation = {
   updateSubjectSetting,
-  changeProfile
+  changeProfile,
+  changeCareerInformation,
+  updateSchedule
 }
 
 export default UserValidation

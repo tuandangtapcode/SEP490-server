@@ -1,11 +1,22 @@
 import { ObjectId } from "mongoose"
 import { CommonDTO } from "./common.dto"
 
+export interface ChangeProfileDTO {
+  FullName: string,
+  Address: string,
+  Avatar: string,
+  Phone: string,
+  DateOfBirth: Date,
+  Gender: 1 | 2,
+  Email: string
+}
+
 export interface ResponseConfirmRegisterDTO {
   TeacherID: ObjectId,
   RegisterStatus: number,
   FullName: string,
-  Email: string
+  Email: string,
+  Reason?: string
 }
 
 export interface GetListTeacherDTO extends CommonDTO {
@@ -20,7 +31,8 @@ export interface GetListTeacherByUserDTO extends CommonDTO {
   FromPrice: string,
   ToPrice: string,
   LearnType: number[],
-  SortByPrice: any
+  SortByPrice: 1 | -1,
+  Gender: number
 }
 
 export interface GetDetailTeacherDTO {
@@ -68,5 +80,32 @@ export interface UpdateSubjectSettingDTO {
 export interface ConfirmSubjectSettingDTO {
   SubjectSettingID: ObjectId,
   FullName: string,
-  Email: string
+  Email: string,
+  RegisterStatus: number,
+  Reason?: string
+}
+
+export interface ChangeCareerInformationDTO {
+  Email: string,
+  Subjects: ObjectId[],
+  Experiences: string[],
+  Educations: string[],
+  Certificates: string[],
+  Description: string,
+}
+
+export interface UpdateSchedulesDTO {
+  Email: string,
+  Schedules: {
+    DateAt: string,
+    StartTime: Date,
+    EndTime: Date
+  }[]
+}
+
+export interface GetListSubjectSettingDTO extends CommonDTO {
+  SubjectID: ObjectId,
+  Level: number[],
+  LearnType: number[],
+  RegisterStatus: number
 }
