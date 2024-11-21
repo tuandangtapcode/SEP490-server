@@ -5,6 +5,7 @@ import { NextFunction, Request, Response } from 'express'
 const createConfirm = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     ConfirmID: Joi.string().pattern(getRegexObjectID()).optional(),
+    CourseID: Joi.string().pattern(getRegexObjectID()).optional(),
     Sender: Joi.string().pattern(getRegexObjectID()).required(),
     StudentName: Joi.string().min(1).required(),
     Receiver: Joi.string().pattern(getRegexObjectID()).required(),

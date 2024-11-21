@@ -1,6 +1,11 @@
 import mongoose, { Schema } from "mongoose"
 
 const ConfirmSchema = new Schema({
+  Course: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Courses',
+    default: null
+  },
   Sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Users',
