@@ -67,12 +67,26 @@ UserRoute.get("/deleteSubjectSetting/:SubjectSettingID",
   authMiddleware([Roles.ROLE_TEACHER]),
   UserController.deleteSubjectSetting
 )
-UserRoute.post("/confirmSubjectSetting",
+UserRoute.post("/responseConfirmSubjectSetting",
   authMiddleware([Roles.ROLE_ADMIN]),
-  UserController.confirmSubjectSetting
+  UserController.responseConfirmSubjectSetting
 )
 UserRoute.get("/getListTopTeacherBySubject/:SubjectID",
   UserController.getListTopTeacherBySubject
+)
+UserRoute.post("/changeCareerInformation",
+  authMiddleware([Roles.ROLE_TEACHER]),
+  UserValidation.changeCareerInformation,
+  UserController.changeCareerInformation
+)
+UserRoute.post("/updateSchedule",
+  authMiddleware([Roles.ROLE_TEACHER]),
+  UserValidation.updateSchedule,
+  UserController.updateSchedule
+)
+UserRoute.post("/getListSubjectSetting",
+  authMiddleware([Roles.ROLE_ADMIN]),
+  UserController.getListSubjectSetting
 )
 
 export default UserRoute

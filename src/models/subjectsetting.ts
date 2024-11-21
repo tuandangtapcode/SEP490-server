@@ -63,9 +63,9 @@ const SubjectSettingSchema = new Schema({
     ],
     default: []
   },
-  IsActive: {
-    type: Boolean,
-    default: false
+  RegisterStatus: {
+    type: Number,
+    default: 1
   }
 }, {
   timestamps: true

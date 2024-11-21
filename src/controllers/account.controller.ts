@@ -3,7 +3,7 @@ import AccountService from "../services/account.service"
 
 const register = async (req: Request, res: Response) => {
   try {
-    const response = await AccountService.fncRegister(req)
+    const response = await AccountService.fncRegister(req, res)
     return res.status(response.statusCode).json(response)
   } catch (error: any) {
     return res.status(500).json(error.toString())
@@ -52,13 +52,23 @@ const changePassword = async (req: Request, res: Response) => {
   }
 }
 
+const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const response = await AccountService.fncForgotPassword(req)
+    return res.status(!!response ? response.statusCode : 200).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
 const AccountController = {
   register,
   login,
   checkAuth,
   loginByGoogle,
   logout,
-  changePassword
+  changePassword,
+  forgotPassword
 }
 
 export default AccountController

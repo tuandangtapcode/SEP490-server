@@ -3,6 +3,14 @@ import { Request } from "express"
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 import * as dotenv from 'dotenv'
 
+// const fetch = require('node-fetch');
+// const { Headers } = fetch;
+// declare global {
+//     var fetch: any;
+//     var Headers: any;
+//   }
+//   global.Headers = Headers;
+//   global.fetch = fetch;
   dotenv.config()
 const ai_key = process.env.API_KEY as string
 const genAI = new GoogleGenerativeAI(ai_key);

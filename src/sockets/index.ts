@@ -32,6 +32,8 @@ const socket = (io: any) => {
 
     socket.on("send-message-meeting-room", SocketService.sendMessageMeetingRoom(io))
 
+    socket.on("send-noted-confirm", SocketService.sendNotedConfirm(socket))
+
     socket.on('disconnect', () => {
       console.log(`người dùng ${socket.id} đã ngắt kết nối`)
       const index = userOnlines.findIndex((i: any) => i.SocketID === socket.id)
