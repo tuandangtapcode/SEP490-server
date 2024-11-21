@@ -69,7 +69,7 @@ const constructRecommendationPrompt = (matches: any[], userQuery: string) => {
     Here are some matching options:
     ${matchedItemsDescription}
 
-    Based on the above, provide a recommendation to the user. Explain why it is a good fit answer only show me ID of users like this [id1,id2,id3,...]
+    Based on the above, provide a recommendation to the user. Explain why it is a good fit answer only show me ID of users only like this [id1,id2,id3,...]
   `.trim();
 };
 // const recommendSubjects = async (userQuery: string) => {
@@ -106,19 +106,17 @@ const teacherRecommendation = async (req: Request) => {
     const recommendation = await OpenaiService.getRecommendation(find)
     if(recommendation?.startsWith("[")){
       const array = (recommendation || "").replace(/[\[\]]/g, "").split(",")
-    console.log(array)
     let query = {} as any
       query = {
         _id: {
           $in: array.map((i: any) => new mongoose.Types.ObjectId(`${i}`))
         }
       }
-    console.log(query)
     const subjectsetting = await SubjectSetting.find(query)
     return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
     }
     else {
-      return response("Không tìm thấy giáo viên phù hợp", true, "câu trả lời", 200)
+      return response(recommendation, true, "câu trả lời", 200)
     }
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

@@ -34,6 +34,7 @@ const searchPinecone = async (queryEmbedding: number[]) => {
   const result = await index.query({
     vector: queryEmbedding,
     topK: 5, // Retrieve the top 5 most similar items
+    includeValues: true,
     includeMetadata: true, // Include metadata for recommendation
   })
 
