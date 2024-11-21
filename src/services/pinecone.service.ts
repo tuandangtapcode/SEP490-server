@@ -21,7 +21,7 @@ const upsertVector = async (
       },
     ]
     // Upsert the vector into the Pinecone index
-    await index.upsert(vectors)
+    await index.namespace("teacher").upsert(vectors)
 
     console.log(`Successfully upserted vector with id: ${id}`)
   } catch (error) {

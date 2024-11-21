@@ -10,7 +10,8 @@ const processSubjectSetting = async (subjectSettingId: string) => {
     const subjectSetting = await SubjectSetting.findById(subjectSettingId)
       .populate("Subject", ["_id", "SubjectName"])
       .populate("Teacher", ["_id", "FullName"]) as any
-    const text = `
+    if(subjectSetting.RegisterStatus === 3){
+      const text = `
         Subject: ${subjectSetting.Subject?.SubjectName || ""}
         Teacher: ${subjectSetting.Teacher?.FullName || ""}
         Quote: ${subjectSetting.Quote.Title || ""} ${subjectSetting.Quote.Content || ""}
@@ -21,20 +22,21 @@ const processSubjectSetting = async (subjectSettingId: string) => {
         Educations: ${subjectSetting.Educations}
         Price: ${subjectSetting.Price || "N/A"}
         Learn Types: ${subjectSetting.LearnTypes.join(", ")}
-        Active: ${subjectSetting.IsActive ? "Yes" : "No"}
+        Active: ${subjectSetting.RegisterStatus === 3 ? "Yes" : "No"}
       `.trim()
-    console.log(text)
+
+      console.log(text)
     // Step 3: Generate embeddingy
-    const embedding = await OpenaiService.generateEmbedding(text)
+    const embedding = await OpenaiService.generateEmbedding(text as string)
 
     // Step 4: Upsert into Pinecone
     await PineconeService.upsertVector(subjectSetting._id.toString(), embedding, {
       subject: subjectSetting.Subject?.SubjectName || "",
       teacher: subjectSetting.Teacher?.FullName || "",
-      isActive: subjectSetting.IsActive,
+      isActive: subjectSetting.RegisterStatus,
     })
-
     console.log("Successfully processed and stored SubjectSetting in Pinecone.")
+    }
   } catch (error) {
     console.error("Error processing SubjectSetting:", error)
   }
@@ -54,28 +56,22 @@ const getQueryEmbedding = async (query: string): Promise<number[]> => {
 
 const constructRecommendationPrompt = (matches: any[], userQuery: string) => {
   const matchedItemsDescription = matches.map((match, index) => {
-    const metadata = match.metadata
-    return `Option ${index + 1}:
     const metadata = match.metadata;
     return `ID ${match.id}:
     - Subject: ${metadata.subject}
     - Teacher: ${metadata.teacher}
     - Active: ${metadata.isActive ? "Yes" : "No"}
-    `
-  }).join("\n")
+    `;
+  }).join("\n");
 
   return `
     A user is looking for: "${userQuery}"
     Here are some matching options:
     ${matchedItemsDescription}
 
-    Based on the above, provide a recommendation to the user. Explain why it is a good fit.
-  `.trim()
-}
     Based on the above, provide a recommendation to the user. Explain why it is a good fit answer only show me ID of users like this [id1,id2,id3,...]
   `.trim();
 };
-
 // const recommendSubjects = async (userQuery: string) => {
 //   try {
 //     // Step 1: Generate query embedding
@@ -106,14 +102,10 @@ const teacherRecommendation = async (req: Request) => {
     const { prompt } = req.body
     const queryEmbedding = await getQueryEmbedding(prompt)
     const matches = await PineconeService.searchPinecone(queryEmbedding)
-    console.log(matches)
-    const query = constructRecommendationPrompt(matches, prompt)
-    const recommendation = await OpenaiService.getRecommendation(query)
-    return response(recommendation, false, "tạo câu trả lời thành công", 200)
-    const matches = await searchPinecone(queryEmbedding);
-    const find = constructRecommendationPrompt(matches, prompt);
-    const recommendation = await getRecommendation(find); 
-    const array = (recommendation || "").replace(/[\[\]]/g, "").split(",");
+    const find = constructRecommendationPrompt(matches, prompt)
+    const recommendation = await OpenaiService.getRecommendation(find)
+    if(recommendation?.startsWith("[")){
+      const array = (recommendation || "").replace(/[\[\]]/g, "").split(",")
     console.log(array)
     let query = {} as any
       query = {
@@ -123,7 +115,11 @@ const teacherRecommendation = async (req: Request) => {
       }
     console.log(query)
     const subjectsetting = await SubjectSetting.find(query)
-  return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
+    return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
+    }
+    else {
+      return response("Không tìm thấy giáo viên phù hợp", true, "câu trả lời", 200)
+    }
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
