@@ -132,11 +132,12 @@ const fncChangeConfirmStatus = async (req: Request) => {
         <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO TRẠNG THÁI ĐĂNG KÝ HỌC</p>
         <p style="margin-bottom:10px">Xin chào ${SenderName},</p>
         <p style="margin-bottom:10px">${ConfirmStatus === 2 ? confirmContent : rejectContent}</p>
-        ${ConfirmStatus === 2 &&
-        `<div>
+        ${ConfirmStatus === 2 ?
+          `<div>
           <span style="color:red; margin-right: 4px">Lưu ý:</span>
           <span>Trong vòng 48h nếu bạn không thanh toán booking này thì booking này sẽ tự động chuyển thành "Hủy xác nhận".</span>
         </div>`
+          : ""
         }
       </body>
       </html>
