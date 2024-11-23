@@ -21,7 +21,7 @@ const upsertVector = async (
       },
     ]
     // Upsert the vector into the Pinecone index
-    await index.upsert(vectors)
+    await index.namespace("teacher").upsert(vectors)
 
     console.log(`Successfully upserted vector with id: ${id}`)
   } catch (error) {
@@ -34,6 +34,7 @@ const searchPinecone = async (queryEmbedding: number[]) => {
   const result = await index.query({
     vector: queryEmbedding,
     topK: 5, // Retrieve the top 5 most similar items
+    includeValues: true,
     includeMetadata: true, // Include metadata for recommendation
   })
 
