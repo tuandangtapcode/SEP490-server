@@ -119,7 +119,7 @@ const fncGetTimeTableByUser = async (req: Request) => {
         !i.Status)
         ? true
         : false,
-      isUpdateTimeTable: moment().isAfter(i.StartTime) &&
+      isUpdateTimeTable: moment().isAfter(moment(i.StartTime).diff(24, "hours")) &&
         moment().isBefore(moment(i.EndTime))
         ? true
         : false,

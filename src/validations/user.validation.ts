@@ -68,7 +68,6 @@ const changeCareerInformation = async (req: Request, res: Response, next: NextFu
     Experiences: Joi.array().items(Joi.string().min(1)).required(),
     Educations: Joi.array().items(Joi.string().min(1)).required(),
     Certificates: Joi.array().items(Joi.string().required()).required(),
-    Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
     Description: Joi.string().min(1).required(),
     Schedules: Joi
       .array().items(
@@ -90,7 +89,6 @@ const changeCareerInformation = async (req: Request, res: Response, next: NextFu
 
 const updateSchedule = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
-    Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
     Schedules: Joi
       .array().items(
         Joi.object({

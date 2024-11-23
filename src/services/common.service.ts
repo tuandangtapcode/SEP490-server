@@ -38,9 +38,7 @@ const fncCreateSystemKey = async (req: Request) => {
 
 const fncGetProfitPercent = async () => {
   try {
-    const percent = await ProfitPercent.findOne({
-      _id: ProfitPercentID
-    })
+    const percent = await getOneDocument(ProfitPercent, "_id", ProfitPercentID)
     return response(percent, false, "Lấy data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

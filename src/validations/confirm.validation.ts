@@ -59,6 +59,7 @@ const changeConfirmStatus = async (req: Request, res: Response, next: NextFuncti
     RecevierName: Joi.string().min(1).required(),
     SenderName: Joi.string().min(1).required(),
     SenderEmail: Joi.string().pattern(getRegexEmail()).required(),
+    Reason: Joi.string().min(1).optional()
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })
