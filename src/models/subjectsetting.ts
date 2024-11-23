@@ -66,6 +66,10 @@ const SubjectSettingSchema = new Schema({
   RegisterStatus: {
     type: Number,
     default: 1
+  },
+  IsDisabled: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

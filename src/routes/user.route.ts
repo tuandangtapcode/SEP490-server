@@ -88,5 +88,9 @@ UserRoute.post("/getListSubjectSetting",
   authMiddleware([Roles.ROLE_ADMIN]),
   UserController.getListSubjectSetting
 )
+UserRoute.post("/disabledOrEnabledSubjectSetting",
+  authMiddleware([Roles.ROLE_TEACHER]),
+  UserController.disabledOrEnabledSubjectSetting
+)
 
 export default UserRoute

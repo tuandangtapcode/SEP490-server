@@ -94,7 +94,6 @@ export interface ChangeCareerInformationDTO {
 }
 
 export interface UpdateSchedulesDTO {
-  Email: string,
   Schedules: {
     DateAt: string,
     StartTime: Date,

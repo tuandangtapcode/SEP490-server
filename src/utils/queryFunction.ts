@@ -4,7 +4,7 @@ import { Roles } from "./constant"
 import { defaultSelectField, selectFieldForStudent, selectFieldForTeacher } from "../services/user.service"
 
 export const getOneDocument = async (model: any, filed: any, value: any) => {
-  const data = await model.findOne({ [filed]: value })
+  const data = await model.findOne({ [filed]: value }).lean()
   return data
 }
 
