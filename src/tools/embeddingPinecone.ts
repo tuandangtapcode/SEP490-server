@@ -125,7 +125,8 @@ const teacherRecommendation = async (req: Request) => {
 
 const EmbeddingPinecone = {
   processAllSubjectSettings,
-  teacherRecommendation
+  teacherRecommendation,
+  processSubjectSetting
 }
 
 export default EmbeddingPinecone
