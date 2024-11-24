@@ -150,8 +150,8 @@ const fncChangePassword = async (req: Request) => {
     const check = bcrypt.compareSync(OldPassword, account.Password)
     if (!check) return response({}, true, "Mật khẩu không chính xác", 200)
     const hashPassword = bcrypt.hashSync(NewPassword, saltRounds)
-    const updateAccount = await Account.findOneAndUpdate({ UserID: UserID }, { Password: hashPassword })
-    return response(updateAccount, false, "Cập nhật mật khẩu thành công", 200)
+    await Account.updateOne({ UserID: UserID }, { Password: hashPassword })
+    return response({}, false, "Cập nhật mật khẩu thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }

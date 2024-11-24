@@ -4,7 +4,7 @@ import Subject from "../models/subject"
 import { Roles } from "../utils/constant"
 import sendEmail from "../utils/send-mail"
 import { getDetailProfile, getOneDocument } from "../utils/queryFunction"
-import mongoose from "mongoose"
+import mongoose, { ObjectId } from "mongoose"
 import { Request } from "express"
 import {
   ChangeCareerInformationDTO,
@@ -243,6 +243,7 @@ const fncGetListTeacherByUser = async (req: Request) => {
         $lte: +ToPrice
       },
       RegisterStatus: 3,
+      IsDisabled: false
     } as any
     const subject = await getOneDocument(Subject, "_id", SubjectID)
     if (!subject) return response({}, true, "Có lỗi xảy ra", 200)
@@ -281,7 +282,7 @@ const fncGetListTeacherByUser = async (req: Request) => {
           pipeline: [
             {
               $addFields: {
-                TotalVotes: { $size: "$Votes" }
+                TotalVotes: { $sum: "$Votes" }
               }
             },
             {
@@ -411,7 +412,7 @@ const fncGetDetailTeacher = async (req: Request) => {
           pipeline: [
             {
               $addFields: {
-                TotalVotes: { $size: "$Votes" }
+                TotalVotes: { $sum: "$Votes" }
               }
             },
             {
@@ -744,7 +745,7 @@ const fncGetListTopTeacherBySubject = async (req: Request) => {
       },
       {
         $addFields: {
-          TotalVotes: { $size: "$Votes" }
+          TotalVotes: { $sum: "$Votes" }
         }
       },
       {
@@ -968,17 +969,40 @@ const fncChangeCareerInformation = async (req: Request) => {
 
 const fncUpdateSchedule = async (req: Request) => {
   try {
-    const UserID = req.user.ID
-    const { Schedules, Email } = req.body as UpdateSchedulesDTO
+    const { ID, RoleID } = req.user
+    const { Schedules } = req.body as UpdateSchedulesDTO
     const updateUser = await User
       .findOneAndUpdate(
-        { _id: UserID },
+        { _id: ID },
         { Schedules: Schedules },
         { new: true }
       )
       .lean()
     if (!updateUser) return response({}, true, "Có lỗi xảy ra", 200)
-    return response({ ...updateUser, Email }, false, "Chỉnh sửa lịch dạy thành công", 200)
+    const user = await getDetailProfile(ID, RoleID)
+    if (!user) return response({}, true, "Có lỗi xảy ra khi get profile", 200)
+    return response(user, false, "Chỉnh sửa thông tin nghề nghiệp thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncDisabledOrEnabledSubjectSetting = async (req: Request) => {
+  try {
+    const UserID = req.user.ID
+    const { SubjectSettingID, IsDisabled } = req.body as { SubjectSettingID: ObjectId, IsDisabled: Boolean }
+    const updateSubjectSetting = await SubjectSetting
+      .findOneAndUpdate(
+        {
+          _id: SubjectSettingID,
+          Teacher: UserID
+        },
+        { IsDisabled: IsDisabled },
+        { new: true }
+      )
+      .lean()
+    if (!updateSubjectSetting) return response({}, true, "Có lỗi xảy ra khi update", 200)
+    return response(updateSubjectSetting, false, "Ẩn môn học thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -1002,7 +1026,8 @@ const UserSerivce = {
   fncGetListTopTeacherBySubject,
   fncChangeCareerInformation,
   fncUpdateSchedule,
-  fncGetListSubjectSetting
+  fncGetListSubjectSetting,
+  fncDisabledOrEnabledSubjectSetting
 }
 
 export default UserSerivce

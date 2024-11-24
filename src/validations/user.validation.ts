@@ -89,7 +89,6 @@ const changeCareerInformation = async (req: Request, res: Response, next: NextFu
 
 const updateSchedule = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
-    Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
     Schedules: Joi
       .array().items(
         Joi.object({

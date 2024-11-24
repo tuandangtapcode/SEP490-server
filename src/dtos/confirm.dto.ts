@@ -2,7 +2,6 @@ import { ObjectId } from "mongoose"
 
 export interface CreateConfirmDTO {
   Sender: ObjectId,
-  CourseID?: ObjectId,
   StudentName: string,
   Receiver: ObjectId,
   TeacherName: string,
@@ -39,4 +38,5 @@ export interface ChangeConfirmStatusDTO {
   RecevierName: string,
   SenderName: string,
   SenderEmail: string,
+  Reason?: string
 }
