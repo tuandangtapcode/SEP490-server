@@ -75,6 +75,25 @@ const constructRecommendationPrompt = (matches: any[], userQuery: string) => {
     Based on the above, provide a recommendation to the user. Explain why it is a good fit answer only show me ID of users only like this [id1,id2,id3,...]
   `.trim();
 };
+
+const constructRecommendationByBehaviorPrompt= (matches: any[], userQuery: string) => {
+  const matchedItemsDescription = matches.map((match, index) => {
+    const metadata = match.metadata;
+    return `ID ${match.id}:
+    - Subject: ${metadata.subject}
+    - Teacher: ${metadata.teacher}
+    - Active: ${metadata.isActive ? "Yes" : "No"}
+    `;
+  }).join("\n");
+
+  return `
+    Here is the logging behavior of A user: "${userQuery}"
+    Here are some matching options:
+    ${matchedItemsDescription}
+
+    Based on the above, provide a recommendation to the user. Explain why it is a good fit answer only show me ID of users only like this [id1,id2,id3,...]
+  `.trim();
+};
 // const recommendSubjects = async (userQuery: string) => {
 //   try {
 //     // Step 1: Generate query embedding
@@ -102,13 +121,19 @@ const constructRecommendationPrompt = (matches: any[], userQuery: string) => {
 
 const teacherRecommendation = async (req: Request) => {
   try {
-    const prompt = req.body
-    const queryEmbedding = await getQueryEmbedding(prompt.toString())
+    const prompt = JSON.stringify(req.body)
+    const queryEmbedding = await getQueryEmbedding(prompt)
     const matches = await PineconeService.searchPinecone(queryEmbedding)
-    const find = constructRecommendationPrompt(matches, prompt)
+    let find;
+    if(req.body.prompt) {
+      find = constructRecommendationPrompt(matches, prompt)
+      console.log("đã chạy tới đây")
+    } else {
+      find = constructRecommendationByBehaviorPrompt(matches, prompt)
+      console.log("đã chạy tới đây2")
+    }
     const recommendation = await OpenaiService.getRecommendation(find)
     if(recommendation?.startsWith("[")){
-      console.log("đã chạy tới đây")
       const array = (recommendation || "").replace(/[\[\]]/g, "").split(",")
     let query = {} as any
       query = {
