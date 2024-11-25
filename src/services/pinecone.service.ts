@@ -31,7 +31,7 @@ const upsertVector = async (
 }
 
 const searchPinecone = async (queryEmbedding: number[]) => {
-  const result = await index.query({
+  const result = await index.namespace('teacher').query({
     vector: queryEmbedding,
     topK: 5, // Retrieve the top 5 most similar items
     includeValues: true,
