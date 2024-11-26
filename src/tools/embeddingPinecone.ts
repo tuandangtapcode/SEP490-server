@@ -25,7 +25,6 @@ const processSubjectSetting = async (subjectSettingId: string) => {
         Active: ${subjectSetting.RegisterStatus === 3 ? "Yes" : "No"}
       `.trim()
 
-      console.log(text)
     // Step 3: Generate embeddingy
     const embedding = await OpenaiService.generateEmbedding(text as string)
 
@@ -40,6 +39,10 @@ const processSubjectSetting = async (subjectSettingId: string) => {
   } catch (error) {
     console.error("Error processing SubjectSetting:", error)
   }
+}
+
+const processLogBehavior = async(userId: string, ) => {
+
 }
 
 const processAllSubjectSettings = async () => {
@@ -66,6 +69,25 @@ const constructRecommendationPrompt = (matches: any[], userQuery: string) => {
 
   return `
     A user is looking for: "${userQuery}"
+    Here are some matching options:
+    ${matchedItemsDescription}
+
+    Based on the above, provide a recommendation to the user. Explain why it is a good fit answer only show me ID of users only like this [id1,id2,id3,...]
+  `.trim();
+};
+
+const constructRecommendationByBehaviorPrompt= (matches: any[], userQuery: string) => {
+  const matchedItemsDescription = matches.map((match, index) => {
+    const metadata = match.metadata;
+    return `ID ${match.id}:
+    - Subject: ${metadata.subject}
+    - Teacher: ${metadata.teacher}
+    - Active: ${metadata.isActive ? "Yes" : "No"}
+    `;
+  }).join("\n");
+
+  return `
+    Here is the logging behavior of A user: "${userQuery}"
     Here are some matching options:
     ${matchedItemsDescription}
 
@@ -99,10 +121,17 @@ const constructRecommendationPrompt = (matches: any[], userQuery: string) => {
 
 const teacherRecommendation = async (req: Request) => {
   try {
-    const { prompt } = req.body
+    const prompt = JSON.stringify(req.body)
     const queryEmbedding = await getQueryEmbedding(prompt)
     const matches = await PineconeService.searchPinecone(queryEmbedding)
-    const find = constructRecommendationPrompt(matches, prompt)
+    let find;
+    if(req.body.prompt) {
+      find = constructRecommendationPrompt(matches, prompt)
+      console.log("đã chạy tới đây")
+    } else {
+      find = constructRecommendationByBehaviorPrompt(matches, prompt)
+      console.log("đã chạy tới đây2")
+    }
     const recommendation = await OpenaiService.getRecommendation(find)
     if(recommendation?.startsWith("[")){
       const array = (recommendation || "").replace(/[\[\]]/g, "").split(",")
@@ -112,6 +141,7 @@ const teacherRecommendation = async (req: Request) => {
           $in: array.map((i: any) => new mongoose.Types.ObjectId(`${i}`))
         }
       }
+      console.log('array', array)
     const subjectsetting = await SubjectSetting.find(query)
     return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
     }
@@ -123,9 +153,12 @@ const teacherRecommendation = async (req: Request) => {
   }
 }
 
+
+
 const EmbeddingPinecone = {
   processAllSubjectSettings,
-  teacherRecommendation
+  teacherRecommendation,
+  processSubjectSetting,
 }
 
 export default EmbeddingPinecone

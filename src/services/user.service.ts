@@ -21,6 +21,7 @@ import {
 } from "../dtos/user.dto"
 import response from "../utils/response"
 import SubjectSetting from "../models/subjectsetting"
+import EmbeddingPinecone from "../tools/embeddingPinecone"
 
 export const defaultSelectField = {
   forAggregate: {
@@ -636,6 +637,7 @@ const fncCreateSubjectSetting = async (req: Request) => {
       Subject: SubjectID,
       Teacher: UserID,
     })
+
     return response(newSubjectSetting, false, "Môn học có thể giảng dạy đã được thêm", 201)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -709,6 +711,9 @@ const fncResponseConfirmSubjectSetting = async (req: Request) => {
       { RegisterStatus: RegisterStatus },
       { new: true }
     )
+    if(updateSubjectSetting) {
+      EmbeddingPinecone.processSubjectSetting(SubjectSettingID.toString())
+    }
     if (!updateSubjectSetting) return response({}, true, "Có lỗi xảy ra", 200)
     return response({}, false, "Duyệt môn học cho giáo viên thành công", 200)
   } catch (error: any) {
