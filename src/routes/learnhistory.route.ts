@@ -15,5 +15,9 @@ LearnHistoryRoute.post("/getListLearnHistory",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
   LearnHistoryController.getListLearnHistory
 )
+LearnHistoryRoute.get("/getDetailLearnHistory/:LearnHistoryID",
+  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
+  LearnHistoryController.getDetailLearnHistory
+)
 
 export default LearnHistoryRoute

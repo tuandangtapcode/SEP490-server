@@ -7,16 +7,16 @@ const IssueSchema = new Schema({
     ref: 'Users',
     required: true
   },
-  // Timetable: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: 'TimeTables',
-  //   required: true
-  // },
-  // Teacher: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: 'Users',
-  //   required: true
-  // },
+  Timetable: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'TimeTables',
+    required: true
+  },
+  Teacher: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Users',
+    required: true
+  },
   Title: {
     type: String,
     required: true

@@ -3,10 +3,12 @@ import Confirm from "../models/confirm"
 
 const checkConfirmExpire = async () => {
   try {
+    console.log("cron job checkConfirmExpire");
     const confirms = await Confirm
       .find({
         $or: [
           { ConfirmStatus: 1 },
+          { ConfirmStatus: 4 },
           {
             ConfirmStatus: 2,
             IsPaid: false
@@ -25,7 +27,7 @@ const checkConfirmExpire = async () => {
     )
     await Promise.all(promiseUpdate)
   } catch (error: any) {
-    console.log("error", error.toString())
+    console.log("error cron job checkConfirmExpire", error.toString())
   }
 }
 

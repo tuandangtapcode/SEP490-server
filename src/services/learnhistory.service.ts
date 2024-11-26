@@ -75,6 +75,31 @@ const fncGetListLearnHistory = async (req: Request) => {
           localField: "Student",
           foreignField: "_id",
           as: "Student",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: '$Student' },
+      {
+        $lookup: {
+          from: "courses",
+          localField: "Student",
+          foreignField: "_id",
+          as: "Student",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
         }
       },
       { $unwind: '$Student' },
@@ -84,6 +109,14 @@ const fncGetListLearnHistory = async (req: Request) => {
           localField: "Teacher",
           foreignField: "_id",
           as: "Teacher",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
         }
       },
       { $unwind: '$Teacher' },
@@ -93,6 +126,14 @@ const fncGetListLearnHistory = async (req: Request) => {
           localField: "Subject",
           foreignField: "_id",
           as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
         }
       },
       { $unwind: '$Subject' },
@@ -111,12 +152,26 @@ const fncGetListLearnHistory = async (req: Request) => {
           LearnedNumber: 1,
           LearnedStatus: 1,
           RegisterDate: 1,
-          'Teacher._id': 1,
-          'Teacher.FullName': 1,
-          'Student._id': 1,
-          'Student.FullName': 1,
-          'Subject._id': 1,
-          'Subject.SubjectName': 1,
+          Teacher: 1,
+          Student: 1,
+          Subject: 1,
+        }
+      },
+      {
+        $lookup: {
+          from: "feedbacks",
+          localField: "_id",
+          foreignField: "LearnHistory",
+          as: "Feedback",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                Rate: 1,
+                Content: 1
+              }
+            }
+          ]
         }
       },
       { $skip: (CurrentPage - 1) * PageSize },
@@ -155,7 +210,7 @@ const fncGetListLearnHistory = async (req: Request) => {
     const result = await Promise.all([list, total])
     const data = result[0].map((i: any) => ({
       ...i,
-      isFeedback: i.LearnedStatus === 2 ? true : false
+      isFeedback: i.LearnedStatus === 2 && !i.Feedback.length ? true : false
     }))
     return response(
       {
@@ -170,9 +225,105 @@ const fncGetListLearnHistory = async (req: Request) => {
   }
 }
 
+const fncGetDetailLearnHistory = async (req: Request) => {
+  try {
+    const { LearnHistoryID } = req.params
+    const learnHistory = await LearnHistory.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(`${LearnHistoryID}`)
+        }
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      {
+        $lookup: {
+          from: "timetables",
+          localField: "_id",
+          foreignField: "LearnHistory",
+          as: "Timetables",
+          pipeline: [
+            {
+              $lookup: {
+                from: "users",
+                localField: "Student",
+                foreignField: "_id",
+                as: "Student",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      FullName: 1
+                    }
+                  }
+                ]
+              }
+            },
+            { $unwind: "$Student" },
+            {
+              $project: {
+                _id: 1,
+                Student: 1,
+                Documents: 1,
+                Status: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: "feedbacks",
+          localField: "_id",
+          foreignField: "LearnHistory",
+          as: "Feedback",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                Rate: 1,
+                Content: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          Subject: 1,
+          TotalLearned: 1,
+          Timetables: 1,
+          Feedback: 1
+        }
+      }
+    ])
+    if (!learnHistory[0]) return response({}, true, "Có lỗi xảy ra", 200)
+    return response(learnHistory[0], false, "Lấy data thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const LearnHistoryService = {
   fncCreateLearnHistory,
-  fncGetListLearnHistory
+  fncGetListLearnHistory,
+  fncGetDetailLearnHistory
 }
 
 export default LearnHistoryService
