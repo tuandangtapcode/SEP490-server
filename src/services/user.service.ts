@@ -421,20 +421,6 @@ const fncGetDetailTeacher = async (req: Request) => {
               }
             },
             {
-              $lookup: {
-                from: "accounts",
-                localField: "_id",
-                foreignField: "UserID",
-                as: "Account"
-              }
-            },
-            { $unwind: '$Account' },
-            {
-              $addFields: {
-                Email: "$Account.Email"
-              }
-            },
-            {
               $project: {
                 FullName: 1,
                 Address: 1,
@@ -442,7 +428,6 @@ const fncGetDetailTeacher = async (req: Request) => {
                 TotalVotes: 1,
                 Votes: 1,
                 AvatarPath: 1,
-                Email: 1
               }
             },
           ]
@@ -632,7 +617,13 @@ const fncGetListSubjectSettingByTeacher = async (req: Request) => {
         Teacher: UserID
       })
       .populate("Subject", ["_id", "SubjectName"])
-    return response(list, false, "Lấy data thành công", 200)
+      .lean()
+    const data = list.map((i: any) => ({
+      ...i,
+      IsUpdate: i.RegisterStatus === 2,
+      IsDisabledBtn: i.RegisterStatus === 2 ? true : false
+    }))
+    return response(data, false, "Lấy data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }

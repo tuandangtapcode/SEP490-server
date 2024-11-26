@@ -1,9 +1,10 @@
-import express from "express"
+import express, { Request, Response } from "express"
 import UserController from "../controllers/user.controller"
 import authMiddleware from "../middlewares/auth.middleware"
 import upload from '../middlewares/clouddinary.middleware'
 import { Roles } from "../utils/constant"
 import UserValidation from "../validations/user.validation"
+import SubjectSetting from "../models/subjectsetting"
 
 const UserRoute = express.Router()
 
@@ -92,5 +93,16 @@ UserRoute.post("/disabledOrEnabledSubjectSetting",
   authMiddleware([Roles.ROLE_TEACHER]),
   UserController.disabledOrEnabledSubjectSetting
 )
+
+UserRoute.get("/updateDisabled", async (req: Request, res: Response) => {
+  await SubjectSetting.updateMany(
+    {
+      _id: {
+        $ne: "673e0b9fdc1b5df8a741700d"
+      }
+    },
+    { IsDisabled: false }
+  )
+})
 
 export default UserRoute
