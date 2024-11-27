@@ -60,6 +60,14 @@ const fncDeleteFeedback = async (req: Request) => {
   }
 }
 
+const fncGetListFeedback = async (req:Request) => {
+  try {
+    
+  } catch (error) {
+    
+  }
+}
+
 const FeedbackSerivce = {
   fncCreateFeedback,
   fncDeleteFeedback,

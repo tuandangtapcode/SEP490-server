@@ -28,5 +28,14 @@ CommonRoute.get("/processAllSubjectSetting",
 CommonRoute.post("/teacherRecommend",
   PineconeController.teacherRecommendation
 )
+CommonRoute.post("/getListTabs",
+  authMiddleware([
+    Roles.ROLE_ADMIN,
+    Roles.ROLE_TEACHER,
+    Roles.ROLE_STUDENT,
+    Roles.ROLE_STAFF
+  ]),
+  CommonController.getListTabs
+)
 
 export default CommonRoute

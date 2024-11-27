@@ -37,12 +37,11 @@ const fncGetDetailBlog = async (req: Request) => {
 const fncGetListBlog = async (req: Request) => {
   try {
     const { CurrentPage, PageSize } = req.body as PaginationDTO
-    const query = { IsDeleted: false }
     const blogs = Blog
-      .find(query)
+      .find()
       .skip((CurrentPage - 1) * PageSize)
       .limit(PageSize)
-    const total = Blog.countDocuments(query)
+    const total = Blog.countDocuments()
     const result = await Promise.all([blogs, total])
     return response(
       { List: result[0], Total: result[1] },
@@ -99,11 +98,9 @@ const fncUpdateBlog = async (req: Request) => {
 
 const fncGetListBlogByUser = async (req: Request) => {
   try {
-    const UserID = req.user.ID
     const { CurrentPage, PageSize } = req.body as PaginationDTO
     const query = {
-      User: UserID,
-      IsDeleted: false,
+      IsDeleted: false
     }
     const blogs = Blog
       .find(query)
@@ -160,6 +157,30 @@ const fncChangeReceiveStatus = async (req: Request) => {
   }
 }
 
+const fncGetListBlogByStudent = async (req: Request) => {
+  try {
+    const UserID = req.user.ID
+    const { CurrentPage, PageSize } = req.body as PaginationDTO
+    const query = {
+      User: UserID
+    }
+    const blogs = Blog
+      .find(query)
+      .skip((CurrentPage - 1) * PageSize)
+      .limit(PageSize)
+    const total = Blog.countDocuments(query)
+    const result = await Promise.all([blogs, total])
+    return response(
+      { List: result[0], Total: result[1] },
+      false,
+      "Lấy ra bài viết thành công",
+      200
+    )
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const BlogService = {
   fncCreateBlog,
   fncGetListBlog,
@@ -167,7 +188,8 @@ const BlogService = {
   fncGetDetailBlog,
   fncUpdateBlog,
   fncGetListBlogByUser,
-  fncSendRequestReceive
+  fncSendRequestReceive,
+  fncGetListBlogByStudent
 }
 
 export default BlogService

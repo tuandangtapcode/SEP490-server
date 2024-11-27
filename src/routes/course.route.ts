@@ -12,7 +12,7 @@ CourseRoute.post("/createCourse",
   CourseController.createCourse
 )
 CourseRoute.post("/getListCourse",
-  authMiddleware([Roles.ROLE_ADMIN]),
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   CourseController.getListCourse
 )
 CourseRoute.post("/getListCourseByTeacher",

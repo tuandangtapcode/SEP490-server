@@ -29,7 +29,7 @@ BankingInforRoute.post("/updateBankingInfor",
   BankingInforController.updateBankingInfor
 )
 BankingInforRoute.post("/getBankingInforOfUser",
-  authMiddleware([Roles.ROLE_ADMIN]),
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   BankingInforController.getBankingInforOfUser
 )
 
