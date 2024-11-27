@@ -10,6 +10,7 @@ import {
   ChangeCareerInformationDTO,
   ChangeProfileDTO,
   ConfirmSubjectSettingDTO,
+  CreateAccountStaff,
   GetListStudentDTO,
   GetListSubjectSettingDTO,
   GetListTeacherByUserDTO,
@@ -22,6 +23,8 @@ import {
 import response from "../utils/response"
 import SubjectSetting from "../models/subjectsetting"
 import EmbeddingPinecone from "../tools/embeddingPinecone"
+import bcrypt from "bcrypt"
+import { CommonDTO } from "../dtos/common.dto"
 
 export const defaultSelectField = {
   forAggregate: {
@@ -145,7 +148,7 @@ const fncResponseConfirmRegister = async (req: Request) => {
 
 const fncGetListTeacher = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, SubjectID, Level, RegisterStatus } =
+    const { TextSearch, CurrentPage, PageSize, RegisterStatus } =
       req.body as GetListTeacherDTO
     let queryUser = {
       FullName: { $regex: TextSearch, $options: "i" },
@@ -202,12 +205,17 @@ const fncGetListTeacher = async (req: Request) => {
           Account: 1,
           BankingInfor: 1
         }
-      }
+      },
+      { $skip: (CurrentPage - 1) * PageSize },
+      { $limit: PageSize }
     ])
     const total = User.countDocuments(queryUser)
     const result = await Promise.all([users, total])
     const data = result[0].map((i: any) => ({
       ...i,
+      BankingInfor: !!i.BankingInfor.length
+        ? i.BankingInfor[0]
+        : {},
       IsConfirm: i.RegisterStatus !== 2 || !i.Account.IsActive,
       IsReject: i.RegisterStatus !== 2 || !i.Account.IsActive,
       IsLockUnLock: i.RegisterStatus !== 3 && !!i.Account.IsActive
@@ -727,59 +735,6 @@ const fncResponseConfirmSubjectSetting = async (req: Request) => {
 
 const fncGetListTopTeacher = async (req: Request) => {
   try {
-    // const { SubjectID } = req.params
-    // if (!mongoose.Types.ObjectId.isValid(`${SubjectID}`)) {
-    //   return response({}, true, "ID môn học không tồn tại", 200)
-    // }
-    // const topTeachers = await User.aggregate([
-    //   {
-    //     $match: {
-    //       RoleID: Roles.ROLE_TEACHER,
-    //       RegisterStatus: 3
-    //     }
-    //   },
-    //   {
-    //     $addFields: {
-    //       TotalVotes: { $sum: "$Votes" }
-    //     }
-    //   },
-    //   {
-    //     $sort: {
-    //       TotalVotes: -1
-    //     }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "subjectsettings",
-    //       localField: "_id",
-    //       foreignField: "Teacher",
-    //       as: "SubjectSetting",
-    //       pipeline: [
-    //         {
-    //           $project: {
-    //             Subject: 1,
-    //             Levels: 1,
-    //             Price: 1,
-    //             LearnTypes: 1,
-    //             IsDisabled: 1,
-    //             RegisterStatus: 1
-    //           }
-    //         }
-    //       ]
-    //     }
-    //   },
-    //   { $unwind: "$SubjectSetting" },
-    //   {
-    //     $match: {
-    //       "SubjectSetting.Subject": new mongoose.Types.ObjectId(`${SubjectID}`),
-    //       "SubjectSetting.RegisterStatus": 3,
-    //       "SubjectSetting.IsDisabled": false
-    //     }
-    //   },
-    //   {
-    //     $limit: 4
-    //   }
-    // ])
     const topTeachers = await SubjectSetting.aggregate([
       {
         $match: {
@@ -1085,7 +1040,92 @@ const fncDisabledOrEnabledSubjectSetting = async (req: Request) => {
       )
       .lean()
     if (!updateSubjectSetting) return response({}, true, "Có lỗi xảy ra khi update", 200)
-    return response(updateSubjectSetting, false, "Ẩn môn học thành công", 200)
+    return response(
+      updateSubjectSetting,
+      false,
+      !!IsDisabled ? "Ẩn môn học thành công" : "Hiện môn học thành công",
+      200
+    )
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncCreateAccountStaff = async (req: Request) => {
+  try {
+    const { Email, FullName } = req.body as CreateAccountStaff
+    const hashPassword = bcrypt.hashSync("Ab12345", 10)
+    const newUser = await User.create({
+      FullName,
+      RoleID: 2,
+      IsFirstLogin: false,
+      RegisterStatus: 3
+    })
+    await Account.create({
+      Email,
+      RoleID: 2,
+      Password: hashPassword,
+      UserID: newUser._id
+    })
+    return response({}, false, "Tạo tài khoản staff thành công", 201)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncGetListAccountStaff = async (req: Request) => {
+  try {
+    const { TextSearch, CurrentPage, PageSize } = req.body as CommonDTO
+    const query = {
+      RoleID: 2,
+      FullName: { $regex: TextSearch, $options: "i" },
+    }
+    const users = User.aggregate([
+      {
+        $match: query
+      },
+      {
+        $lookup: {
+          from: "accounts",
+          localField: "_id",
+          foreignField: "UserID",
+          as: "Account",
+          pipeline: [
+            {
+              $project: {
+                Email: 1,
+                IsActive: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Account" },
+      {
+        $addFields: {
+          Email: "$Account.Email",
+          IsActive: "$Account.IsActive",
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          FullName: 1,
+          Email: 1,
+          IsActive: 1
+        }
+      },
+      { $skip: (CurrentPage - 1) * PageSize },
+      { $limit: PageSize }
+    ])
+    const total = User.countDocuments(query)
+    const result = await Promise.all([users, total])
+    return response(
+      { List: result[0], Total: result[1] },
+      false,
+      "Lấy ra bài viết thành công",
+      200
+    )
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -1110,7 +1150,9 @@ const UserSerivce = {
   fncChangeCareerInformation,
   fncUpdateSchedule,
   fncGetListSubjectSetting,
-  fncDisabledOrEnabledSubjectSetting
+  fncDisabledOrEnabledSubjectSetting,
+  fncCreateAccountStaff,
+  fncGetListAccountStaff
 }
 
 export default UserSerivce

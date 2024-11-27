@@ -12,6 +12,7 @@ BlogRoute.post("/createBlog",
   BlogController.createBlog
 )
 BlogRoute.post("/getListBlog",
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   BlogController.getListBlog
 )
 BlogRoute.get("/deleteBlog/:BlogID",
@@ -27,11 +28,14 @@ BlogRoute.post("/updateBlog",
   BlogController.updateBlog
 )
 BlogRoute.post("/getListBlogByUser",
-  authMiddleware([Roles.ROLE_STUDENT]),
   BlogController.getListBlogByUser
 )
 BlogRoute.get("/sendRequestReceive/:BlogID",
   authMiddleware([Roles.ROLE_TEACHER]),
+  BlogController.sendRequestReceive
+)
+BlogRoute.post("/getListBlogByStudent",
+  authMiddleware([Roles.ROLE_STUDENT]),
   BlogController.sendRequestReceive
 )
 

@@ -94,7 +94,7 @@ export const getDetailProfile = async (ID: string, RoleID: number) => {
       }
     ])
     return user[0]
-  } catch (error) {
-    return false
+  } catch (error: any) {
+    return error.toString()
   }
 }

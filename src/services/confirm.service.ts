@@ -146,11 +146,14 @@ const fncChangeConfirmStatus = async (req: Request) => {
       if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     }
     // }
-    await Confirm
-      .updateOne(
+    const updateConfirm = await Confirm
+      .findOneAndUpdate(
         { _id: ConfirmID },
-        { ConfirmStatus: ConfirmStatus }
+        { ConfirmStatus: ConfirmStatus },
+        { new: true }
       )
+      .populate("Receiver", ["_id", "FullName"])
+      .populate("Subject", ["_id", "SubjectName"])
       .lean() as any
     if (ConfirmStatus == 2 && !!confirm.CourseID) {
       const updateCourse = await Course.findOneAndUpdate(
@@ -164,7 +167,7 @@ const fncChangeConfirmStatus = async (req: Request) => {
       if (!updateCourse) response({}, true, "Có lỗi xảy ra trong quá trình gửi update course", 200)
     }
     return response(
-      {},
+      updateConfirm,
       false,
       ConfirmStatus === 2
         ? "Xác nhận thành công"
