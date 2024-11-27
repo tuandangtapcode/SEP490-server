@@ -72,8 +72,8 @@ UserRoute.post("/responseConfirmSubjectSetting",
   authMiddleware([Roles.ROLE_ADMIN]),
   UserController.responseConfirmSubjectSetting
 )
-UserRoute.get("/getListTopTeacherBySubject/:SubjectID",
-  UserController.getListTopTeacherBySubject
+UserRoute.get("/getListTopTeacher",
+  UserController.getListTopTeacher
 )
 UserRoute.post("/changeCareerInformation",
   authMiddleware([Roles.ROLE_TEACHER]),

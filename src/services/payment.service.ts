@@ -153,7 +153,7 @@ const fncChangePaymentStatus = async (req: Request) => {
                 </body>
                 </html>
                 `
-    const checkSendMail = await sendEmail(Email, subject, content)
+    const checkSendMail = await sendEmail(Email, subject, content, attachments)
     if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     return response(updatePayment, false, "Thanh toán thành công", 200)
   } catch (error: any) {
@@ -367,11 +367,11 @@ const fncGetListTransfer = async (req: Request) => {
                 localField: "_id",
                 as: "Issues",
                 pipeline: [
-                  // {
-                  //   $match: {
-                  //     "createdAt": { $gte: new Date(FromDate), $lte: new Date(ToDate) }
-                  //   }
-                  // },
+                  {
+                    $match: {
+                      "createdAt": { $gte: new Date(FromDate), $lte: new Date(ToDate) }
+                    }
+                  },
                   {
                     $lookup: {
                       from: "users",
@@ -525,7 +525,13 @@ const fncSendRequestExplanation = async (req: Request) => {
   }
 }
 
-
+const fncCancelPaymentOfTeacher = async (req: Request) => {
+  try {
+    // const {PaymentID,}
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
 
 const PaymentService = {
   fncCreatePayment,

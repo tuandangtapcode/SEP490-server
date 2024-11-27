@@ -1,5 +1,6 @@
 import { CreateFeedbackDTO, GetListFeedbackOfTeacherDTO } from "../dtos/feedback.dto"
 import Feedback from "../models/feedback"
+import SubjectSetting from "../models/subjectsetting"
 import User from "../models/user"
 import response from "../utils/response"
 import { Request } from "express"
@@ -9,8 +10,8 @@ const fncCreateFeedback = async (req: Request) => {
     const UserID = req.user.ID
     const { Teacher, Rate } = req.body as CreateFeedbackDTO
     const newFeedback = await Feedback.create({ ...req.body, User: UserID })
-    await User.findByIdAndUpdate(
-      Teacher,
+    await SubjectSetting.findOneAndUpdate(
+      { Teacher },
       { $push: { Votes: Rate } }
     )
     return response(newFeedback, false, "Tạo Feedback thành công", 201)
@@ -26,13 +27,13 @@ const fncGetListFeedbackOfTeacher = async (req: Request) => {
     let query = {
       Teacher: TeacherID
     }
-    const Feedbacks = Feedback
+    const feedbacks = Feedback
       .find(query)
       .skip((CurrentPage - 1) * PageSize)
       .limit(PageSize)
-      .populate("User", ["FullName", "AvatarPath"])
+    // .populate("User", ["FullName", "AvatarPath"])
     const total = Feedback.countDocuments(query)
-    const result = await Promise.all([Feedbacks, total])
+    const result = await Promise.all([feedbacks, total])
     return response(
       { List: result[0], Total: result[1] },
       false,

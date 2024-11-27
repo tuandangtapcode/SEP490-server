@@ -127,9 +127,9 @@ const responseConfirmSubjectSetting = async (req: Request, res: Response) => {
   }
 }
 
-const getListTopTeacherBySubject = async (req: Request, res: Response) => {
+const getListTopTeacher = async (req: Request, res: Response) => {
   try {
-    const response = await UserSerivce.fncGetListTopTeacherBySubject(req)
+    const response = await UserSerivce.fncGetListTopTeacher(req)
     return res.status(response.statusCode).json(response)
   } catch (error: any) {
     return res.status(500).json(error.toString())
@@ -187,7 +187,7 @@ const UserController = {
   updateSubjectSetting,
   deleteSubjectSetting,
   responseConfirmSubjectSetting,
-  getListTopTeacherBySubject,
+  getListTopTeacher,
   changeCareerInformation,
   updateSchedule,
   getListSubjectSetting,

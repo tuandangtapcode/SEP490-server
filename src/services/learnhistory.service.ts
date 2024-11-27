@@ -88,23 +88,6 @@ const fncGetListLearnHistory = async (req: Request) => {
       { $unwind: '$Student' },
       {
         $lookup: {
-          from: "courses",
-          localField: "Student",
-          foreignField: "_id",
-          as: "Student",
-          pipeline: [
-            {
-              $project: {
-                _id: 1,
-                FullName: 1
-              }
-            }
-          ]
-        }
-      },
-      { $unwind: '$Student' },
-      {
-        $lookup: {
           from: "users",
           localField: "Teacher",
           foreignField: "_id",
