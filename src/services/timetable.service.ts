@@ -78,18 +78,23 @@ const fncUpdateTimeTable = async (req: Request) => {
     const { TimeTableID, StartTime } =
       req.body as UpdateTimeTableDTO
     const checkExistTimetable = await TimeTable.findOne({
-      StartTime,
+      StartTime: new Date(StartTime),
       _id: {
         $ne: TimeTableID
       }
     })
     if (!!checkExistTimetable)
-      return response({}, true, "Bạn đã có lịch học vào thời điểm này", 200)
-    const updateTimetable = await TimeTable.findOneAndUpdate(
-      { _id: TimeTableID },
-      { ...req.body },
-      { new: true }
-    )
+      return response(checkExistTimetable, true, "Bạn đã có lịch học vào thời điểm này", 200)
+    const updateTimetable = await TimeTable
+      .findOneAndUpdate(
+        { _id: TimeTableID },
+        { ...req.body },
+        { new: true }
+      )
+      .populate("Teacher", ["_id", "FullName"])
+      .populate("Student", ["_id", "FullName"])
+      .populate("Subject", ["_id", "SubjectName"])
+      .lean()
     return response(updateTimetable, false, "Cập nhật lịch học thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

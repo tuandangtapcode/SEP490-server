@@ -18,7 +18,7 @@ import CommonRoute from "./common.route"
 import CourseRoute from "./course.route"
 import ConfirmRoute from "./confirm.route"
 import GenerateRouter from "./generate.route"
-import PineconeRoute from "./pincone.route"
+
 const routes = (app: Application) => {
   app.use("/account", AccountRoute)
   app.use("/message", MessageRoute)
@@ -39,7 +39,6 @@ const routes = (app: Application) => {
   app.use("/course", CourseRoute)
   app.use("/confirm", ConfirmRoute)
   app.use("/generate", GenerateRouter)
-  app.use("/pinecone", PineconeRoute)
 }
 
 export default routes
