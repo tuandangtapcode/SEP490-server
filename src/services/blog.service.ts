@@ -212,9 +212,9 @@ const fncChangeReceiveStatus = async (req: Request) => {
 
     blog.TeacherReceive.forEach((teacher) => {
       if (teacher.Teacher && teacher.Teacher.toString() === TeacherID) {
-        teacher.ReceiveStatus = 2;
+        teacher.ReceiveStatus = 3;
       } else {
-        teacher.ReceiveStatus = 0;
+        teacher.ReceiveStatus = 2;
       }
     });
 
