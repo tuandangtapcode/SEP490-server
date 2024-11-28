@@ -39,4 +39,9 @@ BlogRoute.post("/getListBlogByStudent",
   BlogController.sendRequestReceive
 )
 
+BlogRoute.post("/changeReceiveStatus",
+  authMiddleware([Roles.ROLE_STUDENT]),
+  BlogController.sendRequestReceive
+)
+
 export default BlogRoute
