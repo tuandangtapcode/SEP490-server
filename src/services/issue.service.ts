@@ -6,7 +6,7 @@ import {
   CreateIssueDTO,
   IssueDTO
 } from "../dtos/issue.dto"
-import { PaginationDTO } from "../dtos/common.dto"
+import { CommonDTO } from "../dtos/common.dto"
 
 const fncCreateIssue = async (req: Request) => {
   try {
@@ -23,16 +23,146 @@ const fncCreateIssue = async (req: Request) => {
 
 const fncGetListIssue = async (req: Request) => {
   try {
-    const { CurrentPage, PageSize } = req.body as PaginationDTO
-    const Issues = Issue
-      .find()
-      .populate("Sender", ["_id", "FullName"])
-      .skip((CurrentPage - 1) * PageSize)
-      .limit(PageSize)
-    const total = Issue.countDocuments()
+    const { TextSearch, CurrentPage, PageSize } = req.body as CommonDTO
+    const Issues = Issue.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "Sender",
+          foreignField: "_id",
+          as: "Sender",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Sender" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $lookup: {
+          from: "timetables",
+          localField: "Timetable",
+          foreignField: "_id",
+          as: "Timetable",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                StartTime: 1,
+                EndTime: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Timetable" },
+      {
+        $match: {
+          $or: [
+            { "Teacher.FullName": { $regex: TextSearch, $options: "i" }, },
+            { "Sender.FullName": { $regex: TextSearch, $options: "i" }, },
+          ]
+        }
+      },
+      { $skip: (CurrentPage - 1) * PageSize },
+      { $limit: PageSize }
+    ])
+    const total = Issue.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "Sender",
+          foreignField: "_id",
+          as: "Sender",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Sender" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $lookup: {
+          from: "timetables",
+          localField: "Timetable",
+          foreignField: "_id",
+          as: "Timetable",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                StartTime: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Timetable" },
+      {
+        $match: {
+          $or: [
+            { "Teacher.FullName": { $regex: TextSearch, $options: "i" }, },
+            { "Sender.FullName": { $regex: TextSearch, $options: "i" }, },
+          ]
+        }
+      },
+      {
+        $group: {
+          _id: "$_id"
+        }
+      },
+      {
+        $count: "total"
+      }
+    ])
     const result = await Promise.all([Issues, total])
     return response(
-      { List: result[0], Total: result[1] },
+      {
+        List: result[0],
+        Total: !!result[1].length ? result[1][0].total : 0
+      },
       false,
       "Lấy ra Issue thành công",
       200
