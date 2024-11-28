@@ -11,9 +11,9 @@ export interface CreateUpdateBlogDTO {
   LearnType: number[],
   Address: string,
   Schedules: {
-    DateAt: string,
-    StartTime: String,
-    EndTime: String
+    // DateAt: string,
+    StartTime: string,
+    EndTime: string
   }[],
   BlogID?: ObjectId
 }

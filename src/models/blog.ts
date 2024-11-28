@@ -72,10 +72,14 @@ const BlogSchema = new Schema({
     type: Boolean,
     default: false
   },
-  IsActivate: {
-    type: Boolean,
-    default: false
-  },
+  // IsActivate: {
+  //   type: Boolean,
+  //   default: false
+  // },
+  RegisterStatus: {
+    type: Number,
+    default: 1
+  }
 }, {
   timestamps: true
 })

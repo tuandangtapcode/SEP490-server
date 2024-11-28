@@ -4,7 +4,9 @@ import BlogService from "../services/blog.service"
 const createBlog = async (req: Request, res: Response) => {
   try {
     const response = await BlogService.fncCreateBlog(req)
+    console.log("Schedules received:", req.body.Schedules);
     return res.status(response.statusCode).json(response)
+    
   } catch (error: any) {
     return res.status(500).json(error.toString())
   }
