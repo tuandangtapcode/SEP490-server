@@ -188,7 +188,7 @@ const fncChangeReceiveStatus = async (req: Request) => {
       }
     });
 
-    blog.IsActivate = false;
+    blog.RegisterStatus = 1;
     await blog.save();
 
     return response(
