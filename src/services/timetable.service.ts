@@ -75,21 +75,37 @@ const fncAttendanceTimeTable = async (req: Request) => {
 
 const fncUpdateTimeTable = async (req: Request) => {
   try {
-    const { TimeTableID, StartTime } =
+    const UserID = req.user.ID
+    const { TimeTableID, StartTime, EndTime } =
       req.body as UpdateTimeTableDTO
-    const checkExistTimetable = await TimeTable.findOne({
-      StartTime,
-      _id: {
-        $ne: TimeTableID
+    const checkExistTimetable = await TimeTable
+      .findOne({
+        StartTime: {
+          $gte: StartTime,
+          $lte: EndTime
+        },
+        _id: {
+          $ne: TimeTableID
+        }
+      })
+      .lean()
+    if (!!checkExistTimetable) {
+      if (checkExistTimetable.Teacher.equals(UserID)) {
+        return response(checkExistTimetable, true, "Bạn đã có lịch học vào thời điểm này", 200)
+      } else {
+        return response(checkExistTimetable, true, "Học sinh của bạn đã có lịch học vào thời điểm này", 200)
       }
-    })
-    if (!!checkExistTimetable)
-      return response({}, true, "Bạn đã có lịch học vào thời điểm này", 200)
-    const updateTimetable = await TimeTable.findOneAndUpdate(
-      { _id: TimeTableID },
-      { ...req.body },
-      { new: true }
-    )
+    }
+    const updateTimetable = await TimeTable
+      .findOneAndUpdate(
+        { _id: TimeTableID },
+        { ...req.body },
+        { new: true }
+      )
+      .populate("Teacher", ["_id", "FullName"])
+      .populate("Student", ["_id", "FullName"])
+      .populate("Subject", ["_id", "SubjectName"])
+      .lean()
     return response(updateTimetable, false, "Cập nhật lịch học thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -100,13 +116,13 @@ const fncGetTimeTableByUser = async (req: Request) => {
   try {
     const { ID, RoleID } = req.user
     const ButtonShow = {
-      isShowBtnAttendance: RoleID === Roles.ROLE_TEACHER ? true : false,
-      isShowBtnUpdateTimeTable: RoleID === Roles.ROLE_TEACHER ? true : false
+      IsShowBtnAttendance: RoleID === Roles.ROLE_TEACHER ? true : false,
+      IsShowBtnUpdateTimeTable: RoleID === Roles.ROLE_TEACHER ? true : false
     }
 
     const timetables = await TimeTable
       .find({
-        [RoleID === Roles.ROLE_STUDENT ? "Student" : "Teacher"]: ID
+        [RoleID === Roles.ROLE_STUDENT ? "Student" : "Teacher"]: ID,
       })
       .populate("Teacher", ["_id", "FullName"])
       .populate("Student", ["_id", "FullName"])
@@ -114,16 +130,16 @@ const fncGetTimeTableByUser = async (req: Request) => {
       .lean()
     const data = timetables.map((i: any) => ({
       ...i,
-      isAttendance: (moment().isAfter(i.StartTime) &&
+      IsAttendance: (moment().isAfter(i.StartTime) &&
         moment().isBefore(moment(i.EndTime).add(24, "hours")) &&
         !i.Status)
         ? true
         : false,
-      isUpdateTimeTable: moment().isAfter(moment(i.StartTime).diff(24, "hours")) &&
+      IsUpdateTimeTable: moment().isAfter(moment(i.StartTime).diff(12, "hours")) &&
         moment().isBefore(moment(i.EndTime))
         ? true
         : false,
-      isSubmitIssue: RoleID === Roles.ROLE_STUDENT &&
+      IsSubmitIssue: RoleID === Roles.ROLE_STUDENT &&
         (moment().isAfter(i.EndTime) &&
           moment().isBefore(moment(i.EndTime).add(24, "hours")))
         ? true

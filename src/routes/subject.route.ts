@@ -7,7 +7,7 @@ import SubjectValidation from "../validations/subject.validation"
 const SubjectRoute = express.Router()
 
 SubjectRoute.post("/createSubject",
-  //authMiddleware([Roles.ROLE_ADMIN]),
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   SubjectValidation.createUpdateSubject,
   SubjectController.createSubject
 )
@@ -15,12 +15,12 @@ SubjectRoute.post("/getListSubject",
   SubjectController.getListSubject
 )
 SubjectRoute.post("/updateSubject",
-  authMiddleware([Roles.ROLE_ADMIN]),
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   SubjectValidation.createUpdateSubject,
   SubjectController.updateSubject
 )
 SubjectRoute.get("/deleteSubject/:SubjectID",
-  authMiddleware([Roles.ROLE_ADMIN]),
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   SubjectController.deleteSubject
 )
 SubjectRoute.get("/getDetailSubject/:SubjectID",

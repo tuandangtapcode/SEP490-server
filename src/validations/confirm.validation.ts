@@ -4,7 +4,7 @@ import { NextFunction, Request, Response } from 'express'
 
 const createConfirm = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
-    ConfirmID: Joi.string().pattern(getRegexObjectID()).optional(),
+    CourseID: Joi.string().pattern(getRegexObjectID()).optional(),
     Sender: Joi.string().pattern(getRegexObjectID()).required(),
     StudentName: Joi.string().min(1).required(),
     Receiver: Joi.string().pattern(getRegexObjectID()).required(),
@@ -55,10 +55,10 @@ const changeConfirmStatus = async (req: Request, res: Response, next: NextFuncti
   const trueCondition = Joi.object({
     ConfirmID: Joi.string().pattern(getRegexObjectID()).required(),
     ConfirmStatus: Joi.number().valid(2, 3, 4).required(),
-    Recevier: Joi.string().pattern(getRegexObjectID()).required(),
     RecevierName: Joi.string().min(1).required(),
+    RecevierEmail: Joi.string().pattern(getRegexEmail()).optional(),
     SenderName: Joi.string().min(1).required(),
-    SenderEmail: Joi.string().pattern(getRegexEmail()).required(),
+    SenderEmail: Joi.string().pattern(getRegexEmail()).optional(),
     Reason: Joi.string().min(1).optional()
   })
   try {

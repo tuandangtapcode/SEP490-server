@@ -127,9 +127,9 @@ const responseConfirmSubjectSetting = async (req: Request, res: Response) => {
   }
 }
 
-const getListTopTeacherBySubject = async (req: Request, res: Response) => {
+const getListTopTeacher = async (req: Request, res: Response) => {
   try {
-    const response = await UserSerivce.fncGetListTopTeacherBySubject(req)
+    const response = await UserSerivce.fncGetListTopTeacher(req)
     return res.status(response.statusCode).json(response)
   } catch (error: any) {
     return res.status(500).json(error.toString())
@@ -172,6 +172,24 @@ const disabledOrEnabledSubjectSetting = async (req: Request, res: Response) => {
   }
 }
 
+const createAccountStaff = async (req: Request, res: Response) => {
+  try {
+    const response = await UserSerivce.fncCreateAccountStaff(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const getListAccountStaff = async (req: Request, res: Response) => {
+  try {
+    const response = await UserSerivce.fncGetListAccountStaff(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
 const UserController = {
   getDetailProfile,
   changeProfile,
@@ -187,11 +205,13 @@ const UserController = {
   updateSubjectSetting,
   deleteSubjectSetting,
   responseConfirmSubjectSetting,
-  getListTopTeacherBySubject,
+  getListTopTeacher,
   changeCareerInformation,
   updateSchedule,
   getListSubjectSetting,
-  disabledOrEnabledSubjectSetting
+  disabledOrEnabledSubjectSetting,
+  createAccountStaff,
+  getListAccountStaff
 }
 
 export default UserController

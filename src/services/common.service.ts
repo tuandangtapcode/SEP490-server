@@ -2,9 +2,28 @@ import { Request } from "express"
 import ProfitPercent from "../models/profitpercent"
 import SystemKey from "../models/systemkey"
 import response from "../utils/response"
-import checkPayment from "../tools/checkPayment"
 import CacheService from "./redis.service"
 import { getOneDocument } from "../utils/queryFunction"
+import { Roles } from "../utils/constant"
+import TimeTable from "../models/timetable"
+
+const getTabs = (RoleID: number, IsByGoogle: boolean) => {
+  let tabs = [] as any[]
+  if (RoleID === Roles.ROLE_ADMIN) {
+    tabs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+  } else if (RoleID === Roles.ROLE_STAFF) {
+    tabs = [3, 4, 5, 6, 7, 10, 11, 12, 13]
+  } else if (RoleID === Roles.ROLE_TEACHER) {
+    tabs = !!IsByGoogle
+      ? [1, 3, 4, 5, 6, 7, 9, 10, 11]
+      : [1, 2, 3, 4, 5, 6, 7, 9, 10, 11]
+  } else {
+    tabs = !!IsByGoogle
+      ? [1, 3, 4, 5, 7, 8, 9, 10, 11]
+      : [1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
+  }
+  return tabs
+}
 
 const ProfitPercentID = "66f92e193657dfff3345aa0f"
 
@@ -19,6 +38,9 @@ const fncGetListSystemKey = async () => {
       systemKeys = await SystemKey.find()
       CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
     }
+    await TimeTable.updateMany({
+      IsCancel: false
+    })
     return response(systemKeys, false, "Lấy ra thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -90,12 +112,24 @@ const fncInsertParentKey = async (req: Request) => {
   }
 }
 
+const fncGetListTabs = async (req: Request) => {
+  try {
+    const { RoleID } = req.user
+    const { IsByGoogle } = req.body
+    const tabs = getTabs(RoleID, IsByGoogle)
+    return response(tabs, false, "Lấy data thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const CommonService = {
   fncGetListSystemKey,
   fncCreateSystemKey,
   fncGetProfitPercent,
   fncChangeProfitPercent,
-  fncInsertParentKey
+  fncInsertParentKey,
+  fncGetListTabs
 }
 
 export default CommonService

@@ -5,6 +5,7 @@ import { NextFunction, Request, Response } from 'express'
 const createFeedback = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     Teacher: Joi.string().pattern(getRegexObjectID()).required(),
+    LearnHistory: Joi.string().pattern(getRegexObjectID()).required(),
     Rate: Joi.number().integer().min(1).max(5).required(),
     Content: Joi.string().min(3).max(256).required()
   })

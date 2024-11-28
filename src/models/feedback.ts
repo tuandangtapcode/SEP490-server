@@ -9,7 +9,12 @@ const FeedbackSchema = new Schema({
   },
   Teacher: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Users',
+    ref: "Users",
+    required: true
+  },
+  LearnHistory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'LearnHistories',
     required: true
   },
   Content: {

@@ -1,3 +1,4 @@
+import { Roles } from "../utils/constant"
 import {
   JoinMeetingRoomDTO,
   LeaveMeetingRoomDTO,
@@ -117,7 +118,8 @@ const sendMessageMeetingRoom = (io: any) => {
 
 const sendNotedConfirm = (socket: any) => {
   return (data: any) => {
-    const user = userOnlines.find((i: any) => i.UserID === data.Sender)
+    const user = userOnlines.find((i: any) => i.UserID ===
+      data?.[data.RoleID === Roles.ROLE_TEACHER ? "Sender" : "Receiver"]._id)
     if (!!user) {
       socket.to(user.SocketID).emit('listen-noted-confirm', data)
     }

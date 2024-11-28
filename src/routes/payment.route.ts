@@ -3,6 +3,7 @@ import PaymentController from "../controllers/payment.controller"
 import authMiddleware from '../middlewares/auth.middleware'
 import { Roles } from "../utils/constant"
 import PaymentValidation from "../validations/payment.validation"
+import upload from '../middlewares/clouddinary.middleware'
 
 const PaymentRoute = express.Router()
 
@@ -17,6 +18,7 @@ PaymentRoute.post("/getListPaymentHistoryByUser",
 )
 PaymentRoute.post("/changePaymentStatus",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_ADMIN, Roles.ROLE_TEACHER]),
+  upload('Bill').single('Image'),
   PaymentValidation.changePaymentStatus,
   PaymentController.changePaymentStatus
 )

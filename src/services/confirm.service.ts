@@ -97,60 +97,72 @@ const fncUpdateConfirm = async (req: Request) => {
 
 const fncChangeConfirmStatus = async (req: Request) => {
   try {
-    const { ConfirmID, ConfirmStatus, Recevier, RecevierName, SenderName, SenderEmail, Reason } = req.body as ChangeConfirmStatusDTO
+    const { ConfirmID, ConfirmStatus, RecevierName, RecevierEmail, SenderName, SenderEmail, Reason } = req.body as ChangeConfirmStatusDTO
+    const { RoleID } = req.user
     const confirm = await getOneDocument(Confirm, "_id", ConfirmID)
     if (!confirm) return response({}, true, "Có lỗi xảy ra", 200)
-    // if (ConfirmStatus === 2) {
-    //   const checkExistTimeTable = await TimeTable.findOne({
-    //     Teacher: Recevier,
-    //     StartTime: {
-    //       $in: confirm.Schedules.map((i: any) => i.StartTime)
-    //     }
-    //   })
-    //   if (!!checkExistTimeTable) {
-    //     return response(
-    //       {},
-    //       true,
-    //       `Bạn đã có lịch dạy vào ngày ${moment(checkExistTimeTable.StartTime).format("DD/MM/YYYY")} ${moment(checkExistTimeTable.StartTime).format("HH:mm")} - ${moment(checkExistTimeTable.EndTime).format("HH:mm")}`,
-    //       200
-    //     )
-    //   }
     if ([2, 3].includes(ConfirmStatus)) {
-      const subject = "THÔNG BÁO TRẠNG THÁI ĐĂNG KÝ HỌC"
-      const confirmContent = `>Giáo viên ${RecevierName} đã xác nhận booking của bạn. Bạn hãy truy cập vào lịch sử booking của mình để tiến hành thanh toán và hoàn tất booking.>Giáo viên ${RecevierName} đã xác nhận booking của bạn. Bạn hãy truy cập vào lịch sử booking của mình để tiến hành thanh toán và hoàn tất booking.`
-      const rejectContent = `Giáo viên ${RecevierName} đã hủy xác nhận booking của bạn với lý do: ${Reason}`
-      const content = `
-      <html>
-      <head>
-      <style>
-          p {
-              color: #333;
+      let subject = "", confirmContent, rejectContent, content = "", checkSendMail
+      if (RoleID === Roles.ROLE_TEACHER) {
+        subject = "THÔNG BÁO TRẠNG THÁI ĐĂNG KÝ HỌC"
+        confirmContent = `Giáo viên ${RecevierName} đã xác nhận booking của bạn. Bạn hãy truy cập vào lịch sử booking của mình để tiến hành thanh toán và hoàn tất booking.>Giáo viên ${RecevierName} đã xác nhận booking của bạn. Bạn hãy truy cập vào lịch sử booking của mình để tiến hành thanh toán và hoàn tất booking.`
+        rejectContent = `Giáo viên ${RecevierName} đã hủy xác nhận booking của bạn với lý do: ${Reason}`
+        content = `
+        <html>
+        <head>
+        <style>
+            p {
+                color: #333;
+            }
+        </style>
+        </head>
+        <body>
+          <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO TRẠNG THÁI ĐĂNG KÝ HỌC</p>
+          <p style="margin-bottom:10px">Xin chào ${SenderName},</p>
+          <p style="margin-bottom:10px">${ConfirmStatus === 2 ? confirmContent : rejectContent}</p>
+          ${ConfirmStatus === 2 ?
+            `<div>
+            <span style="color:red; margin-right: 4px">Lưu ý:</span>
+            <span>Trong vòng 48h nếu bạn không thanh toán booking này thì booking này sẽ tự động chuyển thành "Hủy xác nhận".</span>
+          </div>`
+            : ""
           }
-      </style>
-      </head>
-      <body>
-        <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO TRẠNG THÁI ĐĂNG KÝ HỌC</p>
-        <p style="margin-bottom:10px">Xin chào ${SenderName},</p>
-        <p style="margin-bottom:10px">${ConfirmStatus === 2 ? confirmContent : rejectContent}</p>
-        ${ConfirmStatus === 2 ?
-          `<div>
-          <span style="color:red; margin-right: 4px">Lưu ý:</span>
-          <span>Trong vòng 48h nếu bạn không thanh toán booking này thì booking này sẽ tự động chuyển thành "Hủy xác nhận".</span>
-        </div>`
-          : ""
-        }
-      </body>
-      </html>
-      `
-      const checkSendMail = await sendEmail(SenderEmail, subject, content)
+        </body>
+        </html>
+        `
+        checkSendMail = await sendEmail(SenderEmail as string, subject, content)
+      } else {
+        subject = "THÔNG BÁO TRẠNG THÁI ĐĂNG KÝ HỌC"
+        rejectContent = `Học sinh ${SenderName} đã hủy booking với lý do: ${Reason}`
+        content = `
+        <html>
+        <head>
+        <style>
+            p {
+                color: #333;
+            }
+        </style>
+        </head>
+        <body>
+          <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO TRẠNG THÁI ĐĂNG KÝ HỌC</p>
+          <p style="margin-bottom:10px">Xin chào ${RecevierName},</p>
+          <p style="margin-bottom:10px">${rejectContent}</p>
+        </body>
+        </html>
+        `
+        checkSendMail = await sendEmail(RecevierEmail as string, subject, content)
+      }
       if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     }
-    // }
-    await Confirm
-      .updateOne(
+    const updateConfirm = await Confirm
+      .findOneAndUpdate(
         { _id: ConfirmID },
-        { ConfirmStatus: ConfirmStatus }
+        { ConfirmStatus: ConfirmStatus },
+        { new: true }
       )
+      .populate("Receiver", ["_id", "FullName"])
+      .populate("Sender", ["_id", "FullName"])
+      .populate("Subject", ["_id", "SubjectName"])
       .lean() as any
     if (ConfirmStatus == 2 && !!confirm.CourseID) {
       const updateCourse = await Course.findOneAndUpdate(
@@ -164,7 +176,7 @@ const fncChangeConfirmStatus = async (req: Request) => {
       if (!updateCourse) response({}, true, "Có lỗi xảy ra trong quá trình gửi update course", 200)
     }
     return response(
-      {},
+      updateConfirm,
       false,
       ConfirmStatus === 2
         ? "Xác nhận thành công"
@@ -195,13 +207,9 @@ const fncGetListConfirm = async (req: Request) => {
       {
         $lookup: {
           from: "users",
-          localField: RoleID === Roles.ROLE_TEACHER
-            ? "Sender"
-            : "Receiver",
+          localField: "Sender",
           foreignField: "_id",
-          as: RoleID === Roles.ROLE_TEACHER
-            ? "Sender"
-            : "Receiver",
+          as: "Sender",
           pipeline: [
             {
               $lookup: {
@@ -227,11 +235,39 @@ const fncGetListConfirm = async (req: Request) => {
           ]
         }
       },
+      { $unwind: "$Sender" },
       {
-        $unwind: RoleID === Roles.ROLE_TEACHER
-          ? "$Sender"
-          : "$Receiver"
+        $lookup: {
+          from: "users",
+          localField: "Receiver",
+          foreignField: "_id",
+          as: "Receiver",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email"
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                FullName: 1,
+                Email: 1
+              }
+            },
+          ]
+        }
       },
+      { $unwind: "$Receiver" },
       {
         $lookup: {
           from: "subjects",
@@ -253,10 +289,10 @@ const fncGetListConfirm = async (req: Request) => {
         $match: {
           $or: [
             {
-              [RoleID === Roles.ROLE_TEACHER
-                ? "Sender.FullName"
-                : "Receiver.FullName"
-              ]: { $regex: TextSearch, $options: "i" },
+              "Sender.FullName": { $regex: TextSearch, $options: "i" },
+            },
+            {
+              "Receiver.FullName": { $regex: TextSearch, $options: "i" },
             },
             {
               "Subject.SubjectName": { $regex: TextSearch, $options: "i" },
@@ -279,28 +315,67 @@ const fncGetListConfirm = async (req: Request) => {
       {
         $lookup: {
           from: "users",
-          localField: RoleID === Roles.ROLE_TEACHER
-            ? "Sender"
-            : "Receiver",
+          localField: "Sender",
           foreignField: "_id",
-          as: RoleID === Roles.ROLE_TEACHER
-            ? "Sender"
-            : "Receiver",
+          as: "Sender",
           pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email"
+              }
+            },
             {
               $project: {
                 _id: 1,
-                FullName: 1
+                FullName: 1,
+                Email: 1
               }
-            }
+            },
           ]
         }
       },
+      { $unwind: "$Sender" },
       {
-        $unwind: RoleID === Roles.ROLE_TEACHER
-          ? "$Sender"
-          : "$Receiver"
+        $lookup: {
+          from: "users",
+          localField: "Recevier",
+          foreignField: "_id",
+          as: "Recevier",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email"
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                FullName: 1,
+                Email: 1
+              }
+            },
+          ]
+        }
       },
+      { $unwind: "$Recevier" },
       {
         $lookup: {
           from: "subjects",
@@ -322,10 +397,10 @@ const fncGetListConfirm = async (req: Request) => {
         $match: {
           $or: [
             {
-              [RoleID === Roles.ROLE_TEACHER
-                ? "Sender.FullName"
-                : "Receiver.FullName"
-              ]: { $regex: TextSearch, $options: "i" },
+              "Sender.FullName": { $regex: TextSearch, $options: "i" },
+            },
+            {
+              "Receiver.FullName": { $regex: TextSearch, $options: "i" },
             },
             {
               "Subject.SubjectName": { $regex: TextSearch, $options: "i" },

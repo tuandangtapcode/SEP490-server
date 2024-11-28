@@ -48,7 +48,8 @@ const changePaymentStatus = async (req: Request, res: Response, next: NextFuncti
     PaymentStatus: Joi.number().min(1).max(3).required(),
     TotalFee: Joi.number().min(1).required(),
     FullName: Joi.string().min(1).required(),
-    RoleID: Joi.number().integer().valid(3, 4).required()
+    RoleID: Joi.number().integer().valid(3, 4).required(),
+    Image: Joi.string().required()
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })

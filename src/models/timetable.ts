@@ -4,7 +4,7 @@ const Schema = mongoose.Schema
 const TimeTableSchema = new Schema({
   LearnHistory: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'LearnHistorys',
+    ref: 'LearnHistories',
     required: true
   },
   Teacher: {
@@ -48,6 +48,10 @@ const TimeTableSchema = new Schema({
     default: null
   },
   Status: {
+    type: Boolean,
+    default: false
+  },
+  IsCancel: {
     type: Boolean,
     default: false
   },

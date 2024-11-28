@@ -36,12 +36,6 @@ const UserSchema = new Schema({
     ],
     default: []
   },
-  Votes: {
-    type: [
-      { type: Number }
-    ],
-    default: []
-  },
   Experiences: {
     type: [
       { type: String }

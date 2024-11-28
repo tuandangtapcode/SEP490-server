@@ -153,7 +153,7 @@ const fncChangePaymentStatus = async (req: Request) => {
                 </body>
                 </html>
                 `
-    const checkSendMail = await sendEmail(Email, subject, content)
+    const checkSendMail = await sendEmail(Email, subject, content, attachments)
     if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     return response(updatePayment, false, "Thanh toán thành công", 200)
   } catch (error: any) {
@@ -208,6 +208,7 @@ const fncGetListPayment = async (req: Request) => {
           'Sender.FullName': 1,
         }
       },
+      { $sort: { PaymentTime: -1 } },
       { $skip: (CurrentPage - 1) * PageSize },
       { $limit: PageSize }
     ])
@@ -324,7 +325,7 @@ const fncGetListTransfer = async (req: Request) => {
                 pipeline: [
                   {
                     $match: {
-                      "DateAt": { $gte: new Date(FromDate), $lte: new Date(ToDate) },
+                      "StartTime": { $gte: new Date(FromDate), $lte: new Date(ToDate) },
                       "Status": true,
                     }
                   },
@@ -333,7 +334,15 @@ const fncGetListTransfer = async (req: Request) => {
                       from: "subjects",
                       localField: "Subject",
                       foreignField: "_id",
-                      as: "Subject"
+                      as: "Subject",
+                      pipeline: [
+                        {
+                          $project: {
+                            _id: 1,
+                            SubjectName: 1
+                          }
+                        }
+                      ]
                     }
                   },
                   { $unwind: "$Subject" },
@@ -345,7 +354,7 @@ const fncGetListTransfer = async (req: Request) => {
                       EndTime: 1,
                       LearnType: 1,
                       Address: 1,
-                      "Subject.SubjectName": 1
+                      Subject: 1
                     }
                   }
                 ]
@@ -353,10 +362,10 @@ const fncGetListTransfer = async (req: Request) => {
             },
             {
               $lookup: {
-                from: "reports",
+                from: "issues",
                 foreignField: "Teacher",
                 localField: "_id",
-                as: "Reports",
+                as: "Issues",
                 pipeline: [
                   {
                     $match: {
@@ -384,6 +393,13 @@ const fncGetListTransfer = async (req: Request) => {
                             Email: "$Account.Email"
                           }
                         },
+                        {
+                          $project: {
+                            _id: 1,
+                            FullName: 1,
+                            Email: 1
+                          }
+                        }
                       ]
                     }
                   },
@@ -393,7 +409,16 @@ const fncGetListTransfer = async (req: Request) => {
                       from: "users",
                       localField: "Teacher",
                       foreignField: "_id",
-                      as: "Teacher"
+                      as: "Teacher",
+                      pipeline: [
+                        {
+                          $project: {
+                            _id: 1,
+                            FullName: 1,
+                            Email: 1
+                          }
+                        }
+                      ]
                     }
                   },
                   { $unwind: "$Teacher" },
@@ -404,12 +429,8 @@ const fncGetListTransfer = async (req: Request) => {
                       Content: 1,
                       Timetable: 1,
                       IsHandle: 1,
-                      "Sender._id": 1,
-                      "Sender.FullName": 1,
-                      "Sender.Email": 1,
-                      "Teacher._id": 1,
-                      "Teacher.FullName": 1,
-                      "Teacher.Price": 1
+                      Sender: 1,
+                      Teacher: 1
                     }
                   }
                 ]
@@ -434,7 +455,7 @@ const fncGetListTransfer = async (req: Request) => {
                 _id: 1,
                 FullName: 1,
                 TimeTables: 1,
-                Reports: 1,
+                Issues: 1,
                 Email: 1,
                 RoleID: 1
               }
@@ -444,7 +465,12 @@ const fncGetListTransfer = async (req: Request) => {
       },
       { $unwind: "$Receiver" }
     ])
-    return response(payments, false, "Lấy data thành công", 200)
+    const data = payments.map((i: any) => ({
+      ...i,
+      IsViewIssue: !i.Receiver.Issues.length,
+      IsSendRequestExplantion: !i.Receiver.Issues.length || !!i.RequestAxplanationAt
+    }))
+    return response(data, false, "Lấy data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -499,7 +525,13 @@ const fncSendRequestExplanation = async (req: Request) => {
   }
 }
 
-
+const fncCancelPaymentOfTeacher = async (req: Request) => {
+  try {
+    // const {PaymentID,}
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
 
 const PaymentService = {
   fncCreatePayment,
