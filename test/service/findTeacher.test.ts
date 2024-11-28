@@ -31,43 +31,50 @@ describe('fncGetListTeacher', () => {
     it('should return a list of teachers based on the query', async () => {
         const mockUsers = [
             {
-              _id: new mongoose.Types.ObjectId(),
-              FullName: 'John Doe',
-              RegisterStatus: 3,
-              SubjectSettings: [
-                {
-                  Subject: { _id: '64c12345abcd678901234567', SubjectName: 'Math' },
-                  Levels: ['Beginner', 'Intermediate']
-                }
-              ],
-              Account: {
-                Email: 'johndoe@example.com',
-                IsActive: true
-              },
-              IsConfirm: true,  // added based on RegisterStatus !== 2 and Account.IsActive
-              IsReject: true,   // added based on RegisterStatus !== 2 and Account.IsActive
-              IsLockUnLock: false // added based on RegisterStatus !== 3 and Account.IsActive
+                _id: new mongoose.Types.ObjectId(),
+                FullName: 'John Doe',
+                RegisterStatus: 3,
+                SubjectSettings: [
+                    {
+                        Subject: { _id: '64c12345abcd678901234567', SubjectName: 'Math' },
+                        Levels: ['Beginner', 'Intermediate']
+                    }
+                ],
+                Account: {
+                    Email: 'johndoe@example.com',
+                    IsActive: true
+                },
+                BankingInfor: [
+                    { BankID: '001', UserBankAccount: '123456', UserBankName: 'Test Bank' }
+                ],
+                IsConfirm: true,
+                IsReject: true,
+                IsLockUnLock: false
             }
-          ];
-          
-          const mockTotal = 1;
-          
-          const aggregateStub = sandbox.stub(User, 'aggregate').resolves(mockUsers);
-          const countDocumentsStub = sandbox.stub(User, 'countDocuments').resolves(mockTotal);
-          
-          // Call the function under test
-          const response = await UserSerivce.fncGetListTeacher(req as Request);
-          
-          // Assertions
-          expect(aggregateStub.calledOnce).to.be.true;
-          expect(countDocumentsStub.calledOnce).to.be.true;
-          expect(response.isError).to.be.false;
-          expect(response.msg).to.equal('Lay dat thanh cong');
-          expect(response.data).to.deep.equal({
-            List: mockUsers,
+        ];
+    
+        const mockTotal = 1;
+    
+        const aggregateStub = sandbox.stub(User, 'aggregate').resolves(mockUsers);
+        const countDocumentsStub = sandbox.stub(User, 'countDocuments').resolves(mockTotal);
+    
+        const response = await UserSerivce.fncGetListTeacher(req as Request);
+    
+        expect(aggregateStub.calledOnce).to.be.true;
+        expect(countDocumentsStub.calledOnce).to.be.true;
+        expect(response.isError).to.be.false;
+        expect(response.msg).to.equal('Lay dat thanh cong');
+        expect(response.data).to.deep.equal({
+            List: [
+                {
+                    ...mockUsers[0],
+                    BankingInfor: mockUsers[0].BankingInfor[0], // Transformed BankingInfor
+                }
+            ],
             Total: mockTotal
-          });
+        });
     });
+    
 
     it('should handle errors thrown during database queries', async () => {
         const error = new Error('Database error');

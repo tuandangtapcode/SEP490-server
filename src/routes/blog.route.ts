@@ -28,6 +28,7 @@ BlogRoute.post("/updateBlog",
   BlogController.updateBlog
 )
 BlogRoute.post("/getListBlogByUser",
+  authMiddleware([Roles.ROLE_STUDENT]),
   BlogController.getListBlogByUser
 )
 BlogRoute.get("/sendRequestReceive/:BlogID",
@@ -35,6 +36,11 @@ BlogRoute.get("/sendRequestReceive/:BlogID",
   BlogController.sendRequestReceive
 )
 BlogRoute.post("/getListBlogByStudent",
+  authMiddleware([Roles.ROLE_STUDENT]),
+  BlogController.sendRequestReceive
+)
+
+BlogRoute.post("/changeReceiveStatus",
   authMiddleware([Roles.ROLE_STUDENT]),
   BlogController.sendRequestReceive
 )
