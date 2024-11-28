@@ -294,11 +294,11 @@ const fncGetListConfirm = async (req: Request) => {
             {
               "Receiver.FullName": { $regex: TextSearch, $options: "i" },
             },
-            {
-              "Subject.SubjectName": { $regex: TextSearch, $options: "i" },
-            }
           ]
         }
+      },
+      {
+        $sort: { createdAt: -1 }
       },
       { $skip: (CurrentPage - 1) * PageSize },
       { $limit: PageSize }
@@ -347,9 +347,9 @@ const fncGetListConfirm = async (req: Request) => {
       {
         $lookup: {
           from: "users",
-          localField: "Recevier",
+          localField: "Receiver",
           foreignField: "_id",
-          as: "Recevier",
+          as: "Receiver",
           pipeline: [
             {
               $lookup: {
@@ -375,7 +375,7 @@ const fncGetListConfirm = async (req: Request) => {
           ]
         }
       },
-      { $unwind: "$Recevier" },
+      { $unwind: "$Receiver" },
       {
         $lookup: {
           from: "subjects",
@@ -408,6 +408,14 @@ const fncGetListConfirm = async (req: Request) => {
           ]
         }
       },
+      {
+        $group: {
+          _id: "$_id"
+        }
+      },
+      {
+        $count: "total"
+      }
     ])
     const result = await Promise.all([confirms, total])
     const data = result[0].map((i: any) => ({

@@ -8,6 +8,7 @@ import {
 } from "../dtos/timetable.dto"
 import response from "../utils/response"
 import moment from "moment"
+import mongoose from "mongoose"
 
 const fncCreateTimeTable = async (req: Request) => {
   try {
@@ -31,7 +32,8 @@ const fncGetTimeTableOfTeacherOrStudent = async (req: Request) => {
     const timetables = await TimeTable
       .find({
         [RoleID === Roles.ROLE_TEACHER ? "Student" : "Teacher"]: UserID,
-        StartTime: { $gte: new Date() }
+        StartTime: { $gte: new Date() },
+        IsCancel: false
       })
       .select("StartTime EndTime")
     return response(timetables, false, "Lấy data thành công", 200)
@@ -119,15 +121,89 @@ const fncGetTimeTableByUser = async (req: Request) => {
       IsShowBtnAttendance: RoleID === Roles.ROLE_TEACHER ? true : false,
       IsShowBtnUpdateTimeTable: RoleID === Roles.ROLE_TEACHER ? true : false
     }
-
-    const timetables = await TimeTable
-      .find({
-        [RoleID === Roles.ROLE_STUDENT ? "Student" : "Teacher"]: ID,
-      })
-      .populate("Teacher", ["_id", "FullName"])
-      .populate("Student", ["_id", "FullName"])
-      .populate("Subject", ["_id", "SubjectName"])
-      .lean()
+    // const timetables = await TimeTable
+    //   .find({
+    //     [RoleID === Roles.ROLE_STUDENT ? "Student" : "Teacher"]: ID,
+    //     IsCancel: false
+    //   })
+    //   .populate("Teacher", ["_id", "FullName"])
+    //   .populate("Student", ["_id", "FullName"])
+    //   .populate("Subject", ["_id", "SubjectName"])
+    //   .lean()
+    const timetables = await TimeTable.aggregate([
+      {
+        $match: {
+          [RoleID === Roles.ROLE_STUDENT ? "Student" : "Teacher"]: new mongoose.Types.ObjectId(`${ID}`),
+          IsCancel: false
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Student",
+          foreignField: "_id",
+          as: "Student",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Student" },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      {
+        $lookup: {
+          from: "issues",
+          localField: "_id",
+          foreignField: "Timetable",
+          as: "Issue",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+              }
+            }
+          ]
+        }
+      }
+    ])
     const data = timetables.map((i: any) => ({
       ...i,
       IsAttendance: (moment().isAfter(i.StartTime) &&
@@ -140,6 +216,7 @@ const fncGetTimeTableByUser = async (req: Request) => {
         ? true
         : false,
       IsSubmitIssue: RoleID === Roles.ROLE_STUDENT &&
+        !i.Issue.length &&
         (moment().isAfter(i.EndTime) &&
           moment().isBefore(moment(i.EndTime).add(24, "hours")))
         ? true
