@@ -34,9 +34,9 @@ export interface UpdateConfirmDTO {
 export interface ChangeConfirmStatusDTO {
   ConfirmID: ObjectId,
   ConfirmStatus: number,
-  Recevier: ObjectId,
   RecevierName: string,
+  RecevierEmail?: string,
   SenderName: string,
-  SenderEmail: string,
+  SenderEmail?: string,
   Reason?: string
 }

@@ -51,6 +51,10 @@ const TimeTableSchema = new Schema({
     type: Boolean,
     default: false
   },
+  IsCancel: {
+    type: Boolean,
+    default: false
+  },
   IsDeleted: {
     type: Boolean,
     default: false

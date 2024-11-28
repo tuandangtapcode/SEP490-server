@@ -7,6 +7,11 @@ const FeedbackSchema = new Schema({
     ref: 'Users',
     required: true
   },
+  Teacher: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Users",
+    required: true
+  },
   LearnHistory: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'LearnHistories',

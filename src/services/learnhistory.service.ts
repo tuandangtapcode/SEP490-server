@@ -193,7 +193,7 @@ const fncGetListLearnHistory = async (req: Request) => {
     const result = await Promise.all([list, total])
     const data = result[0].map((i: any) => ({
       ...i,
-      isFeedback: i.LearnedStatus === 2 && !i.Feedback.length ? true : false
+      IsFeedback: i.LearnedStatus === 2 && !i.Feedback.length ? true : false
     }))
     return response(
       {
