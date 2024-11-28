@@ -120,26 +120,56 @@ const fncUpdateBlog = async (req: Request) => {
 
 const fncGetListBlogByUser = async (req: Request) => {
   try {
-    const { CurrentPage, PageSize } = req.body as PaginationDTO
-    const query = {
-      IsDeleted: false
+    const UserID = req.user.ID; // Assuming `req.user` contains authenticated user info
+    const { CurrentPage, PageSize, Title, SubjectID } = req.body;
+
+    // Validate UserID
+    if (!mongoose.Types.ObjectId.isValid(UserID)) {
+      return response({}, true, "Người dùng không tồn tại", 400);
     }
-    const blogs = Blog
+
+    // Build the query with filters
+    const query: any = {
+      User: UserID, // Filter blogs by UserID
+      IsDeleted: false, // Only include non-deleted blogs
+    };
+
+    // Add Title filter (case-insensitive partial match)
+    if (Title) {
+      query.Title = { $regex: Title, $options: "i" };
+    }
+
+    // Add Subject filter
+    if (SubjectID) {
+      query.Subject = SubjectID;
+    }
+
+    // Fetch blogs with pagination and populate necessary fields
+    const blogs = Blog.find(query)
       .find(query)
       .skip((CurrentPage - 1) * PageSize)
       .limit(PageSize)
-    const total = Blog.countDocuments(query)
-    const result = await Promise.all([blogs, total])
+      .populate("Subject", ["_id", "SubjectName"]); // Populate Subject field with specific fields
+
+    // Count total blogs for the user (for pagination)
+    const total = Blog.countDocuments(query);
+
+    // Wait for both promises to resolve
+    const result = await Promise.all([blogs, total]);
+
+    // Return response with blog list and total count
     return response(
       { List: result[0], Total: result[1] },
       false,
       "Lấy ra bài viết thành công",
       200
-    )
+    );
   } catch (error: any) {
-    return response({}, true, error.toString(), 500)
+    console.error(error);
+    return response({}, true, error.toString(), 500);
   }
-}
+};
+
 
 const fncSendRequestReceive = async (req: Request) => {
   try {
@@ -182,9 +212,9 @@ const fncChangeReceiveStatus = async (req: Request) => {
 
     blog.TeacherReceive.forEach((teacher) => {
       if (teacher.Teacher && teacher.Teacher.toString() === TeacherID) {
-        teacher.ReceiveStatus = 2; 
+        teacher.ReceiveStatus = 2;
       } else {
-        teacher.ReceiveStatus = 0; 
+        teacher.ReceiveStatus = 0;
       }
     });
 
