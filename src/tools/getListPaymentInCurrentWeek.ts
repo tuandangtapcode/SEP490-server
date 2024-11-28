@@ -3,59 +3,58 @@ import Payment from "../models/payment"
 import { ADMIN_ID } from "../services/message.service"
 import { getCurrentWeekRange, randomNumber } from "../utils/commonFunction"
 import { Roles } from "../utils/constant"
+import TimeTable from "../models/timetable"
+import SubjectSetting from "../models/subjectsetting"
 
 const getListPaymentInCurrentWeek = async () => {
   try {
+    console.log("cron job getListPaymentInCurrentWeek");
     const { startOfWeek, endOfWeek } = getCurrentWeekRange()
-    const teachers = await User.aggregate([
-      {
-        $match: {
-          RoleID: Roles.ROLE_TEACHER
+    const timetables = await TimeTable
+      .find(
+        {
+          StartTime: { $gte: startOfWeek, $lte: endOfWeek },
+          Status: true,
         }
-      },
-      {
-        $lookup: {
-          from: "timetables",
-          localField: "_id",
-          foreignField: "Teacher",
-          as: "TimeTables",
-          pipeline: [
-            {
-              $match: {
-                "DateAt": { $gte: startOfWeek, $lte: endOfWeek },
-                "Status": true,
-              }
-            }
-          ]
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          FullName: 1,
-          Price: 1,
-          "TimeTables._id": 1,
-        }
-      }
-    ])
+      )
+      .select("_id Teacher Subject")
+      .lean()
+    const subjectSetting = timetables.map((i: any) => (
+      SubjectSetting
+        .findOne(
+          {
+            Teacher: i.Teacher,
+            Subject: i.Subject
+          }
+        )
+        .populate("Teacher", ["_id", "FullName"])
+        .select("_id Teacher Subject Price")
+        .lean()
+    ))
+    const result = await Promise.all(subjectSetting)
+    const data = result.map((i: any) => ({
+      ...i,
+      TimeTables: timetables.filter((p: any) => p.Teacher.equals(i.Teacher._id) && p.Subject.equals(i.Subject))
+    }))
     let teacherReported = [] as any
-    teachers.forEach(teacher => {
-      if (!!teacher.TimeTables.length) {
+    data.forEach((i: any) => {
+      if (!!i.TimeTables.length) {
         const newPayment = Payment.create({
           Sender: ADMIN_ID,
-          Receiver: teacher._id,
+          Receiver: i.Teacher._id,
           PaymentType: 3,
           TraddingCode: randomNumber(),
-          TotalFee: teacher.Price * teacher.TimeTables.length * 1000,
-          Description: `Thanh toán tiền dạy học cho giảng viên ${teacher.FullName}`,
+          TotalFee: i.Price * i.TimeTables.length * 1000,
+          Description: `Thanh toán tiền dạy học cho giảng viên ${i.Teacher.FullName}`,
           PaymentStatus: 1,
+          PaymentMethod: 2
         })
         teacherReported.push(newPayment)
       }
     })
     await Promise.all(teacherReported)
   } catch (error: any) {
-    console.log("error", error.toString())
+    console.log("error cron job getListPaymentInCurrentWeek", error.toString())
   }
 }
 

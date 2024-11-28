@@ -38,4 +38,5 @@ export interface ChangeConfirmStatusDTO {
   RecevierName: string,
   SenderName: string,
   SenderEmail: string,
+  Reason?: string
 }

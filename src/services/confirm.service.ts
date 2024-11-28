@@ -8,6 +8,22 @@ import mongoose from "mongoose"
 import { Roles } from "../utils/constant"
 import TimeTable from "../models/timetable"
 import moment from "moment"
+import Course from "../models/course"
+import { getOneDocument } from "../utils/queryFunction"
+
+const getStartTime = (listConfirm: any[], confirmID: any) => {
+  let listStartTime = [] as any[]
+  listConfirm.forEach((i: any) => {
+    if (i.ConfirmStatus === 2 && !i._id.equals(confirmID)) {
+      i.Schedules.forEach((s: any) => {
+        if (moment(s.StartTime).diff(moment(), "hours") > 0) {
+          listStartTime.push(new Date(s.StartTime).toISOString())
+        }
+      })
+    }
+  })
+  return listStartTime
+}
 
 const fncCreateConfirm = async (req: Request) => {
   try {
@@ -81,25 +97,28 @@ const fncUpdateConfirm = async (req: Request) => {
 
 const fncChangeConfirmStatus = async (req: Request) => {
   try {
-    const { ConfirmID, ConfirmStatus, Recevier, RecevierName, SenderName, SenderEmail } = req.body as ChangeConfirmStatusDTO
-    const confirm = await Confirm.findOne({ _id: ConfirmID }).lean()
+    const { ConfirmID, ConfirmStatus, Recevier, RecevierName, SenderName, SenderEmail, Reason } = req.body as ChangeConfirmStatusDTO
+    const confirm = await getOneDocument(Confirm, "_id", ConfirmID)
     if (!confirm) return response({}, true, "Có lỗi xảy ra", 200)
-    if (ConfirmStatus === 2) {
-      const checkExistTimeTable = await TimeTable.findOne({
-        Teacher: Recevier,
-        StartTime: {
-          $in: confirm.Schedules.map((i: any) => i.StartTime)
-        }
-      })
-      if (!!checkExistTimeTable) {
-        return response(
-          {},
-          true,
-          `Bạn đã có lịch dạy vào ngày ${moment(checkExistTimeTable.StartTime).format("DD/MM/YYYY")} ${moment(checkExistTimeTable.StartTime).format("HH:mm")} - ${moment(checkExistTimeTable.EndTime).format("HH:mm")}`,
-          200
-        )
-      }
+    // if (ConfirmStatus === 2) {
+    //   const checkExistTimeTable = await TimeTable.findOne({
+    //     Teacher: Recevier,
+    //     StartTime: {
+    //       $in: confirm.Schedules.map((i: any) => i.StartTime)
+    //     }
+    //   })
+    //   if (!!checkExistTimeTable) {
+    //     return response(
+    //       {},
+    //       true,
+    //       `Bạn đã có lịch dạy vào ngày ${moment(checkExistTimeTable.StartTime).format("DD/MM/YYYY")} ${moment(checkExistTimeTable.StartTime).format("HH:mm")} - ${moment(checkExistTimeTable.EndTime).format("HH:mm")}`,
+    //       200
+    //     )
+    //   }
+    if ([2, 3].includes(ConfirmStatus)) {
       const subject = "THÔNG BÁO TRẠNG THÁI ĐĂNG KÝ HỌC"
+      const confirmContent = `>Giáo viên ${RecevierName} đã xác nhận booking của bạn. Bạn hãy truy cập vào lịch sử booking của mình để tiến hành thanh toán và hoàn tất booking.>Giáo viên ${RecevierName} đã xác nhận booking của bạn. Bạn hãy truy cập vào lịch sử booking của mình để tiến hành thanh toán và hoàn tất booking.`
+      const rejectContent = `Giáo viên ${RecevierName} đã hủy xác nhận booking của bạn với lý do: ${Reason}`
       const content = `
       <html>
       <head>
@@ -112,17 +131,21 @@ const fncChangeConfirmStatus = async (req: Request) => {
       <body>
         <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO TRẠNG THÁI ĐĂNG KÝ HỌC</p>
         <p style="margin-bottom:10px">Xin chào ${SenderName},</p>
-        <p style="margin-bottom:10px">Giáo viên ${RecevierName} đã xác nhận booking của bạn. Bạn hãy truy cập vào lịch sử booking của mình để tiến hành thanh toán và hoàn tất booking.</p>
-        <div>
+        <p style="margin-bottom:10px">${ConfirmStatus === 2 ? confirmContent : rejectContent}</p>
+        ${ConfirmStatus === 2 ?
+          `<div>
           <span style="color:red; margin-right: 4px">Lưu ý:</span>
           <span>Trong vòng 48h nếu bạn không thanh toán booking này thì booking này sẽ tự động chuyển thành "Hủy xác nhận".</span>
-        </div>
+        </div>`
+          : ""
+        }
       </body>
       </html>
       `
       const checkSendMail = await sendEmail(SenderEmail, subject, content)
       if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     }
+    // }
     const updateConfirm = await Confirm
       .findOneAndUpdate(
         { _id: ConfirmID },
@@ -131,6 +154,18 @@ const fncChangeConfirmStatus = async (req: Request) => {
       )
       .populate("Receiver", ["_id", "FullName"])
       .populate("Subject", ["_id", "SubjectName"])
+      .lean() as any
+    if (ConfirmStatus == 2 && !!confirm.CourseID) {
+      const updateCourse = await Course.findOneAndUpdate(
+        { _id: confirm.CourseID },
+        {
+          $inc: {
+            QuantityLearner: 1
+          }
+        }
+      )
+      if (!updateCourse) response({}, true, "Có lỗi xảy ra trong quá trình gửi update course", 200)
+    }
     return response(
       updateConfirm,
       false,
@@ -305,14 +340,17 @@ const fncGetListConfirm = async (req: Request) => {
     const result = await Promise.all([confirms, total])
     const data = result[0].map((i: any) => ({
       ...i,
-      IsUpdate: RoleID === Roles.ROLE_TEACHER || i.ConfirmStatus !== 1 ? false : true,
+      // IsUpdate: RoleID === Roles.ROLE_TEACHER || i.ConfirmStatus !== 1 ? false : true,
       IsConfirm: RoleID !== Roles.ROLE_TEACHER || [1, 2, 3].includes(i.ConfirmStatus) ? false : true,
       IsPaid: RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 2 && !i.IsPaid ? true : false,
       IsReject: (RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 1) ||
         (RoleID === Roles.ROLE_TEACHER && i.ConfirmStatus === 4)
         ? true
         : false,
-      IsNoted: RoleID !== Roles.ROLE_TEACHER || [2, 3, 4].includes(i.ConfirmStatus) ? false : true
+      IsNoted: RoleID !== Roles.ROLE_TEACHER || [2, 3, 4].includes(i.ConfirmStatus) ? false : true,
+      IsDisabledConfirm: i.ConfirmStatus === 4 && i.Schedules
+        .map((sche: any) => new Date(sche.StartTime).toISOString())
+        .some((schedule: any) => getStartTime(result[0], i._id).includes(schedule)),
     }))
     return response(
       {

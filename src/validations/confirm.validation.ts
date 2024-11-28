@@ -4,7 +4,7 @@ import { NextFunction, Request, Response } from 'express'
 
 const createConfirm = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
-    ConfirmID: Joi.string().pattern(getRegexObjectID()).optional(),
+    CourseID: Joi.string().pattern(getRegexObjectID()).optional(),
     Sender: Joi.string().pattern(getRegexObjectID()).required(),
     StudentName: Joi.string().min(1).required(),
     Receiver: Joi.string().pattern(getRegexObjectID()).required(),
@@ -59,6 +59,7 @@ const changeConfirmStatus = async (req: Request, res: Response, next: NextFuncti
     RecevierName: Joi.string().min(1).required(),
     SenderName: Joi.string().min(1).required(),
     SenderEmail: Joi.string().pattern(getRegexEmail()).required(),
+    Reason: Joi.string().min(1).optional()
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })

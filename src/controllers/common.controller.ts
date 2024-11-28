@@ -47,12 +47,22 @@ const insertParentKey = async (req: Request, res: Response) => {
   }
 }
 
+const getListTabs = async (req: Request, res: Response) => {
+  try {
+    const response = await CommonService.fncGetListTabs(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
 const CommonController = {
   getListSystemKey,
   createSystemKey,
   getProfitPercent,
   changeProfitPercent,
-  insertParentKey
+  insertParentKey,
+  getListTabs
 }
 
 export default CommonController

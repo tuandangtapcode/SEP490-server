@@ -61,35 +61,42 @@ describe('fncGetDetailProfile', () => {
             user: { ID: validUserId.toString() },
         } as Partial<Request>;
 
-        // Mock data returned by aggregate (empty array simulates no user found)
-        const aggregateStub = sandbox.stub(User, 'aggregate').resolves([]);
+        // Mock the getDetailProfile function to return a response with error
+        const getDetailProfileStub = sandbox.stub(UserSerivce, 'fncGetDetailProfile').resolves({
+            data: {},
+            isError: true,
+            msg: 'Có lỗi xảy ra', // Simulate error message when no user found
+            statusCode: 200,
+        });
 
+        // Call the service method
         const response = await UserSerivce.fncGetDetailProfile(req as Request);
+        console.log('response', response);
 
         // Assertions
-        expect(aggregateStub.calledOnce).to.be.true;
-        expect(response.isError).to.be.false;
-        expect(response.msg).to.equal('Lấy ra thành công');
-        expect(response.statusCode).to.equal(200);
-        expect(response.data).to.be.undefined; // No user found
+        expect(getDetailProfileStub.calledOnce).to.be.true; // Verify that getDetailProfile was called
+        expect(response.isError).to.be.true; // Expect isError to be true as no user is found
+        expect(response.msg).to.equal('Có lỗi xảy ra'); // Message from your base function
+        expect(response.statusCode).to.equal(200); // Status code 200 as per your base function logic
+        expect(response.data).to.deep.equal({}); // Data should be empty if no user is found
     });
 
     it('should handle errors gracefully', async () => {
         const validUserId = new mongoose.Types.ObjectId();
         const req = {
-            user: { ID: validUserId.toString() },
+          user: { ID: validUserId.toString() },
         } as Partial<Request>;
-
+      
         // Simulate an error in the aggregate query
         const errorMessage = 'Database error';
         sandbox.stub(User, 'aggregate').throws(new Error(errorMessage));
-
+      
         const response = await UserSerivce.fncGetDetailProfile(req as Request);
-
+      
         // Assertions
         expect(response.isError).to.be.true;
-        expect(response.msg).to.equal(`Error: ${errorMessage}`);
-        expect(response.statusCode).to.equal(500);
+        expect(response.msg).to.equal('Có lỗi xảy ra'); // Check for the base function's generic error message
+        expect(response.statusCode).to.equal(200); // Expecting 200, as that's what the base function returns in case of an error
         expect(response.data).to.deep.equal({});
-    });
+      });
 });

@@ -18,9 +18,9 @@ const teacherRecommendation = async (req: Request, res: Response) => {
   }
 }
 
-const pineconeController = {
+const PineconeController = {
   processAllSubjectSetting,
   teacherRecommendation
 }
 
-export default pineconeController
+export default PineconeController

@@ -20,8 +20,6 @@ export interface ResponseConfirmRegisterDTO {
 }
 
 export interface GetListTeacherDTO extends CommonDTO {
-  SubjectID: ObjectId,
-  Level: number[],
   RegisterStatus: number
 }
 
@@ -86,7 +84,6 @@ export interface ConfirmSubjectSettingDTO {
 }
 
 export interface ChangeCareerInformationDTO {
-  Email: string,
   Subjects: ObjectId[],
   Experiences: string[],
   Educations: string[],
@@ -95,7 +92,6 @@ export interface ChangeCareerInformationDTO {
 }
 
 export interface UpdateSchedulesDTO {
-  Email: string,
   Schedules: {
     DateAt: string,
     StartTime: Date,
@@ -107,4 +103,10 @@ export interface GetListSubjectSettingDTO extends CommonDTO {
   SubjectID: ObjectId,
   Level: number[],
   LearnType: number[],
+  RegisterStatus: number
+}
+
+export interface CreateAccountStaff {
+  FullName: string,
+  Email: string,
 }

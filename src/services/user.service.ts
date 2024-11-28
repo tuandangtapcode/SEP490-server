@@ -3,13 +3,14 @@ import User from "../models/user"
 import Subject from "../models/subject"
 import { Roles } from "../utils/constant"
 import sendEmail from "../utils/send-mail"
-import { getOneDocument } from "../utils/queryFunction"
-import mongoose from "mongoose"
+import { getDetailProfile, getOneDocument } from "../utils/queryFunction"
+import mongoose, { ObjectId } from "mongoose"
 import { Request } from "express"
 import {
   ChangeCareerInformationDTO,
   ChangeProfileDTO,
   ConfirmSubjectSettingDTO,
+  CreateAccountStaff,
   GetListStudentDTO,
   GetListSubjectSettingDTO,
   GetListTeacherByUserDTO,
@@ -21,15 +22,17 @@ import {
 } from "../dtos/user.dto"
 import response from "../utils/response"
 import SubjectSetting from "../models/subjectsetting"
+import EmbeddingPinecone from "../tools/embeddingPinecone"
+import bcrypt from "bcrypt"
+import { CommonDTO } from "../dtos/common.dto"
 
-const defaultSelectField = {
+export const defaultSelectField = {
   forAggregate: {
     _id: 1,
     FullName: 1,
     AvatarPath: 1,
     RoleID: 1,
     Description: 1,
-    Votes: 1,
     Address: 1,
     DateOfBirth: 1,
     Phone: 1,
@@ -38,22 +41,21 @@ const defaultSelectField = {
     Gender: 1,
     RegisterStatus: 1
   },
-  forFind: "_id FullName AvatarPath RoleID Description Votes Address DateOfBirth Phone IsFirstLogin IsByGoogle Gender RegisterStatus"
+  forFind: "_id FullName AvatarPath RoleID Description Address DateOfBirth Phone IsFirstLogin IsByGoogle Gender RegisterStatus"
 }
 
-const selectFieldForTeacher = {
+export const selectFieldForTeacher = {
   forAggregate: {
     Experiences: 1,
     Educations: 1,
     Description: 1,
     Schedules: 1,
     Certificates: 1,
-    Votes: 1,
   },
-  forFind: "Experiences Educations Description Schedules Certificates Votes"
+  forFind: "Experiences Educations Description Schedules Certificates"
 }
 
-const selectFieldForStudent = {
+export const selectFieldForStudent = {
   forAggregate: {
     Subjects: 1
   },
@@ -63,90 +65,9 @@ const selectFieldForStudent = {
 const fncGetDetailProfile = async (req: Request) => {
   try {
     const { ID, RoleID } = req.user
-    const selectField = RoleID === Roles.ROLE_TEACHER
-      ? {
-        ...selectFieldForTeacher.forAggregate,
-        SubjectSettings: 1,
-      }
-      : selectFieldForStudent.forAggregate
-    const user = await User.aggregate([
-      {
-        $match: {
-          _id: new mongoose.Types.ObjectId(`${ID}`)
-        }
-      },
-      {
-        $lookup: {
-          from: "accounts",
-          localField: "_id",
-          foreignField: "UserID",
-          as: "Account"
-        }
-      },
-      { $unwind: '$Account' },
-      {
-        $addFields: {
-          Email: "$Account.Email"
-        }
-      },
-      {
-        $lookup: RoleID === Roles.ROLE_STUDENT
-          ? {
-            from: "subjects",
-            localField: "Subjects",
-            foreignField: "_id",
-            as: "Subjects",
-            pipeline: [
-              {
-                $project: {
-                  _id: 1,
-                  SubjectName: 1
-                }
-              }
-            ]
-          }
-          : {
-            from: "subjectsettings",
-            localField: "_id",
-            foreignField: "Teacher",
-            as: "SubjectSettings",
-            pipeline: [
-              {
-                $lookup: {
-                  from: "subjects",
-                  localField: "Subject",
-                  foreignField: "_id",
-                  as: "Subject",
-                  pipeline: [
-                    {
-                      $project: {
-                        _id: 1,
-                        SubjectName: 1
-                      }
-                    }
-                  ]
-                }
-              },
-              { $unwind: "$Subject" },
-              {
-                $project: {
-                  _id: 1,
-                  Subject: 1
-                }
-              }
-            ]
-          }
-      },
-      {
-        $project: {
-          ...defaultSelectField.forAggregate,
-          ...selectField,
-          IsByGoogle: 1,
-          Email: 1,
-        }
-      }
-    ])
-    return response(user[0], false, "Lấy ra thành công", 200)
+    const user = await getDetailProfile(ID, RoleID)
+    if (!user) return response({}, true, "Có lỗi xảy ra", 200)
+    return response(user, false, "Lấy ra thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -155,24 +76,24 @@ const fncGetDetailProfile = async (req: Request) => {
 const fncChangeProfile = async (req: Request) => {
   try {
     const { ID, RoleID } = req.user
-    const selectField = RoleID === Roles.ROLE_TEACHER
-      ? `${defaultSelectField.forFind} ${selectFieldForTeacher.forFind}`
-      : `${defaultSelectField.forFind} ${selectFieldForStudent.forFind}`
-    const updateProfile = await User
-      .findOneAndUpdate(
-        { _id: ID },
-        {
-          ...req.body as ChangeProfileDTO,
-          IsFirstLogin: false,
-          RegisterStatus: RoleID === Roles.ROLE_STUDENT ? 3 : 1
-        },
-        { new: true },
-      )
-      .populate("Subjects", ["_id", "SubjectName"])
-      .select(selectField)
-      .lean()
-    if (!updateProfile) return response({}, true, "Có lỗi xảy ra", 200)
-    return response({ ...updateProfile, Email: req.body.Email }, false, "Chỉnh sửa thông tin nhân thành công", 200)
+    const dataUpdate = RoleID === Roles.ROLE_STUDENT
+      ? {
+        ...req.body as ChangeProfileDTO,
+        IsFirstLogin: false,
+        RegisterStatus: 3
+      }
+      : {
+        ...req.body as ChangeProfileDTO,
+        IsFirstLogin: false
+      }
+    const updateProfile = await User.findOneAndUpdate(
+      { _id: ID },
+      { ...dataUpdate }
+    )
+    if (!updateProfile) return response({}, true, "Có lỗi xảy ra khi update", 200)
+    const user = await getDetailProfile(ID, RoleID)
+    if (!user) return response({}, true, "Có lỗi xảy ra khi get profile", 200)
+    return response(user, false, "Chỉnh sửa thông tin nhân thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -227,7 +148,7 @@ const fncResponseConfirmRegister = async (req: Request) => {
 
 const fncGetListTeacher = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, SubjectID, Level, RegisterStatus } =
+    const { TextSearch, CurrentPage, PageSize, RegisterStatus } =
       req.body as GetListTeacherDTO
     let queryUser = {
       FullName: { $regex: TextSearch, $options: "i" },
@@ -277,7 +198,6 @@ const fncGetListTeacher = async (req: Request) => {
           ]
         }
       },
-      { $unwind: "$BankingInfor" },
       {
         $project: {
           ...defaultSelectField.forAggregate,
@@ -285,12 +205,17 @@ const fncGetListTeacher = async (req: Request) => {
           Account: 1,
           BankingInfor: 1
         }
-      }
+      },
+      { $skip: (CurrentPage - 1) * PageSize },
+      { $limit: PageSize }
     ])
     const total = User.countDocuments(queryUser)
     const result = await Promise.all([users, total])
     const data = result[0].map((i: any) => ({
       ...i,
+      BankingInfor: !!i.BankingInfor.length
+        ? i.BankingInfor[0]
+        : {},
       IsConfirm: i.RegisterStatus !== 2 || !i.Account.IsActive,
       IsReject: i.RegisterStatus !== 2 || !i.Account.IsActive,
       IsLockUnLock: i.RegisterStatus !== 3 && !!i.Account.IsActive
@@ -323,6 +248,7 @@ const fncGetListTeacherByUser = async (req: Request) => {
         $lte: +ToPrice
       },
       RegisterStatus: 3,
+      IsDisabled: false
     } as any
     const subject = await getOneDocument(Subject, "_id", SubjectID)
     if (!subject) return response({}, true, "Có lỗi xảy ra", 200)
@@ -353,17 +279,17 @@ const fncGetListTeacherByUser = async (req: Request) => {
         $match: query
       },
       {
+        $addFields: {
+          TotalVotes: { $sum: "$Votes" }
+        }
+      },
+      {
         $lookup: {
           from: "users",
           localField: "Teacher",
           foreignField: "_id",
           as: "Teacher",
           pipeline: [
-            {
-              $addFields: {
-                TotalVotes: { $size: "$Votes" }
-              }
-            },
             {
               $project: {
                 _id: 1,
@@ -372,8 +298,6 @@ const fncGetListTeacherByUser = async (req: Request) => {
                 Gender: 1,
                 AvatarPath: 1,
                 Address: 1,
-                Votes: 1,
-                TotalVotes: 1
               }
             }
           ]
@@ -386,12 +310,9 @@ const fncGetListTeacherByUser = async (req: Request) => {
       {
         $project: {
           Price: 1,
-          "Teacher._id": 1,
-          "Teacher.FullName": 1,
-          "Teacher.AvatarPath": 1,
-          "Teacher.Address": 1,
-          "Teacher.TotalVotes": 1,
-          "Teacher.Votes": 1,
+          Teacher: 1,
+          TotalVotes: 1,
+          Votes: 1
         }
       },
       {
@@ -419,7 +340,6 @@ const fncGetListTeacherByUser = async (req: Request) => {
                 Gender: 1,
                 AvatarPath: 1,
                 Address: 1,
-                Votes: 1
               }
             }
           ]
@@ -471,7 +391,7 @@ const fncGetDetailTeacher = async (req: Request) => {
         Certificates: 0,
         IntroVideos: 0,
         Levels: 0,
-        Quote: 0
+        Quote: 0,
       }
       : {}
     const user = await SubjectSetting.aggregate([
@@ -483,22 +403,17 @@ const fncGetDetailTeacher = async (req: Request) => {
         }
       },
       {
+        $addFields: {
+          TotalVotes: { $sum: "$Votes" },
+        }
+      },
+      {
         $lookup: {
           from: "users",
           localField: "Teacher",
           foreignField: "_id",
           as: "Teacher",
           pipeline: [
-            {
-              $addFields: {
-                TotalVotes: { $size: "$Votes" }
-              }
-            },
-            {
-              $match: {
-                RegisterStatus: 3
-              }
-            },
             {
               $lookup: {
                 from: "accounts",
@@ -510,7 +425,12 @@ const fncGetDetailTeacher = async (req: Request) => {
             { $unwind: '$Account' },
             {
               $addFields: {
-                Email: "$Account.Email"
+                Email: "$Account.Email",
+              }
+            },
+            {
+              $match: {
+                RegisterStatus: 3
               }
             },
             {
@@ -518,8 +438,6 @@ const fncGetDetailTeacher = async (req: Request) => {
                 FullName: 1,
                 Address: 1,
                 Schedules: 1,
-                TotalVotes: 1,
-                Votes: 1,
                 AvatarPath: 1,
                 Email: 1
               }
@@ -711,7 +629,13 @@ const fncGetListSubjectSettingByTeacher = async (req: Request) => {
         Teacher: UserID
       })
       .populate("Subject", ["_id", "SubjectName"])
-    return response(list, false, "Lấy data thành công", 200)
+      .lean()
+    const data = list.map((i: any) => ({
+      ...i,
+      IsUpdate: i.RegisterStatus === 2,
+      IsDisabledBtn: i.RegisterStatus === 2 ? true : false
+    }))
+    return response(data, false, "Lấy data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -725,6 +649,7 @@ const fncCreateSubjectSetting = async (req: Request) => {
       Subject: SubjectID,
       Teacher: UserID,
     })
+
     return response(newSubjectSetting, false, "Môn học có thể giảng dạy đã được thêm", 201)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -798,6 +723,9 @@ const fncResponseConfirmSubjectSetting = async (req: Request) => {
       { RegisterStatus: RegisterStatus },
       { new: true }
     )
+    if (updateSubjectSetting) {
+      EmbeddingPinecone.processSubjectSetting(SubjectSettingID.toString())
+    }
     if (!updateSubjectSetting) return response({}, true, "Có lỗi xảy ra", 200)
     return response({}, false, "Duyệt môn học cho giáo viên thành công", 200)
   } catch (error: any) {
@@ -805,57 +733,92 @@ const fncResponseConfirmSubjectSetting = async (req: Request) => {
   }
 }
 
-const fncGetListTopTeacherBySubject = async (req: Request) => {
+const fncGetListTopTeacher = async (req: Request) => {
   try {
-    const { SubjectID } = req.params
-    if (!mongoose.Types.ObjectId.isValid(`${SubjectID}`)) {
-      return response({}, true, "ID môn học không tồn tại", 200)
-    }
-    const topTeachers = await User.aggregate([
+    const topTeachers = await SubjectSetting.aggregate([
       {
         $match: {
-          RoleID: Roles.ROLE_TEACHER,
-          RegisterStatus: 3
+          RegisterStatus: 3,
+          IsDisabled: false
         }
       },
       {
         $addFields: {
-          TotalVotes: { $size: "$Votes" }
+          TotalVotes: { $sum: "$Votes" }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                IsActive: "$Account.IsActive",
+              }
+            },
+            {
+              $project: {
+                FullName: 1,
+                AvatarPath: 1,
+                RegisterStatus: 1,
+                IsActive: 1,
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: {
+          "Teacher.RegisterStatus": 3,
+          "Teacher.IsActive": true,
+        }
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      {
+        $project: {
+          _id: 1,
+          Subject: 1,
+          Levels: 1,
+          Price: 1,
+          LearnTypes: 1,
+          Teacher: 1,
+          TotalVotes: 1,
+          Votes: 1
         }
       },
       {
         $sort: {
           TotalVotes: -1
         }
-      },
-      {
-        $lookup: {
-          from: "subjectsettings",
-          localField: "_id",
-          foreignField: "Teacher",
-          as: "SubjectSetting",
-          pipeline: [
-            {
-              $project: {
-                Subject: 1,
-                Levels: 1,
-                Price: 1,
-                LearnTypes: 1,
-                IsActive: 1
-              }
-            }
-          ]
-        }
-      },
-      { $unwind: "$SubjectSetting" },
-      {
-        $match: {
-          "SubjectSetting.Subject": new mongoose.Types.ObjectId(`${SubjectID}`),
-          "SubjectSetting.RegisterStatus": 3
-        }
-      },
-      {
-        $limit: 4
       }
     ])
     return response(topTeachers, false, "Lấy data thành công", 200)
@@ -866,7 +829,7 @@ const fncGetListTopTeacherBySubject = async (req: Request) => {
 
 const fncGetListSubjectSetting = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, SubjectID, Level, LearnType } =
+    const { TextSearch, CurrentPage, PageSize, SubjectID, Level, LearnType, RegisterStatus } =
       req.body as GetListSubjectSettingDTO
     let query = {} as any
     if (!!SubjectID) {
@@ -885,6 +848,12 @@ const fncGetListSubjectSetting = async (req: Request) => {
       query = {
         ...query,
         LearnTypes: { $in: LearnType }
+      }
+    }
+    if (!!RegisterStatus) {
+      query = {
+        ...query,
+        RegisterStatus: RegisterStatus
       }
     }
     let teacherQuery = {
@@ -1005,33 +974,32 @@ const fncGetListSubjectSetting = async (req: Request) => {
 const fncChangeCareerInformation = async (req: Request) => {
   try {
     const { ID, RoleID } = req.user
-    const { Subjects, Email } = req.body as ChangeCareerInformationDTO
-    const selectField = RoleID === Roles.ROLE_TEACHER
-      ? `${defaultSelectField.forFind} ${selectFieldForTeacher.forFind}`
-      : `${defaultSelectField.forFind} ${selectFieldForStudent.forFind}`
-    let dataSubjectSetting = [] as any[]
+    const { Subjects } = req.body as ChangeCareerInformationDTO
     if (RoleID === Roles.ROLE_TEACHER) {
-      dataSubjectSetting = Subjects.map((i: any) => ({
-        Teacher: ID,
-        Subject: i
+      const bulkOps = Subjects.map((i: any) => ({
+        updateOne: {
+          filter: { Teacher: ID, Subject: i },
+          update: { $setOnInsert: { Teacher: ID, Subject: i } },
+          upsert: true
+        }
       }))
-      await SubjectSetting.insertMany(dataSubjectSetting, { ordered: true })
+      await SubjectSetting.bulkWrite(bulkOps)
     }
     const updateInfor = await User
       .findOneAndUpdate(
         { _id: ID },
         {
           ...req.body as ChangeCareerInformationDTO,
+          RegisterStatus: 2,
           Subjects: RoleID === Roles.ROLE_STUDENT
             ? Subjects
             : []
-        },
-        { new: true }
+        }
       )
-      .select(selectField)
-      .lean()
-    if (!updateInfor) return response({}, true, "Có lỗi xảy ra", 200)
-    return response({ ...updateInfor, Email }, false, "Chỉnh sửa thông tin nghề nghiệp thành công", 200)
+    if (!updateInfor) return response({}, true, "Có lỗi xảy ra khi update", 200)
+    const user = await getDetailProfile(ID, RoleID)
+    if (!user) return response({}, true, "Có lỗi xảy ra khi get profile", 200)
+    return response(user, false, "Chỉnh sửa thông tin nghề nghiệp thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -1039,17 +1007,125 @@ const fncChangeCareerInformation = async (req: Request) => {
 
 const fncUpdateSchedule = async (req: Request) => {
   try {
-    const UserID = req.user.ID
-    const { Schedules, Email } = req.body as UpdateSchedulesDTO
+    const { ID, RoleID } = req.user
+    const { Schedules } = req.body as UpdateSchedulesDTO
     const updateUser = await User
       .findOneAndUpdate(
-        { _id: UserID },
+        { _id: ID },
         { Schedules: Schedules },
         { new: true }
       )
       .lean()
     if (!updateUser) return response({}, true, "Có lỗi xảy ra", 200)
-    return response({ ...updateUser, Email }, false, "Chỉnh sửa lịch dạy thành công", 200)
+    const user = await getDetailProfile(ID, RoleID)
+    if (!user) return response({}, true, "Có lỗi xảy ra khi get profile", 200)
+    return response(user, false, "Chỉnh sửa thông tin nghề nghiệp thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncDisabledOrEnabledSubjectSetting = async (req: Request) => {
+  try {
+    const UserID = req.user.ID
+    const { SubjectSettingID, IsDisabled } = req.body as { SubjectSettingID: ObjectId, IsDisabled: Boolean }
+    const updateSubjectSetting = await SubjectSetting
+      .findOneAndUpdate(
+        {
+          _id: SubjectSettingID,
+          Teacher: UserID
+        },
+        { IsDisabled: IsDisabled },
+        { new: true }
+      )
+      .lean()
+    if (!updateSubjectSetting) return response({}, true, "Có lỗi xảy ra khi update", 200)
+    return response(
+      updateSubjectSetting,
+      false,
+      !!IsDisabled ? "Ẩn môn học thành công" : "Hiện môn học thành công",
+      200
+    )
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncCreateAccountStaff = async (req: Request) => {
+  try {
+    const { Email, FullName } = req.body as CreateAccountStaff
+    const hashPassword = bcrypt.hashSync("Ab12345", 10)
+    const newUser = await User.create({
+      FullName,
+      RoleID: 2,
+      IsFirstLogin: false,
+      RegisterStatus: 3
+    })
+    await Account.create({
+      Email,
+      RoleID: 2,
+      Password: hashPassword,
+      UserID: newUser._id
+    })
+    return response({}, false, "Tạo tài khoản staff thành công", 201)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncGetListAccountStaff = async (req: Request) => {
+  try {
+    const { TextSearch, CurrentPage, PageSize } = req.body as CommonDTO
+    const query = {
+      RoleID: 2,
+      FullName: { $regex: TextSearch, $options: "i" },
+    }
+    const users = User.aggregate([
+      {
+        $match: query
+      },
+      {
+        $lookup: {
+          from: "accounts",
+          localField: "_id",
+          foreignField: "UserID",
+          as: "Account",
+          pipeline: [
+            {
+              $project: {
+                Email: 1,
+                IsActive: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Account" },
+      {
+        $addFields: {
+          Email: "$Account.Email",
+          IsActive: "$Account.IsActive",
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          FullName: 1,
+          Email: 1,
+          IsActive: 1
+        }
+      },
+      { $skip: (CurrentPage - 1) * PageSize },
+      { $limit: PageSize }
+    ])
+    const total = User.countDocuments(query)
+    const result = await Promise.all([users, total])
+    return response(
+      { List: result[0], Total: result[1] },
+      false,
+      "Lấy ra bài viết thành công",
+      200
+    )
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -1070,10 +1146,13 @@ const UserSerivce = {
   fncUpdateSubjectSetting,
   fncDeleteSubjectSetting,
   fncResponseConfirmSubjectSetting,
-  fncGetListTopTeacherBySubject,
+  fncGetListTopTeacher,
   fncChangeCareerInformation,
   fncUpdateSchedule,
-  fncGetListSubjectSetting
+  fncGetListSubjectSetting,
+  fncDisabledOrEnabledSubjectSetting,
+  fncCreateAccountStaff,
+  fncGetListAccountStaff
 }
 
 export default UserSerivce

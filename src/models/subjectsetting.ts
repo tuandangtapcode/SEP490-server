@@ -63,9 +63,19 @@ const SubjectSettingSchema = new Schema({
     ],
     default: []
   },
+  Votes: {
+    type: [
+      { type: Number }
+    ],
+    default: []
+  },
   RegisterStatus: {
     type: Number,
     default: 1
+  },
+  IsDisabled: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

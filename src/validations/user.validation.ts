@@ -51,7 +51,7 @@ const updateSubjectSetting = async (req: Request, res: Response, next: NextFunct
       .required(),
     Price: Joi.number().required().required(),
     LearnTypes: Joi.array().items(Joi.number().valid(1, 2).required()).required(),
-    IntroVideos: Joi.array().items(Joi.string().optional()).optional(),
+    IntroVideos: Joi.array().items(Joi.string().optional()).required(),
     Certificates: Joi.array().items(Joi.string().required()).required()
   })
   try {
@@ -68,7 +68,6 @@ const changeCareerInformation = async (req: Request, res: Response, next: NextFu
     Experiences: Joi.array().items(Joi.string().min(1)).required(),
     Educations: Joi.array().items(Joi.string().min(1)).required(),
     Certificates: Joi.array().items(Joi.string().required()).required(),
-    Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
     Description: Joi.string().min(1).required(),
     Schedules: Joi
       .array().items(
@@ -90,7 +89,6 @@ const changeCareerInformation = async (req: Request, res: Response, next: NextFu
 
 const updateSchedule = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
-    Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
     Schedules: Joi
       .array().items(
         Joi.object({
@@ -109,11 +107,25 @@ const updateSchedule = async (req: Request, res: Response, next: NextFunction) =
   }
 }
 
+const createAccountStaff = async (req: Request, res: Response, next: NextFunction) => {
+  const trueCondition = Joi.object({
+    FullName: Joi.string().min(1).required(),
+    Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
+  })
+  try {
+    await trueCondition.validateAsync(req.body, { abortEarly: false })
+    next()
+  } catch (error: any) {
+    return res.status(400).json(error.toString())
+  }
+}
+
 const UserValidation = {
   updateSubjectSetting,
   changeProfile,
   changeCareerInformation,
-  updateSchedule
+  updateSchedule,
+  createAccountStaff
 }
 
 export default UserValidation
