@@ -121,7 +121,7 @@ const fncUpdateBlog = async (req: Request) => {
 const fncGetListBlogByUser = async (req: Request) => {
   try {
     const UserID = req.user.ID; // Assuming `req.user` contains authenticated user info
-    const { CurrentPage = 1, PageSize = 10, Title, SubjectID } = req.body;
+    const { CurrentPage, PageSize, Title, SubjectID } = req.body;
 
     // Validate UserID
     if (!mongoose.Types.ObjectId.isValid(UserID)) {
@@ -146,8 +146,9 @@ const fncGetListBlogByUser = async (req: Request) => {
 
     // Fetch blogs with pagination and populate necessary fields
     const blogs = Blog.find(query)
-      .skip((CurrentPage - 1) * PageSize) // Pagination: skip to the correct page
-      .limit(PageSize) // Limit results to PageSize
+      .find(query)
+      .skip((CurrentPage - 1) * PageSize)
+      .limit(PageSize)
       .populate("Subject", ["_id", "SubjectName"]); // Populate Subject field with specific fields
 
     // Count total blogs for the user (for pagination)
@@ -211,9 +212,9 @@ const fncChangeReceiveStatus = async (req: Request) => {
 
     blog.TeacherReceive.forEach((teacher) => {
       if (teacher.Teacher && teacher.Teacher.toString() === TeacherID) {
-        teacher.ReceiveStatus = 2; 
+        teacher.ReceiveStatus = 2;
       } else {
-        teacher.ReceiveStatus = 0; 
+        teacher.ReceiveStatus = 0;
       }
     });
 
