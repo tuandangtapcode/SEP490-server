@@ -28,6 +28,7 @@ BlogRoute.post("/updateBlog",
   BlogController.updateBlog
 )
 BlogRoute.post("/getListBlogByUser",
+  authMiddleware([Roles.ROLE_STUDENT]),
   BlogController.getListBlogByUser
 )
 BlogRoute.get("/sendRequestReceive/:BlogID",
