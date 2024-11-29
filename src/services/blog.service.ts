@@ -5,6 +5,7 @@ import { Request } from "express"
 import { CreateUpdateBlogDTO } from "../dtos/blog.dto"
 import { PaginationDTO } from "../dtos/common.dto"
 import { cache } from "joi"
+import sendEmail from "../utils/send-mail"
 import mongoose from "mongoose"
 
 const fncCreateBlog = async (req: Request) => {
@@ -55,7 +56,7 @@ const fncGetListBlog = async (req: Request) => {
     }
 
     query.IsDeleted = false
-    query.IsActivate = true
+    query.RegisterStatus = 3
 
     const blogs = Blog
       .find(query)
@@ -218,7 +219,7 @@ const fncChangeReceiveStatus = async (req: Request) => {
       }
     })
 
-    blog.IsActivate = false
+    blog.RegisterStatus = 1
     await blog.save()
 
     return response(
@@ -257,6 +258,42 @@ const fncGetListBlogByStudent = async (req: Request) => {
   }
 }
 
+const fncChangeRegisterStatus = async(req: Request) => {
+  try {
+    const { BlogID, FullName, Email, Reason, RegisterStatus } = req.body 
+    const confirmContent = "Bài đăng tìm kiếm của bạn đã được duyệt. Từ giờ giáo viên có thể nhìn thấy bài đăng của bạn và có thể thực hiện nhận việc."
+    const rejectContent = `Bài đăng của bạn không được duyệt với lý do: ${Reason}. Bạn có thể phản hồi để làm rõ.`
+    const subject = "THÔNG BÁO KIỂM DUYỆT BÀI ĐĂNG TÌM KIẾM GIÁO VIÊN"
+    const content = `
+                <html>
+                <head>
+                <style>
+                    p {
+                        color: #333;
+                    }
+                </style>
+                </head>
+                <body>
+                  <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO KIỂM DUYỆT BÀI ĐĂNG TÌM KIẾM GIÁO VIÊN</p>
+                  <p style="margin-bottom:10px">Xin chào ${FullName},</p>
+                  <p style="margin-bottom:10px">Talent LearningHub thông báo: ${RegisterStatus === 3 ? confirmContent : rejectContent}</p>
+                </body>
+                </html>
+                `
+    const checkSendMail = await sendEmail(Email, subject, content)
+    if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
+    const updateBlog = await Blog.findOneAndUpdate(
+      { _id: BlogID },
+      { RegisterStatus: RegisterStatus },
+      { new: true }
+    )
+    if (!updateBlog) return response({}, true, "Có lỗi xảy ra", 200)
+    return response({}, false, "Duyệt blog cho giáo viên thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const BlogService = {
   fncCreateBlog,
   fncGetListBlog,
@@ -266,7 +303,8 @@ const BlogService = {
   fncGetListBlogByUser,
   fncSendRequestReceive,
   fncGetListBlogByStudent,
-  fncChangeReceiveStatus
+  fncChangeReceiveStatus,
+  fncChangeRegisterStatus
 }
 
 export default BlogService
