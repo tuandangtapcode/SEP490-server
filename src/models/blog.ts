@@ -78,7 +78,7 @@ const BlogSchema = new Schema({
   // },
   RegisterStatus: {
     type: Number,
-    default: 1
+    default: 2
   }
 }, {
   timestamps: true

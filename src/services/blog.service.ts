@@ -55,7 +55,7 @@ const fncGetListBlog = async (req: Request) => {
     }
 
     query.IsDeleted = false;
-    query.IsActivate = true;
+    // query.IsActivate = true;
 
     const blogs = Blog
       .find(query)
@@ -257,6 +257,8 @@ const fncGetListBlogByStudent = async (req: Request) => {
   }
 }
 
+
+
 const BlogService = {
   fncCreateBlog,
   fncGetListBlog,
@@ -266,7 +268,7 @@ const BlogService = {
   fncGetListBlogByUser,
   fncSendRequestReceive,
   fncGetListBlogByStudent,
-  fncChangeReceiveStatus
+  fncChangeReceiveStatus,
 }
 
 export default BlogService
