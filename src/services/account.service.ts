@@ -100,6 +100,7 @@ const fncLogin = async (req: Request, res: Response) => {
     const getAccount = await getOneDocument(Account, "Email", Email)
     if (!getAccount) return response({}, true, "Email không tồn tại", 200)
     if (!getAccount.IsActive) return response({}, true, "Tài khoản đã bị khóa", 200)
+    if (!getAccount.Password) return response({}, true, "Mật khẩu không chính xác", 200)
     const check = bcrypt.compareSync(Password, getAccount.Password)
     if (!check) return response({}, true, "Mật khẩu không chính xác", 200)
     const token = encodeData({

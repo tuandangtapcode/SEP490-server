@@ -12,7 +12,7 @@ IssueRoute.post("/createIssue",
   IssueController.createIssue
 )
 IssueRoute.post("/getListIssue",
-  authMiddleware([Roles.ROLE_ADMIN]),
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   IssueController.getListIssue
 )
 // IssueRoute.post("/getListIssueTimeTable",

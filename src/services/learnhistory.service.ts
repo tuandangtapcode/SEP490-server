@@ -193,7 +193,7 @@ const fncGetListLearnHistory = async (req: Request) => {
     const result = await Promise.all([list, total])
     const data = result[0].map((i: any) => ({
       ...i,
-      isFeedback: i.LearnedStatus === 2 && !i.Feedback.length ? true : false
+      IsFeedback: i.LearnedStatus === 2 && !i.Feedback.length ? true : false
     }))
     return response(
       {
@@ -259,11 +259,31 @@ const fncGetDetailLearnHistory = async (req: Request) => {
             },
             { $unwind: "$Student" },
             {
+              $lookup: {
+                from: "users",
+                localField: "Teacher",
+                foreignField: "_id",
+                as: "Teacher",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      FullName: 1
+                    }
+                  }
+                ]
+              }
+            },
+            { $unwind: "$Teacher" },
+            {
               $project: {
                 _id: 1,
                 Student: 1,
                 Documents: 1,
-                Status: 1
+                Status: 1,
+                StartTime: 1,
+                EndTime: 1,
+                Teacher: 1
               }
             }
           ]

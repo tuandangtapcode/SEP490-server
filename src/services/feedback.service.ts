@@ -1,7 +1,6 @@
 import { CreateFeedbackDTO, GetListFeedbackOfTeacherDTO } from "../dtos/feedback.dto"
 import Feedback from "../models/feedback"
 import SubjectSetting from "../models/subjectsetting"
-import User from "../models/user"
 import response from "../utils/response"
 import { Request } from "express"
 
@@ -60,11 +59,11 @@ const fncDeleteFeedback = async (req: Request) => {
   }
 }
 
-const fncGetListFeedback = async (req:Request) => {
+const fncGetListFeedback = async (req: Request) => {
   try {
-    
+
   } catch (error) {
-    
+
   }
 }
 
