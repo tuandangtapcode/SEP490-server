@@ -37,12 +37,17 @@ BlogRoute.get("/sendRequestReceive/:BlogID",
 )
 BlogRoute.post("/getListBlogByStudent",
   authMiddleware([Roles.ROLE_STUDENT]),
-  BlogController.sendRequestReceive
+  BlogController.getListBlogByStudent
 )
 
 BlogRoute.post("/changeReceiveStatus",
   authMiddleware([Roles.ROLE_STUDENT]),
-  BlogController.sendRequestReceive
+  BlogController.changeReceiveStatus
+)
+
+BlogRoute.post("/changeRegisterStatus",
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
+  BlogController.changeRegisterStatus
 )
 
 export default BlogRoute
