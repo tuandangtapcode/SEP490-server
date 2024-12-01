@@ -1,12 +1,13 @@
 import response from "../utils/response"
 import { getOneDocument } from "../utils/queryFunction"
 import Blog from "../models/blog"
+import User from "../models/user"
 import { Request } from "express"
 import { CreateUpdateBlogDTO } from "../dtos/blog.dto"
 import { PaginationDTO } from "../dtos/common.dto"
 import { cache } from "joi"
 import sendEmail from "../utils/send-mail"
-import mongoose from "mongoose"
+import mongoose, { ObjectId } from "mongoose"
 
 const fncCreateBlog = async (req: Request) => {
   try {
@@ -16,6 +17,7 @@ const fncCreateBlog = async (req: Request) => {
     // if (!!blog) return response({}, true, "Tiêu đề blog đã tồn tại", 200)
     const newCreateBlog = await Blog.create({
       ...req.body,
+      RegisterStatus: 2,
       User: UserID,
     })
     return response(newCreateBlog, false, "Tạo bài viết thành công", 201)
@@ -35,7 +37,7 @@ const fncGetDetailBlog = async (req: Request) => {
   }
 }
 
-const fncGetListBlog = async (req: Request) => {
+const fncGetListBlogByTeacher = async (req: Request) => {
   try {
     const { CurrentPage, PageSize, title, minPrice, maxPrice, subject } = req.body
 
@@ -76,6 +78,36 @@ const fncGetListBlog = async (req: Request) => {
     return response({}, true, error.toString(), 500)
   }
 }
+
+const fncGetListBlog = async (req: Request) => {
+  try {
+    // const { CurrentPage, PageSize, title, minPrice, maxPrice, subject } = req.body;
+    const { CurrentPage, PageSize} = req.body;
+
+    const query: any = {};
+    query.IsDeleted = false;
+
+
+    const blogs = Blog
+      .find(query) 
+      .skip((CurrentPage - 1) * PageSize) 
+      .limit(PageSize) 
+      .populate("User", ["_id", "FullName"])
+      .populate("Subject", ["_id", "SubjectName"]); 
+    
+    const total = Blog.countDocuments(query); 
+    const result = await Promise.all([blogs, total]); 
+
+    return response(
+      { List: result[0], Total: result[1] }, 
+      false,
+      "Lấy ra tất cả các bài viết thành công", 
+      200 
+    );
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500); 
+  }
+};
 
 const fncDeleteBlog = async (req: Request) => {
   try {
@@ -303,8 +335,10 @@ const BlogService = {
   fncGetListBlogByUser,
   fncSendRequestReceive,
   fncGetListBlogByStudent,
+  fncGetListBlogByTeacher,
   fncChangeReceiveStatus,
-  fncChangeRegisterStatus
+  fncChangeRegisterStatus,
+  
 }
 
 export default BlogService
