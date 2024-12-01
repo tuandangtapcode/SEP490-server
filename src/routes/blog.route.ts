@@ -15,6 +15,11 @@ BlogRoute.post("/getListBlog",
   authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   BlogController.getListBlog
 )
+
+BlogRoute.post("/getListBlogByTeacher",
+  authMiddleware([Roles.ROLE_TEACHER]),
+  BlogController.getListBlogByTeacher
+)
 BlogRoute.get("/deleteBlog/:BlogID",
   authMiddleware([Roles.ROLE_STUDENT]),
   BlogController.deletedBlog
