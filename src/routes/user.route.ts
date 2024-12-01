@@ -98,5 +98,9 @@ UserRoute.post("/getListAccountStaff",
   authMiddleware([Roles.ROLE_ADMIN]),
   UserController.getListAccountStaff
 )
+UserRoute.get("/resetPasswordAccountStaff/:UserID",
+  authMiddleware([Roles.ROLE_ADMIN]),
+  UserController.resetPasswordAccountStaff
+)
 
 export default UserRoute
