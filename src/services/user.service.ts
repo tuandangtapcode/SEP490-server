@@ -150,7 +150,6 @@ const fncGetListTeacher = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, RegisterStatus } =
       req.body as GetListTeacherDTO
-    const { RoleID } = req.user
     let queryUser = {
       FullName: { $regex: TextSearch, $options: "i" },
       RoleID: Roles.ROLE_TEACHER
@@ -219,8 +218,7 @@ const fncGetListTeacher = async (req: Request) => {
         : {},
       IsConfirm: i.RegisterStatus !== 2 || !i.Account.IsActive,
       IsReject: i.RegisterStatus !== 2 || !i.Account.IsActive,
-      IsLockUnLock: i.RegisterStatus !== 3 && !!i.Account.IsActive,
-      IsViewLockUnLock: RoleID === Roles.ROLE_ADMIN
+      IsLockUnLock: i.RegisterStatus !== 3 && !!i.Account.IsActive
     }))
     return response(
       {
@@ -500,7 +498,6 @@ const fncGetListStudent = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, SortByBookQuantity } =
       req.body as GetListStudentDTO
-    const { RoleID } = req.user
     let query = {
       RoleID: Roles.ROLE_STUDENT
     }
@@ -510,7 +507,7 @@ const fncGetListStudent = async (req: Request) => {
       },
       {
         $lookup: {
-          from: "learnhistories",
+          from: "learnhistorys",
           localField: "_id",
           foreignField: "Student",
           as: "LearnHistory"
@@ -595,8 +592,7 @@ const fncGetListStudent = async (req: Request) => {
     return response(
       {
         List: result[0],
-        Total: !!result[1].length ? result[1][0].total : 0,
-        IsViewLockUnLock: RoleID === Roles.ROLE_ADMIN
+        Total: !!result[1].length ? result[1][0].total : 0
       },
       false,
       "Lay dat thanh cong",
