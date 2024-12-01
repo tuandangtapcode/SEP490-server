@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import { getRegexEmail, getRegexObjectID } from '../utils/commonFunction'
+import { getRegexEmail, getRegexObjectID, getRegexPassword, getRegexPhoneNumber } from '../utils/commonFunction'
 import { NextFunction, Response, Request } from 'express'
 
 const changeProfile = async (req: Request, res: Response, next: NextFunction) => {
@@ -7,7 +7,7 @@ const changeProfile = async (req: Request, res: Response, next: NextFunction) =>
     FullName: Joi.string().min(1).required(),
     Address: Joi.string().min(1).required(),
     AvatarPath: Joi.string().min(1).required(),
-    Phone: Joi.string().min(1).required(),
+    Phone: Joi.string().pattern(getRegexPhoneNumber()).required(),
     DateOfBirth: Joi.date().required(),
     Gender: Joi.number().integer().valid(1, 2).required(),
     Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
@@ -111,6 +111,8 @@ const createAccountStaff = async (req: Request, res: Response, next: NextFunctio
   const trueCondition = Joi.object({
     FullName: Joi.string().min(1).required(),
     Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
+    Phone: Joi.string().pattern(getRegexPhoneNumber()).required(),
+    Password: Joi.string().min(8).max(100).pattern(getRegexPassword()).required(),
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })

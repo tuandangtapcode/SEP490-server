@@ -6,7 +6,7 @@ const createBlog = async (req: Request, res: Response) => {
     const response = await BlogService.fncCreateBlog(req)
     console.log("Schedules received:", req.body.Schedules);
     return res.status(response.statusCode).json(response)
-    
+
   } catch (error: any) {
     return res.status(500).json(error.toString())
   }
@@ -75,15 +75,6 @@ const sendRequestReceive = async (req: Request, res: Response) => {
   }
 }
 
-const getListBlogByStudent = async (req: Request, res: Response) => {
-  try {
-    const response = await BlogService.fncGetListBlogByStudent(req)
-    return res.status(response.statusCode).json(response)
-  } catch (error: any) {
-    return res.status(500).json(error.toString())
-  }
-}
-
 const changeReceiveStatus = async (req: Request, res: Response) => {
   try {
     const response = await BlogService.fncChangeReceiveStatus(req)
@@ -110,7 +101,6 @@ const BlogController = {
   updateBlog,
   getListBlogByUser,
   sendRequestReceive,
-  getListBlogByStudent,
   getListBlogByTeacher,
   changeReceiveStatus,
   changeRegisterStatus
