@@ -64,13 +64,22 @@ const searchPineconeByQuery = async (queryEmbedding: number[]) => {
     vector: queryEmbedding,
     topK: 15,
   })
-
   return result.matches// Array of the closest matches
+}
+
+const searchPineconeByID = async (id: string) => {
+  const result = await index.namespace('learnhistory').query({
+    id: id,
+    topK: 1,
+    includeValues: true,
+  })
+  return result.matches
 }
 
 const PineconeService = {
   upsertVector,
   searchPineconeByQuery,
+  searchPineconeByID,
   updateVector,
   deleteVector
 }
