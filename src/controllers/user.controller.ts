@@ -190,6 +190,15 @@ const getListAccountStaff = async (req: Request, res: Response) => {
   }
 }
 
+const resetPasswordAccountStaff = async (req: Request, res: Response) => {
+  try {
+    const response = await UserSerivce.fncResetPasswordAccountStaff(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
 const UserController = {
   getDetailProfile,
   changeProfile,
@@ -211,7 +220,8 @@ const UserController = {
   getListSubjectSetting,
   disabledOrEnabledSubjectSetting,
   createAccountStaff,
-  getListAccountStaff
+  getListAccountStaff,
+  resetPasswordAccountStaff
 }
 
 export default UserController

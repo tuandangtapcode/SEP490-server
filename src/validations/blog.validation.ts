@@ -14,9 +14,8 @@ const createUpdateBlog = async (req: Request, res: Response, next: NextFunction)
     Address: Joi.string().min(1).optional(),
     Schedules: Joi.array().items(
       Joi.object({
-        DateAt: Joi.string().min(1).required(),
-        StartTime: Joi.string().min(1).required(),
-        EndTime: Joi.string().min(1).required(),
+        StartTime: Joi.string().required(),
+        EndTime: Joi.string().required(),
       })
     ).required(),
     BlogID: Joi.string().pattern(getRegexObjectID()).optional()

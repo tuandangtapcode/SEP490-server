@@ -151,7 +151,6 @@ const fncGetListTeacher = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, RegisterStatus } =
       req.body as GetListTeacherDTO
-    const { RoleID } = req.user
     let queryUser = {
       FullName: { $regex: TextSearch, $options: "i" },
       RoleID: Roles.ROLE_TEACHER
@@ -201,10 +200,44 @@ const fncGetListTeacher = async (req: Request) => {
         }
       },
       {
+        $lookup: {
+          from: "subjectsettings",
+          localField: "_id",
+          foreignField: "Teacher",
+          as: "SubjectSettings",
+          pipeline: [
+            {
+              $lookup: {
+                from: "subjects",
+                localField: "Subject",
+                foreignField: "_id",
+                as: "Subject",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      SubjectName: 1
+                    }
+                  }
+                ]
+              }
+            },
+            { $unwind: "$Subject" },
+            {
+              $project: {
+                _id: 1,
+                Subject: 1
+              }
+            }
+          ]
+        }
+      },
+      {
         $project: {
           ...defaultSelectField.forAggregate,
           ...selectFieldForTeacher.forAggregate,
           Account: 1,
+          SubjectSettings: 1,
           BankingInfor: 1
         }
       },
@@ -220,8 +253,7 @@ const fncGetListTeacher = async (req: Request) => {
         : {},
       IsConfirm: i.RegisterStatus !== 2 || !i.Account.IsActive,
       IsReject: i.RegisterStatus !== 2 || !i.Account.IsActive,
-      IsLockUnLock: i.RegisterStatus !== 3 && !!i.Account.IsActive,
-      IsViewLockUnLock: RoleID === Roles.ROLE_ADMIN
+      IsLockUnLock: i.RegisterStatus !== 3 && !!i.Account.IsActive
     }))
     return response(
       {
@@ -501,7 +533,6 @@ const fncGetListStudent = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, SortByBookQuantity } =
       req.body as GetListStudentDTO
-    const { RoleID } = req.user
     let query = {
       RoleID: Roles.ROLE_STUDENT
     }
@@ -511,7 +542,7 @@ const fncGetListStudent = async (req: Request) => {
       },
       {
         $lookup: {
-          from: "learnhistories",
+          from: "learnhistorys",
           localField: "_id",
           foreignField: "Student",
           as: "LearnHistory"
@@ -596,8 +627,7 @@ const fncGetListStudent = async (req: Request) => {
     return response(
       {
         List: result[0],
-        Total: !!result[1].length ? result[1][0].total : 0,
-        IsViewLockUnLock: RoleID === Roles.ROLE_ADMIN
+        Total: !!result[1].length ? result[1][0].total : 0
       },
       false,
       "Lay dat thanh cong",
@@ -1064,13 +1094,16 @@ const fncDisabledOrEnabledSubjectSetting = async (req: Request) => {
 
 const fncCreateAccountStaff = async (req: Request) => {
   try {
-    const { Email, FullName } = req.body as CreateAccountStaff
-    const hashPassword = bcrypt.hashSync("Ab12345", 10)
+    const { Email, FullName, Phone, Password } = req.body as CreateAccountStaff
+    const checkExist = await getOneDocument(Account, "Email", Email)
+    if (!!checkExist) return response({}, true, "Email đã tồn tại", 200)
+    const hashPassword = bcrypt.hashSync(Password, 10)
     const newUser = await User.create({
       FullName,
       RoleID: 2,
       IsFirstLogin: false,
-      RegisterStatus: 3
+      RegisterStatus: 3,
+      Phone
     })
     await Account.create({
       Email,
@@ -1142,6 +1175,22 @@ const fncGetListAccountStaff = async (req: Request) => {
   }
 }
 
+const fncResetPasswordAccountStaff = async (req: Request) => {
+  try {
+    const { UserID } = req.params
+    const hashPassword = bcrypt.hashSync("Ab123456", 10)
+    const updateAccount = await Account.findOneAndUpdate(
+      { UserID },
+      { Password: hashPassword },
+      { new: true }
+    )
+    if (!updateAccount) return response({}, true, "Có lỗi xảy ra", 200)
+    return response({}, false, "Reset mật khẩu thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const UserSerivce = {
   fncGetDetailProfile,
   fncChangeProfile,
@@ -1163,7 +1212,8 @@ const UserSerivce = {
   fncGetListSubjectSetting,
   fncDisabledOrEnabledSubjectSetting,
   fncCreateAccountStaff,
-  fncGetListAccountStaff
+  fncGetListAccountStaff,
+  fncResetPasswordAccountStaff
 }
 
 export default UserSerivce

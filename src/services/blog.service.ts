@@ -1,12 +1,15 @@
 import response from "../utils/response"
 import { getOneDocument } from "../utils/queryFunction"
 import Blog from "../models/blog"
+import User from "../models/user"
 import { Request } from "express"
-import { CreateUpdateBlogDTO } from "../dtos/blog.dto"
-import { PaginationDTO } from "../dtos/common.dto"
-import { cache } from "joi"
+import {
+  CreateUpdateBlogDTO,
+  GetListBlogByUserDTO,
+  GetListBlogDTO
+} from "../dtos/blog.dto"
 import sendEmail from "../utils/send-mail"
-import mongoose from "mongoose"
+import mongoose, { ObjectId } from "mongoose"
 
 const fncCreateBlog = async (req: Request) => {
   try {
@@ -16,6 +19,7 @@ const fncCreateBlog = async (req: Request) => {
     // if (!!blog) return response({}, true, "Tiêu đề blog đã tồn tại", 200)
     const newCreateBlog = await Blog.create({
       ...req.body,
+      RegisterStatus: 2,
       User: UserID,
     })
     return response(newCreateBlog, false, "Tạo bài viết thành công", 201)
@@ -35,29 +39,30 @@ const fncGetDetailBlog = async (req: Request) => {
   }
 }
 
-const fncGetListBlog = async (req: Request) => {
+const fncGetListBlogByTeacher = async (req: Request) => {
   try {
-    const { CurrentPage, PageSize, title, minPrice, maxPrice, subject } = req.body
-
-    const query: any = {}
-
-    if (title) {
-      query.Title = { $regex: title, $options: 'i' }
+    const { TextSearch, CurrentPage, PageSize, SubjectID, LearnType } = req.body as GetListBlogDTO
+    let query = {
+      RegisterStatus :3,
+    } as any
+    if (!!SubjectID) {
+      query = {
+        ...query,
+        Subject: SubjectID
+      }
     }
-
-    if (minPrice || maxPrice) {
-      query.Price = {}
-      if (minPrice) query.Price.$gte = parseFloat(minPrice)
-      if (maxPrice) query.Price.$lte = parseFloat(maxPrice)
+    if (!!LearnType) {
+      query = {
+        ...query,
+        LearnType: LearnType
+      }
     }
-
-    if (subject) {
-      query.Subject = subject
+    if (!!TextSearch) {
+      query = {
+        ...query,
+        Title: { $regex: TextSearch, $options: "i" }
+      }
     }
-
-    query.IsDeleted = false
-    query.RegisterStatus = 3
-
     const blogs = Blog
       .find(query)
       .skip((CurrentPage - 1) * PageSize)
@@ -70,6 +75,173 @@ const fncGetListBlog = async (req: Request) => {
       { List: result[0], Total: result[1] },
       false,
       "Lấy ra bài viết thành công",
+      200
+    )
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncGetListBlog = async (req: Request) => {
+  try {
+    const { TextSearch, CurrentPage, PageSize, SubjectID, RegisterStatus, LearnType } = req.body as GetListBlogDTO
+    let query = {
+    } as any
+    if (!!SubjectID) {
+      query = {
+        ...query,
+        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
+      }
+    }
+    if (!!RegisterStatus) {
+      query = {
+        ...query,
+        RegisterStatus: RegisterStatus
+      }
+    }
+    if (!!LearnType) {
+      query = {
+        ...query,
+        LearnType: LearnType
+      }
+    }
+    const blogs = Blog.aggregate([
+      {
+        $match: query
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "User",
+          foreignField: "_id",
+          as: "User",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account",
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email",
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                FullName: 1,
+                Email: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$User" },
+      {
+        $match: {
+          "User.FullName": { $regex: TextSearch, $options: "i" }
+        }
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      { $skip: (CurrentPage - 1) * PageSize },
+      { $limit: PageSize }
+    ])
+    const total = Blog.aggregate([
+      {
+        $match: query
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "User",
+          foreignField: "_id",
+          as: "User",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account",
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email",
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                FullName: 1,
+                Email: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$User" },
+      {
+        $match: {
+          "User.FullName": { $regex: TextSearch, $options: "i" }
+        }
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      {
+        $group: {
+          _id: "$_id"
+        }
+      },
+      {
+        $count: "total"
+      }
+    ])
+    const result = await Promise.all([blogs, total])
+
+    return response(
+      {
+        List: result[0],
+        Total: !!result[1].length ? result[1][0].total : 0
+      },
+      false,
+      "Lấy ra tất cả các bài viết thành công",
       200
     )
   } catch (error: any) {
@@ -99,14 +271,7 @@ const fncDeleteBlog = async (req: Request) => {
 const fncUpdateBlog = async (req: Request) => {
   try {
     const { BlogID, Title } = req.body as CreateUpdateBlogDTO
-    // const checkExistTitle = await Blog.findOne({
-    //   Title: Title,
-    //   _id: {
-    //     $ne: BlogID
-    //   }
-    // })
-    // if (!!checkExistTitle)
-    //   return response({}, true, "Tiêu đề blog đã tồn tại", 200)
+   
     const updateBlog = await Blog.findOneAndUpdate(
       { _id: BlogID },
       { ...req.body },
@@ -121,44 +286,37 @@ const fncUpdateBlog = async (req: Request) => {
 
 const fncGetListBlogByUser = async (req: Request) => {
   try {
-    const UserID = req.user.ID // Assuming `req.user` contains authenticated user info
-    const { CurrentPage, PageSize, Title, SubjectID } = req.body
-
-    // Validate UserID
-    if (!mongoose.Types.ObjectId.isValid(UserID)) {
-      return response({}, true, "Người dùng không tồn tại", 400)
+    const UserID = req.user.ID
+    const { TextSearch, CurrentPage, PageSize, SubjectID, RegisterStatus, LearnType } = req.body as GetListBlogDTO
+    let query = {
+      User: UserID,   
+      IsDeleted: false
+    } as any
+    if (!!SubjectID) {
+      query = {
+        ...query,
+        Subject: SubjectID
+      }
     }
-
-    // Build the query with filters
-    const query: any = {
-      User: UserID, // Filter blogs by UserID
-      IsDeleted: false, // Only include non-deleted blogs
+    if (!!RegisterStatus) {
+      query = {
+        ...query,
+        RegisterStatus: RegisterStatus
+      }
     }
-
-    // Add Title filter (case-insensitive partial match)
-    if (Title) {
-      query.Title = { $regex: Title, $options: "i" }
+    if (!!LearnType) {
+      query = {
+        ...query,
+        LearnType: LearnType
+      }
     }
-
-    // Add Subject filter
-    if (SubjectID) {
-      query.Subject = SubjectID
-    }
-
-    // Fetch blogs with pagination and populate necessary fields
     const blogs = Blog.find(query)
       .find(query)
       .skip((CurrentPage - 1) * PageSize)
       .limit(PageSize)
-      .populate("Subject", ["_id", "SubjectName"]) // Populate Subject field with specific fields
-
-    // Count total blogs for the user (for pagination)
+      .populate("Subject", ["_id", "SubjectName"])
     const total = Blog.countDocuments(query)
-
-    // Wait for both promises to resolve
     const result = await Promise.all([blogs, total])
-
-    // Return response with blog list and total count
     return response(
       { List: result[0], Total: result[1] },
       false,
@@ -198,19 +356,8 @@ const fncSendRequestReceive = async (req: Request) => {
 const fncChangeReceiveStatus = async (req: Request) => {
   try {
     const { BlogID, TeacherID } = req.body
-
-    if (!mongoose.Types.ObjectId.isValid(BlogID)) {
-      return response({}, true, "Blog không tồn tại", 200)
-    }
-    if (!mongoose.Types.ObjectId.isValid(TeacherID)) {
-      return response({}, true, "Giáo viên không tồn tại", 200)
-    }
-
     const blog = await Blog.findById(BlogID)
-    if (!blog) {
-      return response({}, true, "Không tìm thấy bài viết", 404)
-    }
-
+    if (!blog) return response({}, true, "Không tìm thấy bài viết", 200)
     blog.TeacherReceive.forEach((teacher) => {
       if (teacher.Teacher && teacher.Teacher.toString() === TeacherID) {
         teacher.ReceiveStatus = 3
@@ -218,12 +365,9 @@ const fncChangeReceiveStatus = async (req: Request) => {
         teacher.ReceiveStatus = 2
       }
     })
-
-    blog.RegisterStatus = 1
     await blog.save()
-
     return response(
-      { BlogID, TeacherID },
+      {},
       false,
       "Trạng thái nhận bài viết đã được cập nhật thành công",
       200
@@ -234,33 +378,9 @@ const fncChangeReceiveStatus = async (req: Request) => {
   }
 }
 
-const fncGetListBlogByStudent = async (req: Request) => {
+const fncChangeRegisterStatus = async (req: Request) => {
   try {
-    const UserID = req.user.ID
-    const { CurrentPage, PageSize } = req.body as PaginationDTO
-    const query = {
-      User: UserID
-    }
-    const blogs = Blog
-      .find(query)
-      .skip((CurrentPage - 1) * PageSize)
-      .limit(PageSize)
-    const total = Blog.countDocuments(query)
-    const result = await Promise.all([blogs, total])
-    return response(
-      { List: result[0], Total: result[1] },
-      false,
-      "Lấy ra bài viết thành công",
-      200
-    )
-  } catch (error: any) {
-    return response({}, true, error.toString(), 500)
-  }
-}
-
-const fncChangeRegisterStatus = async(req: Request) => {
-  try {
-    const { BlogID, FullName, Email, Reason, RegisterStatus } = req.body 
+    const { BlogID, FullName, Email, Reason, RegisterStatus } = req.body
     const confirmContent = "Bài đăng tìm kiếm của bạn đã được duyệt. Từ giờ giáo viên có thể nhìn thấy bài đăng của bạn và có thể thực hiện nhận việc."
     const rejectContent = `Bài đăng của bạn không được duyệt với lý do: ${Reason}. Bạn có thể phản hồi để làm rõ.`
     const subject = "THÔNG BÁO KIỂM DUYỆT BÀI ĐĂNG TÌM KIẾM GIÁO VIÊN"
@@ -269,12 +389,12 @@ const fncChangeRegisterStatus = async(req: Request) => {
                 <head>
                 <style>
                     p {
-                        color: #333;
+                        color: #333
                     }
                 </style>
                 </head>
                 <body>
-                  <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO KIỂM DUYỆT BÀI ĐĂNG TÌM KIẾM GIÁO VIÊN</p>
+                  <p style="margin-top: 30px margin-bottom:30px text-align:center font-weigth: 700 font-size: 20px">THÔNG BÁO KIỂM DUYỆT BÀI ĐĂNG TÌM KIẾM GIÁO VIÊN</p>
                   <p style="margin-bottom:10px">Xin chào ${FullName},</p>
                   <p style="margin-bottom:10px">Talent LearningHub thông báo: ${RegisterStatus === 3 ? confirmContent : rejectContent}</p>
                 </body>
@@ -302,9 +422,10 @@ const BlogService = {
   fncUpdateBlog,
   fncGetListBlogByUser,
   fncSendRequestReceive,
-  fncGetListBlogByStudent,
+  fncGetListBlogByTeacher,
   fncChangeReceiveStatus,
-  fncChangeRegisterStatus
+  fncChangeRegisterStatus,
+
 }
 
 export default BlogService

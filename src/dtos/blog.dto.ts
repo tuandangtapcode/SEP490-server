@@ -1,4 +1,5 @@
 import { ObjectId } from "mongoose"
+import { CommonDTO } from "./common.dto"
 
 export interface CreateUpdateBlogDTO {
   User: ObjectId,
@@ -11,9 +12,19 @@ export interface CreateUpdateBlogDTO {
   LearnType: number[],
   Address: string,
   Schedules: {
-    DateAt: string,
-    StartTime: String,
-    EndTime: String
+    // DateAt: string,
+    StartTime: string,
+    EndTime: string
   }[],
   BlogID?: ObjectId
+}
+
+export interface GetListBlogDTO extends CommonDTO {
+  SubjectID?: ObjectId,
+  RegisterStatus: number,
+  LearnType: number
+}
+
+export interface GetListBlogByUserDTO extends CommonDTO {
+  SubjectID?: ObjectId,
 }

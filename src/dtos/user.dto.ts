@@ -109,4 +109,6 @@ export interface GetListSubjectSettingDTO extends CommonDTO {
 export interface CreateAccountStaff {
   FullName: string,
   Email: string,
+  Password: string,
+  Phone: string
 }
