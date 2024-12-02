@@ -8,7 +8,7 @@ const openai = new OpenAI({
 
 const generateEmbedding = async (text: string): Promise<number[]> => {
   const response = await openai.embeddings.create({
-    model: "text-embedding-3-large", // The model name you want to use
+    model: "text-embedding-3-small", // The model name you want to use
     input: text,
     encoding_format: "float", // Ensure compatibility with Pinecone
   })

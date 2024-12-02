@@ -23,6 +23,7 @@ import {
 import response from "../utils/response"
 import SubjectSetting from "../models/subjectsetting"
 import EmbeddingPinecone from "../tools/embeddingPinecone"
+import PineconeService from "./pinecone.service"
 import bcrypt from "bcrypt"
 import { CommonDTO } from "../dtos/common.dto"
 
@@ -678,6 +679,9 @@ const fncUpdateSubjectSetting = async (req: Request) => {
         { new: true }
       )
       .populate("Subject", ["_id", "SubjectName"])
+    if(updateSubjectSetting){ 
+      EmbeddingPinecone.updateSubjectSetting(SubjectSettingID.toString())
+    }
     if (!updateSubjectSetting) return response({}, true, "Có lỗi xảy ra", 200)
     return response(updateSubjectSetting, false, "Cập nhật môn học thành công", 200)
   } catch (error: any) {
@@ -691,6 +695,9 @@ const fncDeleteSubjectSetting = async (req: Request) => {
     const deleteSubjectSetting = await SubjectSetting.findOneAndDelete({
       _id: SubjectSettingID
     })
+    if(deleteSubjectSetting) {
+      PineconeService.deleteVector(SubjectSettingID, "teacher")
+    }
     if (!deleteSubjectSetting) return response({}, true, "Có lỗi xảy ra", 200)
     return response({}, false, "Xóa môn học thành công", 200)
   } catch (error: any) {
