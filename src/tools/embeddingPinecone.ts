@@ -66,10 +66,7 @@ const updateSubjectSetting = async (subjectSettingId: string) => {
         Learn Types: ${subjectSetting.LearnTypes === 1 ? "Trực tiếp" : "Online"}
         Active: ${subjectSetting.RegisterStatus === 3 ? "Yes" : "No"}
       `.trim()
-      // Step 3: Generate embeddingy
       const embedding = await OpenaiService.generateEmbedding(text as string)
-
-      // Step 4: Upsert into Pinecone
       const updateData = await PineconeService.updateVector(subjectSettingId, "teacher", embedding)
       return response(updateData, false, "cập nhật data thành công", 200)
     }
@@ -89,15 +86,15 @@ const processLearnHistory = async (userID: string) => {
       SubjectIntroduction: ${learnHistory.Subject?.Description || ""}
       Teacher: ${learnHistory.Teacher?.FullName || ""}
       TeacherInformation: ${learnHistory.Teacher?.Description || ""}
-      `
+      `.trim()
     const embedding = await OpenaiService.generateEmbedding(text as string)
-    if (learnHistory.countDocuments === 1) {
+    if (learnHistory.length === 1) {
       await PineconeService.upsertVector(userID, "learnhistory", embedding, {
         student: learnHistory.Student?.FullName || "",
         gender: learnHistory.Student?.Gender === 1 ? "Nam" : "Nữ",
         address: learnHistory.Student?.Address || "",
       })
-    } else if (learnHistory.countDocuments > 1) {
+    } else if (learnHistory.length > 1) {
       await PineconeService.updateVector(userID, "learnhistory", embedding)
     }
   } catch (error: any) {
@@ -110,7 +107,9 @@ const processAllSubjectSettings = async () => {
   for (const subjectSetting of subjectSettings) {
     await processSubjectSetting(subjectSetting._id.toString())
   }
+
 }
+
 
 const getQueryEmbedding = async (query: string): Promise<number[]> => {
   return await OpenaiService.generateEmbedding(query)
@@ -324,7 +323,7 @@ const EmbeddingPinecone = {
   processSubjectSetting,
   updateSubjectSetting,
   teacherRecommendation,
-  teacherRecommendationByLearnHistory
+  teacherRecommendationByLearnHistory,
 }
 
 export default EmbeddingPinecone
