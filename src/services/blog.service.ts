@@ -42,10 +42,7 @@ const fncGetDetailBlog = async (req: Request) => {
 const fncGetListBlogByTeacher = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, SubjectID, LearnType } = req.body as GetListBlogDTO
-    let query = {
-      RegisterStatus: 3,
-      IsDeleted: false
-    } as any
+    let query = {} as any
     if (!!SubjectID) {
       query = {
         ...query,
@@ -86,7 +83,8 @@ const fncGetListBlogByTeacher = async (req: Request) => {
 const fncGetListBlog = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, SubjectID, RegisterStatus, LearnType } = req.body as GetListBlogDTO
-    let query = {} as any
+    let query = {
+    } as any
     if (!!SubjectID) {
       query = {
         ...query,
@@ -275,14 +273,7 @@ const fncDeleteBlog = async (req: Request) => {
 const fncUpdateBlog = async (req: Request) => {
   try {
     const { BlogID, Title } = req.body as CreateUpdateBlogDTO
-    // const checkExistTitle = await Blog.findOne({
-    //   Title: Title,
-    //   _id: {
-    //     $ne: BlogID
-    //   }
-    // })
-    // if (!!checkExistTitle)
-    //   return response({}, true, "Tiêu đề blog đã tồn tại", 200)
+   
     const updateBlog = await Blog.findOneAndUpdate(
       { _id: BlogID },
       { ...req.body },
@@ -297,11 +288,8 @@ const fncUpdateBlog = async (req: Request) => {
 
 const fncGetListBlogByUser = async (req: Request) => {
   try {
-    const UserID = req.user.ID
-    const { TextSearch, CurrentPage, PageSize, SubjectID, RegisterStatus } = req.body as GetListBlogDTO
-    let query = {
-      User: UserID
-    } as any
+    const { TextSearch, CurrentPage, PageSize, SubjectID, RegisterStatus, LearnType } = req.body as GetListBlogDTO
+    let query = {} as any
     if (!!SubjectID) {
       query = {
         ...query,

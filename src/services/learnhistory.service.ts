@@ -8,6 +8,7 @@ import {
   GetListLearnHistoryDTO,
   GetListLearnHistoryOfUserDTO
 } from "../dtos/learnhistory.dto"
+import EmbeddingPinecone from "../tools/embeddingPinecone"
 import response from "../utils/response"
 import moment from "moment"
 
@@ -44,6 +45,9 @@ const fncCreateLearnHistory = async (req: Request) => {
     const checkSendMail = await sendEmail(TeacherEmail, subject, content)
     if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     const newLearnHistory = await LearnHistory.create({ ...remainBody, Student: UserID })
+    if(newLearnHistory) {
+      EmbeddingPinecone.processLearnHistory(UserID)
+    }
     return response(newLearnHistory, false, "Thêm thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
