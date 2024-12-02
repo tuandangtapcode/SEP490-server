@@ -33,13 +33,12 @@ const processSubjectSetting = async (subjectSettingId: string) => {
       const embedding = await OpenaiService.generateEmbedding(text as string)
 
       // Step 4: Upsert into Pinecone
-      const upsetData = await PineconeService.upsertVector(subjectSetting._id.toString(),"teacher", embedding, {
+      await PineconeService.upsertVector(subjectSetting._id.toString(), "teacher", embedding, {
         subject: subjectSetting.Subject?.SubjectName || "",
         teacher: subjectSetting.Teacher?.FullName || "",
         gender: subjectSetting.Teacher?.Gender === 1 ? "Nam" : "Nữ",
         isActive: subjectSetting.RegisterStatus,
       })
-      return response(upsetData, false, "ghi nhận data thành công", 200)
     }
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -71,20 +70,20 @@ const updateSubjectSetting = async (subjectSettingId: string) => {
       const embedding = await OpenaiService.generateEmbedding(text as string)
 
       // Step 4: Upsert into Pinecone
-      const updateData = await PineconeService.updateVector(subjectSettingId,"teacher",embedding)
+      const updateData = await PineconeService.updateVector(subjectSettingId, "teacher", embedding)
       return response(updateData, false, "cập nhật data thành công", 200)
     }
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
-} 
+}
 
-const processLearnHistory = async (userID : string) => {
+const processLearnHistory = async (userID: string) => {
   try {
-    const learnHistory = await LearnHistory.find({Student: userID})
-    .populate("Subject", ["_id", "SubjectName", "Description"])
-    .populate("Teacher", ["_id", "FullName", "Address", "Description", "Gender"]) 
-    .populate("Student", ["_id", "FullName", "Address", "Gender"]) as any
+    const learnHistory = await LearnHistory.find({ Student: userID })
+      .populate("Subject", ["_id", "SubjectName", "Description"])
+      .populate("Teacher", ["_id", "FullName", "Address", "Description", "Gender"])
+      .populate("Student", ["_id", "FullName", "Address", "Gender"]) as any
     const text = `
       Subject: ${learnHistory.Subject?.SubjectName || ""}
       SubjectIntroduction: ${learnHistory.Subject?.Description || ""}
@@ -92,25 +91,18 @@ const processLearnHistory = async (userID : string) => {
       TeacherInformation: ${learnHistory.Teacher?.Description || ""}
       `
     const embedding = await OpenaiService.generateEmbedding(text as string)
-    if(learnHistory.countDocuments === 1) {
-      const upsetData = await PineconeService.upsertVector(userID,"learnhistory",embedding, {
+    if (learnHistory.countDocuments === 1) {
+      await PineconeService.upsertVector(userID, "learnhistory", embedding, {
         student: learnHistory.Student?.FullName || "",
         gender: learnHistory.Student?.Gender === 1 ? "Nam" : "Nữ",
         address: learnHistory.Student?.Address || "",
       })
-    } else if(learnHistory.countDocuments > 1){
-      const upsetData = await PineconeService.updateVector(userID,"learnhistory",embedding)
+    } else if (learnHistory.countDocuments > 1) {
+      await PineconeService.updateVector(userID, "learnhistory", embedding)
     }
-    return response({}, false, "ghi nhận data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
-}
-
-
-
-const processAllLearningHistory = async () => {
-
 }
 
 const processAllSubjectSettings = async () => {
@@ -118,15 +110,111 @@ const processAllSubjectSettings = async () => {
   for (const subjectSetting of subjectSettings) {
     await processSubjectSetting(subjectSetting._id.toString())
   }
-  // processSubjectSetting("66f83320bea43f926006d683")
 }
 
 const getQueryEmbedding = async (query: string): Promise<number[]> => {
   return await OpenaiService.generateEmbedding(query)
 }
 
-const teacherRecommendationByLearnHistory = async(req: Request) => {
+const teacherRecommendationByLearnHistory = async (req: Request) => {
+  try {
     const userID = req.user.ID
+    const learnHistory = await PineconeService.searchPineconeByID(userID)
+    const queryEmbedding = learnHistory[0].values
+    const matches = await PineconeService.searchPineconeByQuery(queryEmbedding)
+    let query = {} as any
+    query = {
+      _id: {
+        $in: matches.map((i: any) => new mongoose.Types.ObjectId(`${i.id}`))
+      }
+    }
+    const subjectsetting = await SubjectSetting.aggregate([
+      {
+        $match: query
+      },
+      {
+        $addFields: {
+          TotalVotes: { $sum: "$Votes" }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                IsActive: "$Account.IsActive",
+              }
+            },
+            {
+              $project: {
+                FullName: 1,
+                AvatarPath: 1,
+                RegisterStatus: 1,
+                IsActive: 1,
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: {
+          "Teacher.RegisterStatus": 3,
+          "Teacher.IsActive": true,
+        }
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      {
+        $project: {
+          _id: 1,
+          Subject: 1,
+          Levels: 1,
+          Price: 1,
+          LearnTypes: 1,
+          Teacher: 1,
+          TotalVotes: 1,
+          Votes: 1
+        }
+      },
+      {
+        $sort: {
+          TotalVotes: -1
+        }
+      }
+    ])
+    return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
 }
 
 const teacherRecommendation = async (req: Request) => {
@@ -134,7 +222,6 @@ const teacherRecommendation = async (req: Request) => {
     const prompt = JSON.stringify(req.body)
     const queryEmbedding = await getQueryEmbedding(prompt)
     const matches = await PineconeService.searchPineconeByQuery(queryEmbedding)
-    console.log(matches)
     let query = {} as any
     query = {
       _id: {
@@ -234,9 +321,10 @@ const teacherRecommendation = async (req: Request) => {
 const EmbeddingPinecone = {
   processAllSubjectSettings,
   processLearnHistory,
+  processSubjectSetting,
   updateSubjectSetting,
   teacherRecommendation,
-  processSubjectSetting,
+  teacherRecommendationByLearnHistory
 }
 
 export default EmbeddingPinecone
