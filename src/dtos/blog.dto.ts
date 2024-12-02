@@ -11,8 +11,10 @@ export interface CreateUpdateBlogDTO {
   NumberSlot: number,
   LearnType: number[],
   Address: string,
+  StartDate: Date,
+  ProfessionalLevel: number,
   Schedules: {
-    // DateAt: string,
+    DateValue: number,
     StartTime: string,
     EndTime: string
   }[],
@@ -20,11 +22,19 @@ export interface CreateUpdateBlogDTO {
 }
 
 export interface GetListBlogDTO extends CommonDTO {
-  SubjectID?: ObjectId,
+  SubjectID: ObjectId,
   RegisterStatus: number,
-  LearnType: number
+  LearnType: number[]
 }
 
 export interface GetListBlogByUserDTO extends CommonDTO {
-  SubjectID?: ObjectId,
+  SubjectID: ObjectId,
+}
+
+export interface ChangeRegisterStatusDTO {
+  BlogID: ObjectId,
+  FullName: string,
+  Email: string,
+  Reason?: string,
+  RegisterStatus: number
 }

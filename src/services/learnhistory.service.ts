@@ -5,9 +5,11 @@ import sendEmail from "../utils/send-mail"
 import { Request } from "express"
 import {
   CreateLearnHistoryDTO,
-  GetListLearnHistoryDTO
+  GetListLearnHistoryDTO,
+  GetListLearnHistoryOfUserDTO
 } from "../dtos/learnhistory.dto"
 import response from "../utils/response"
+import moment from "moment"
 
 const fncCreateLearnHistory = async (req: Request) => {
   try {
@@ -51,8 +53,7 @@ const fncCreateLearnHistory = async (req: Request) => {
 const fncGetListLearnHistory = async (req: Request) => {
   try {
     const { ID, RoleID } = req.user
-    const { PageSize, CurrentPage, LearnedStatus, TextSearch } =
-      req.body as GetListLearnHistoryDTO
+    const { PageSize, CurrentPage, LearnedStatus, TextSearch, SubjectID } = req.body as GetListLearnHistoryDTO
     let query = {
       [RoleID === Roles.ROLE_STUDENT
         ? "Student"
@@ -63,6 +64,12 @@ const fncGetListLearnHistory = async (req: Request) => {
       query = {
         ...query,
         LearnedStatus: LearnedStatus
+      }
+    }
+    if (!!SubjectID) {
+      query = {
+        ...query,
+        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
       }
     }
     const list = LearnHistory.aggregate([
@@ -283,6 +290,7 @@ const fncGetDetailLearnHistory = async (req: Request) => {
                 Status: 1,
                 StartTime: 1,
                 EndTime: 1,
+                IsCancel: 1,
                 Teacher: 1
               }
             }
@@ -317,7 +325,197 @@ const fncGetDetailLearnHistory = async (req: Request) => {
       }
     ])
     if (!learnHistory[0]) return response({}, true, "Có lỗi xảy ra", 200)
-    return response(learnHistory[0], false, "Lấy data thành công", 200)
+    const data = {
+      ...learnHistory[0],
+      Timetables: learnHistory[0].Timetables.map((i: any) => ({
+        ...i,
+        IsDisabledAtendance: moment().isAfter(moment(i.StartTime)) ||
+          moment().isBefore(moment(i.EndTime).add(24, "hours"))
+      }))
+    }
+    return response(data, false, "Lấy data thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncGetListLearnHistoryOfUser = async (req: Request) => {
+  try {
+    const { TextSearch, PageSize, CurrentPage, UserID, RoleID, LearnedStatus, SubjectID } = req.body as GetListLearnHistoryOfUserDTO
+    let query = {
+      [RoleID === Roles.ROLE_STUDENT ? "Student" : "Teacher"]: new mongoose.Types.ObjectId(`${UserID}`)
+    } as any
+    if (!!LearnedStatus) {
+      query = {
+        ...query,
+        LearnedStatus: LearnedStatus
+      }
+    }
+    if (!!SubjectID) {
+      query = {
+        ...query,
+        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
+      }
+    }
+    const list = LearnHistory.aggregate([
+      {
+        $match: query
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Student",
+          foreignField: "_id",
+          as: "Student",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Student" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: {
+          $or: [
+            { 'Teacher.FullName': { $regex: TextSearch, $options: 'i' } },
+            { 'Student.FullName': { $regex: TextSearch, $options: 'i' } },
+          ]
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          TotalLearned: 1,
+          LearnedNumber: 1,
+          LearnedStatus: 1,
+          RegisterDate: 1,
+          Teacher: 1,
+          Student: 1,
+          Subject: 1,
+        }
+      },
+      { $skip: (CurrentPage - 1) * PageSize },
+      { $limit: PageSize }
+    ])
+    const total = LearnHistory.aggregate([
+      {
+        $match: query
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Student",
+          foreignField: "_id",
+          as: "Student",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Student" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: {
+          $or: [
+            { 'Teacher.FullName': { $regex: TextSearch, $options: 'i' } },
+            { 'Student.FullName': { $regex: TextSearch, $options: 'i' } },
+          ]
+        }
+      },
+      {
+        $group: {
+          _id: "$_id"
+        }
+      },
+      {
+        $count: "total"
+      }
+    ])
+    const result = await Promise.all([list, total])
+    return response(
+      {
+        List: result[0],
+        Total: !!result[1].length ? result[1][0].total : 0
+      },
+      false,
+      "Lấy data thành công",
+      200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -326,7 +524,8 @@ const fncGetDetailLearnHistory = async (req: Request) => {
 const LearnHistoryService = {
   fncCreateLearnHistory,
   fncGetListLearnHistory,
-  fncGetDetailLearnHistory
+  fncGetDetailLearnHistory,
+  fncGetListLearnHistoryOfUser
 }
 
 export default LearnHistoryService

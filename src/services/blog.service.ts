@@ -4,8 +4,8 @@ import Blog from "../models/blog"
 import User from "../models/user"
 import { Request } from "express"
 import {
+  ChangeRegisterStatusDTO,
   CreateUpdateBlogDTO,
-  GetListBlogByUserDTO,
   GetListBlogDTO
 } from "../dtos/blog.dto"
 import sendEmail from "../utils/send-mail"
@@ -42,11 +42,14 @@ const fncGetDetailBlog = async (req: Request) => {
 const fncGetListBlogByTeacher = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, SubjectID, LearnType } = req.body as GetListBlogDTO
-    let query = {} as any
+    let query = {
+      RegisterStatus: 3,
+      IsDeleted: false
+    } as any
     if (!!SubjectID) {
       query = {
         ...query,
-        Subject: SubjectID
+        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
       }
     }
     if (!!LearnType) {
@@ -87,7 +90,7 @@ const fncGetListBlog = async (req: Request) => {
     if (!!SubjectID) {
       query = {
         ...query,
-        Subject: SubjectID
+        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
       }
     }
     if (!!RegisterStatus) {
@@ -96,7 +99,7 @@ const fncGetListBlog = async (req: Request) => {
         RegisterStatus: RegisterStatus
       }
     }
-    if (!!LearnType) {
+    if (!!LearnType.length) {
       query = {
         ...query,
         LearnType: LearnType
@@ -231,10 +234,14 @@ const fncGetListBlog = async (req: Request) => {
       }
     ])
     const result = await Promise.all([blogs, total])
-
+    const data = result[0].map((i: any) => ({
+      ...i,
+      IsConfirm: i.RegisterStatus === 1 ? false : true,
+      IsReject: i.RegisterStatus === 1 ? false : true
+    }))
     return response(
       {
-        List: result[0],
+        List: data,
         Total: !!result[1].length ? result[1][0].total : 0
       },
       false,
@@ -290,12 +297,15 @@ const fncUpdateBlog = async (req: Request) => {
 
 const fncGetListBlogByUser = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, SubjectID, RegisterStatus, LearnType } = req.body as GetListBlogDTO
-    let query = {} as any
+    const UserID = req.user.ID
+    const { TextSearch, CurrentPage, PageSize, SubjectID, RegisterStatus } = req.body as GetListBlogDTO
+    let query = {
+      User: UserID
+    } as any
     if (!!SubjectID) {
       query = {
         ...query,
-        Subject: SubjectID
+        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
       }
     }
     if (!!RegisterStatus) {
@@ -304,10 +314,10 @@ const fncGetListBlogByUser = async (req: Request) => {
         RegisterStatus: RegisterStatus
       }
     }
-    if (!!LearnType) {
+    if (!!TextSearch) {
       query = {
         ...query,
-        LearnType: LearnType
+        Title: { $regex: TextSearch, $options: "i" }
       }
     }
     const blogs = Blog.find(query)
@@ -315,6 +325,7 @@ const fncGetListBlogByUser = async (req: Request) => {
       .skip((CurrentPage - 1) * PageSize)
       .limit(PageSize)
       .populate("Subject", ["_id", "SubjectName"])
+      .populate("TeacherReceive.Teacher", ["_id", "FullName"])
     const total = Blog.countDocuments(query)
     const result = await Promise.all([blogs, total])
     return response(
@@ -380,7 +391,7 @@ const fncChangeReceiveStatus = async (req: Request) => {
 
 const fncChangeRegisterStatus = async (req: Request) => {
   try {
-    const { BlogID, FullName, Email, Reason, RegisterStatus } = req.body
+    const { BlogID, FullName, Email, Reason, RegisterStatus } = req.body as ChangeRegisterStatusDTO
     const confirmContent = "Bài đăng tìm kiếm của bạn đã được duyệt. Từ giờ giáo viên có thể nhìn thấy bài đăng của bạn và có thể thực hiện nhận việc."
     const rejectContent = `Bài đăng của bạn không được duyệt với lý do: ${Reason}. Bạn có thể phản hồi để làm rõ.`
     const subject = "THÔNG BÁO KIỂM DUYỆT BÀI ĐĂNG TÌM KIẾM GIÁO VIÊN"

@@ -10,15 +10,33 @@ const getListPaymentInCurrentWeek = async () => {
   try {
     console.log("cron job getListPaymentInCurrentWeek");
     const { startOfWeek, endOfWeek } = getCurrentWeekRange()
-    const timetables = await TimeTable
-      .find(
-        {
-          StartTime: { $gte: startOfWeek, $lte: endOfWeek },
+    const timetables = await TimeTable.aggregate([
+      {
+        $match: {
           Status: true,
-        }
-      )
-      .select("_id Teacher Subject")
-      .lean()
+          IsCancel: false,
+          StartTime: { $gte: startOfWeek, $lte: endOfWeek },
+        },
+      },
+      {
+        $group: {
+          _id: { Teacher: "$Teacher", Subject: "$Subject" },
+          StartTime: { $push: "$StartTime" },
+          Status: { $first: "$Status" },
+          IsCancel: { $first: "$IsCancel" },
+        },
+      },
+      {
+        $project: {
+          Teacher: "$_id.Teacher",
+          Subject: "$_id.Subject",
+          StartTime: 1,
+          Status: 1,
+          IsCancel: 1,
+          _id: 0,
+        },
+      },
+    ])
     const subjectSetting = timetables.map((i: any) => (
       SubjectSetting
         .findOne(
@@ -34,7 +52,7 @@ const getListPaymentInCurrentWeek = async () => {
     const result = await Promise.all(subjectSetting)
     const data = result.map((i: any) => ({
       ...i,
-      TimeTables: timetables.filter((p: any) => p.Teacher.equals(i.Teacher._id) && p.Subject.equals(i.Subject))
+      TimeTables: timetables.find((p: any) => p.Teacher.equals(i.Teacher._id) && p.Subject.equals(i.Subject)).StartTime
     }))
     let teacherReported = [] as any
     data.forEach((i: any) => {
