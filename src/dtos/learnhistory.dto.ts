@@ -1,5 +1,5 @@
 import { ObjectId } from "mongoose"
-import { CommonDTO } from "./common.dto"
+import { CommonDTO, PaginationDTO } from "./common.dto"
 
 export interface CreateLearnHistoryDTO {
   Teacher: ObjectId,
@@ -14,5 +14,13 @@ export interface CreateLearnHistoryDTO {
 }
 
 export interface GetListLearnHistoryDTO extends CommonDTO {
-  LearnedStatus: number
+  LearnedStatus: number,
+  SubjectID: ObjectId
+}
+
+export interface GetListLearnHistoryOfUserDTO extends CommonDTO {
+  UserID: ObjectId,
+  RoleID: number,
+  LearnedStatus: number,
+  SubjectID: ObjectId
 }

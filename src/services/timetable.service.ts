@@ -3,6 +3,7 @@ import LearnHistory from "../models/learnhistory"
 import { Roles } from "../utils/constant"
 import { Request } from "express"
 import {
+  AttendanceOrCancelTimeTableDTO,
   CreateTimeTableDTO,
   UpdateTimeTableDTO
 } from "../dtos/timetable.dto"
@@ -58,6 +59,7 @@ const fncAttendanceTimeTable = async (req: Request) => {
         },
         { new: true }
       )
+      .lean()
     if (!learnHistory) return response({}, true, "Có lỗi xảy ra", 200)
     if (learnHistory.LearnedNumber === learnHistory.TotalLearned) {
       await LearnHistory
@@ -78,8 +80,7 @@ const fncAttendanceTimeTable = async (req: Request) => {
 const fncUpdateTimeTable = async (req: Request) => {
   try {
     const UserID = req.user.ID
-    const { TimeTableID, StartTime, EndTime } =
-      req.body as UpdateTimeTableDTO
+    const { TimeTableID, StartTime, EndTime } = req.body as UpdateTimeTableDTO
     const checkExistTimetable = await TimeTable
       .findOne({
         StartTime: {
@@ -188,21 +189,6 @@ const fncGetTimeTableByUser = async (req: Request) => {
         }
       },
       { $unwind: "$Subject" },
-      {
-        $lookup: {
-          from: "issues",
-          localField: "_id",
-          foreignField: "Timetable",
-          as: "Issue",
-          pipeline: [
-            {
-              $project: {
-                _id: 1,
-              }
-            }
-          ]
-        }
-      }
     ])
     const data = timetables.map((i: any) => ({
       ...i,
@@ -215,14 +201,52 @@ const fncGetTimeTableByUser = async (req: Request) => {
         moment().isBefore(moment(i.EndTime))
         ? true
         : false,
-      IsSubmitIssue: RoleID === Roles.ROLE_STUDENT &&
-        !i.Issue.length &&
-        (moment().isAfter(i.EndTime) &&
-          moment().isBefore(moment(i.EndTime).add(24, "hours")))
-        ? true
-        : false
     }))
     return response({ List: data, ButtonShow }, false, "Lấy data thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncAttendanceOrCancelTimeTable = async (req: Request) => {
+  try {
+    const { TimeTables, Type, LearnHistoryID } = req.body as AttendanceOrCancelTimeTableDTO
+    const updateTimeTables = await TimeTable.updateMany(
+      {
+        _id: {
+          $in: TimeTables
+        }
+      },
+      {
+        [`${Type}`]: true
+      }
+    )
+    if (!updateTimeTables.acknowledged) return response({}, true, "Có lỗi xảy ra", 200)
+    if (Type === "Status") {
+      const learnHistory = await LearnHistory
+        .findOneAndUpdate(
+          { _id: LearnHistoryID },
+          {
+            $inc: {
+              LearnedNumber: 1
+            }
+          },
+          { new: true }
+        )
+        .lean()
+      if (!learnHistory) return response({}, true, "Có lỗi xảy ra", 200)
+      if (learnHistory.LearnedNumber === learnHistory.TotalLearned) {
+        await LearnHistory
+          .findOneAndUpdate(
+            { _id: LearnHistoryID },
+            {
+              LearnedStatus: 2
+            },
+            { new: true }
+          )
+      }
+    }
+    return response({}, false, "Cập nhật thời khóa biểu thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -233,7 +257,8 @@ const TimeTableService = {
   fncGetTimeTableOfTeacherOrStudent,
   fncAttendanceTimeTable,
   fncUpdateTimeTable,
-  fncGetTimeTableByUser
+  fncGetTimeTableByUser,
+  fncAttendanceOrCancelTimeTable
 }
 
 export default TimeTableService

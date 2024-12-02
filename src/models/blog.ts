@@ -30,10 +30,6 @@ const BlogSchema = new Schema({
     type: Number,
     required: true
   },
-  Content: {
-    type: String,
-    required: true
-  },
   LearnType: {
     type: [
       { type: Number }
@@ -44,14 +40,23 @@ const BlogSchema = new Schema({
     type: String,
     default: null
   },
+  ProfessionalLevel: {
+    type: Number,
+    required: true
+  },
   Schedules: {
     type: [
       {
+        DateValue: { type: Number },
         StartTime: { type: Date },
         EndTime: { type: Date }
       }
     ],
     default: []
+  },
+  StartDate: {
+    type: Date,
+    required: true
   },
   TeacherReceive: {
     type: [

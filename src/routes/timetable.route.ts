@@ -28,5 +28,9 @@ TimeTableRoute.get("/getTimeTableByUser",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
   TimeTableController.getTimeTableByUser
 )
+TimeTableRoute.post("/attendanceOrCancelTimeTable",
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
+  TimeTableController.attendanceOrCancelTimeTable
+)
 
 export default TimeTableRoute

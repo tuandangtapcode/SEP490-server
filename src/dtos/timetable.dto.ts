@@ -19,3 +19,9 @@ export interface UpdateTimeTableDTO {
     DocPath: string
   }[]
 }
+
+export interface AttendanceOrCancelTimeTableDTO {
+  TimeTables: ObjectId[],
+  Type: string,
+  LearnHistoryID: ObjectId
+}
