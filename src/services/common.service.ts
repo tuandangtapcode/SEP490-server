@@ -6,6 +6,7 @@ import CacheService from "./redis.service"
 import { getOneDocument } from "../utils/queryFunction"
 import { Roles } from "../utils/constant"
 import TimeTable from "../models/timetable"
+import SubjectSetting from "../models/subjectsetting"
 
 const getTabs = (RoleID: number, IsByGoogle: boolean) => {
   let tabs = [] as any[]
@@ -15,12 +16,12 @@ const getTabs = (RoleID: number, IsByGoogle: boolean) => {
     tabs = [3, 4, 5, 6, 7, 10, 11, 12, 13]
   } else if (RoleID === Roles.ROLE_TEACHER) {
     tabs = !!IsByGoogle
-      ? [1, 3, 4, 5, 6, 7, 9, 10, 11]
-      : [1, 2, 3, 4, 5, 6, 7, 9, 10, 11]
+      ? [1, 3, 4, 5, 6, 7, 8, 10, 11, 12]
+      : [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12]
   } else {
     tabs = !!IsByGoogle
-      ? [1, 4, 5, 7, 8, 9, 10, 11]
-      : [1, 2, 4, 5, 7, 8, 9, 10, 11]
+      ? [1, 4, 5, 7, 9, 10, 11, 12]
+      : [1, 2, 4, 5, 7, 9, 10, 11, 12]
   }
   return tabs
 }
@@ -38,9 +39,6 @@ const fncGetListSystemKey = async () => {
       systemKeys = await SystemKey.find()
       CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
     }
-    await TimeTable.updateMany({
-      IsCancel: false
-    })
     return response(systemKeys, false, "Lấy ra thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

@@ -4,8 +4,8 @@ import Blog from "../models/blog"
 import User from "../models/user"
 import { Request } from "express"
 import {
+  ChangeRegisterStatusDTO,
   CreateUpdateBlogDTO,
-  GetListBlogByUserDTO,
   GetListBlogDTO
 } from "../dtos/blog.dto"
 import sendEmail from "../utils/send-mail"
@@ -41,14 +41,12 @@ const fncGetDetailBlog = async (req: Request) => {
 
 const fncGetListBlogByTeacher = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, SubjectID, LearnType } = req.body as GetListBlogDTO
-    let query = {
-      RegisterStatus :3,
-    } as any
+    const { TextSearch, CurrentPage, PageSize, SubjectID, LearnType, RoleID, UserID } = req.body as GetListBlogDTO
+    let query = {} as any
     if (!!SubjectID) {
       query = {
         ...query,
-        Subject: SubjectID
+        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
       }
     }
     if (!!LearnType) {
@@ -68,11 +66,21 @@ const fncGetListBlogByTeacher = async (req: Request) => {
       .skip((CurrentPage - 1) * PageSize)
       .limit(PageSize)
       .populate("Subject", ["_id", "SubjectName"])
+      .populate("User", ["_id", "FullName"])
+      .populate("TeacherReceive.Teacher", ["_id", "FullName"])
+      .lean()
     const total = Blog.countDocuments(query)
     const result = await Promise.all([blogs, total])
-
+    const data = result[0].map((i: any) => ({
+      ...i,
+      IsRegister: !!RoleID
+        ? !!i.TeacherReceive.some((t: any) => t.Teacher._id.equals(UserID))
+          ? false
+          : true
+        : false
+    }))
     return response(
-      { List: result[0], Total: result[1] },
+      { List: data, Total: result[1] },
       false,
       "Lấy ra bài viết thành công",
       200
@@ -99,7 +107,7 @@ const fncGetListBlog = async (req: Request) => {
         RegisterStatus: RegisterStatus
       }
     }
-    if (!!LearnType) {
+    if (!!LearnType.length) {
       query = {
         ...query,
         LearnType: LearnType
@@ -234,10 +242,14 @@ const fncGetListBlog = async (req: Request) => {
       }
     ])
     const result = await Promise.all([blogs, total])
-
+    const data = result[0].map((i: any) => ({
+      ...i,
+      IsConfirm: i.RegisterStatus === 1 ? false : true,
+      IsReject: i.RegisterStatus === 1 ? false : true
+    }))
     return response(
       {
-        List: result[0],
+        List: data,
         Total: !!result[1].length ? result[1][0].total : 0
       },
       false,
@@ -271,7 +283,7 @@ const fncDeleteBlog = async (req: Request) => {
 const fncUpdateBlog = async (req: Request) => {
   try {
     const { BlogID, Title } = req.body as CreateUpdateBlogDTO
-   
+
     const updateBlog = await Blog.findOneAndUpdate(
       { _id: BlogID },
       { ...req.body },
@@ -286,16 +298,12 @@ const fncUpdateBlog = async (req: Request) => {
 
 const fncGetListBlogByUser = async (req: Request) => {
   try {
-    const UserID = req.user.ID
     const { TextSearch, CurrentPage, PageSize, SubjectID, RegisterStatus, LearnType } = req.body as GetListBlogDTO
-    let query = {
-      User: UserID,   
-      IsDeleted: false
-    } as any
+    let query = {} as any
     if (!!SubjectID) {
       query = {
         ...query,
-        Subject: SubjectID
+        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
       }
     }
     if (!!RegisterStatus) {
@@ -304,10 +312,10 @@ const fncGetListBlogByUser = async (req: Request) => {
         RegisterStatus: RegisterStatus
       }
     }
-    if (!!LearnType) {
+    if (!!TextSearch) {
       query = {
         ...query,
-        LearnType: LearnType
+        Title: { $regex: TextSearch, $options: "i" }
       }
     }
     const blogs = Blog.find(query)
@@ -315,6 +323,7 @@ const fncGetListBlogByUser = async (req: Request) => {
       .skip((CurrentPage - 1) * PageSize)
       .limit(PageSize)
       .populate("Subject", ["_id", "SubjectName"])
+      .populate("TeacherReceive.Teacher", ["_id", "FullName"])
     const total = Blog.countDocuments(query)
     const result = await Promise.all([blogs, total])
     return response(
@@ -329,14 +338,10 @@ const fncGetListBlogByUser = async (req: Request) => {
   }
 }
 
-
 const fncSendRequestReceive = async (req: Request) => {
   try {
     const UserID = req.user.ID
     const { BlogID } = req.params
-    if (!mongoose.Types.ObjectId.isValid(`${BlogID}`)) {
-      return response({}, true, "Blog không tồn tại", 200)
-    }
     const updateBlog = await Blog.findOneAndUpdate(
       { _id: BlogID },
       {
@@ -380,7 +385,7 @@ const fncChangeReceiveStatus = async (req: Request) => {
 
 const fncChangeRegisterStatus = async (req: Request) => {
   try {
-    const { BlogID, FullName, Email, Reason, RegisterStatus } = req.body
+    const { BlogID, FullName, Email, Reason, RegisterStatus } = req.body as ChangeRegisterStatusDTO
     const confirmContent = "Bài đăng tìm kiếm của bạn đã được duyệt. Từ giờ giáo viên có thể nhìn thấy bài đăng của bạn và có thể thực hiện nhận việc."
     const rejectContent = `Bài đăng của bạn không được duyệt với lý do: ${Reason}. Bạn có thể phản hồi để làm rõ.`
     const subject = "THÔNG BÁO KIỂM DUYỆT BÀI ĐĂNG TÌM KIẾM GIÁO VIÊN"
@@ -414,6 +419,20 @@ const fncChangeRegisterStatus = async (req: Request) => {
   }
 }
 
+const fncGetListBlogApproval = async (req: Request) => {
+  try {
+    const UserID = req.user.ID
+    const blogs = await Blog
+      .find(
+        { "TeacherReceive.Teacher": UserID },
+        { TeacherReceive: 0 }
+      )
+    return response(blogs, false, "Lấy data thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const BlogService = {
   fncCreateBlog,
   fncGetListBlog,
@@ -425,7 +444,7 @@ const BlogService = {
   fncGetListBlogByTeacher,
   fncChangeReceiveStatus,
   fncChangeRegisterStatus,
-
+  fncGetListBlogApproval
 }
 
 export default BlogService

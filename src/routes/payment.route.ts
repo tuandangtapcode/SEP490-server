@@ -34,10 +34,5 @@ PaymentRoute.post("/getListTransfer",
   authMiddleware([Roles.ROLE_ADMIN]),
   PaymentController.getListTransfer
 )
-PaymentRoute.post("/sendRequestExplanation",
-  authMiddleware([Roles.ROLE_ADMIN]),
-  PaymentValidation.sendRequestExplanation,
-  PaymentController.sendRequestExplanation
-)
 
 export default PaymentRoute

@@ -7,18 +7,19 @@ const createUpdateBlog = async (req: Request, res: Response, next: NextFunction)
     Subject: Joi.string().pattern(getRegexObjectID()).required(),
     Title: Joi.string().min(1).required(),
     Price: Joi.number().integer().min(1).required(),
-    Content: Joi.string().min(1).required(),
     Gender: Joi.array().items(Joi.number().valid(1, 2).optional()).required(),
     NumberSlot: Joi.number().integer().min(1).required(),
     LearnType: Joi.array().items(Joi.number().valid(1, 2).optional()).required(),
     Address: Joi.string().min(1).optional(),
+    ProfessionalLevel: Joi.number().valid(1, 2, 3).required(),
+    StartDate: Joi.date().required(),
     Schedules: Joi.array().items(
       Joi.object({
+        DateValue: Joi.number().required(),
         StartTime: Joi.string().required(),
         EndTime: Joi.string().required(),
       })
     ).required(),
-    BlogID: Joi.string().pattern(getRegexObjectID()).optional()
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })

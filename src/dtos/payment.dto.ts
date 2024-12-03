@@ -37,15 +37,3 @@ export interface GetListTransferDTO extends PaginationDTO {
   FromDate: Date,
   ToDate: Date
 }
-
-export interface SendRequestExplanationDTO {
-  PaymentID: ObjectId,
-  Email: string,
-  FullName: string,
-  Issues: {
-    DateAt: string,
-    Time: string,
-    Title: string,
-    Content: string
-  }[]
-}

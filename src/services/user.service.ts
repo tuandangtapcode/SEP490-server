@@ -149,8 +149,8 @@ const fncResponseConfirmRegister = async (req: Request) => {
 
 const fncGetListTeacher = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, RegisterStatus } =
-      req.body as GetListTeacherDTO
+    const { TextSearch, CurrentPage, PageSize, RegisterStatus } = req.body as GetListTeacherDTO
+    const { RoleID } = req.user
     let queryUser = {
       FullName: { $regex: TextSearch, $options: "i" },
       RoleID: Roles.ROLE_TEACHER
@@ -251,14 +251,14 @@ const fncGetListTeacher = async (req: Request) => {
       BankingInfor: !!i.BankingInfor.length
         ? i.BankingInfor[0]
         : {},
-      IsConfirm: i.RegisterStatus !== 2 || !i.Account.IsActive,
-      IsReject: i.RegisterStatus !== 2 || !i.Account.IsActive,
-      IsLockUnLock: i.RegisterStatus !== 3 && !!i.Account.IsActive
+      IsConfirm: i.RegisterStatus === 2 || !i.Account.IsActive ? false : true,
+      IsReject: i.RegisterStatus === 2 || !i.Account.IsActive ? false : true,
     }))
     return response(
       {
         List: data,
-        Total: result[1]
+        Total: result[1],
+        IsViewLockUnLock: RoleID === Roles.ROLE_ADMIN ? true : false
       },
       false,
       "Lay dat thanh cong",
@@ -531,8 +531,8 @@ const fncGetDetailTeacher = async (req: Request) => {
 
 const fncGetListStudent = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, SortByBookQuantity } =
-      req.body as GetListStudentDTO
+    const { RoleID } = req.user
+    const { TextSearch, CurrentPage, PageSize, SortByBookQuantity } = req.body as GetListStudentDTO
     let query = {
       RoleID: Roles.ROLE_STUDENT
     }
@@ -542,7 +542,7 @@ const fncGetListStudent = async (req: Request) => {
       },
       {
         $lookup: {
-          from: "learnhistorys",
+          from: "learnhistories",
           localField: "_id",
           foreignField: "Student",
           as: "LearnHistory"
@@ -627,7 +627,8 @@ const fncGetListStudent = async (req: Request) => {
     return response(
       {
         List: result[0],
-        Total: !!result[1].length ? result[1][0].total : 0
+        Total: !!result[1].length ? result[1][0].total : 0,
+        IsViewLockUnLock: RoleID === Roles.ROLE_ADMIN ? true : false
       },
       false,
       "Lay dat thanh cong",
@@ -709,7 +710,7 @@ const fncUpdateSubjectSetting = async (req: Request) => {
         { new: true }
       )
       .populate("Subject", ["_id", "SubjectName"])
-    if(updateSubjectSetting){ 
+    if (!!updateSubjectSetting) {
       EmbeddingPinecone.updateSubjectSetting(SubjectSettingID.toString())
     }
     if (!updateSubjectSetting) return response({}, true, "Có lỗi xảy ra", 200)
@@ -725,7 +726,7 @@ const fncDeleteSubjectSetting = async (req: Request) => {
     const deleteSubjectSetting = await SubjectSetting.findOneAndDelete({
       _id: SubjectSettingID
     })
-    if(deleteSubjectSetting) {
+    if (!!deleteSubjectSetting) {
       PineconeService.deleteVector(SubjectSettingID, "teacher")
     }
     if (!deleteSubjectSetting) return response({}, true, "Có lỗi xảy ra", 200)
@@ -764,7 +765,7 @@ const fncResponseConfirmSubjectSetting = async (req: Request) => {
       { RegisterStatus: RegisterStatus },
       { new: true }
     )
-    if (updateSubjectSetting) {
+    if (!!updateSubjectSetting) {
       EmbeddingPinecone.processSubjectSetting(SubjectSettingID.toString())
     }
     if (!updateSubjectSetting) return response({}, true, "Có lỗi xảy ra", 200)
@@ -856,11 +857,12 @@ const fncGetListTopTeacher = async (req: Request) => {
           Votes: 1
         }
       },
+      { $limit: 8 },
       {
         $sort: {
           TotalVotes: -1
         }
-      }
+      },
     ])
     return response(topTeachers, false, "Lấy data thành công", 200)
   } catch (error: any) {
@@ -899,6 +901,7 @@ const fncGetListSubjectSetting = async (req: Request) => {
     }
     let teacherQuery = {
       "Teacher.FullName": { $regex: TextSearch, $options: "i" },
+      "Teacher.IsActive": true
     } as any
     const teachers = SubjectSetting.aggregate([
       {
