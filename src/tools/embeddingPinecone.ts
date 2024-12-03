@@ -59,12 +59,10 @@ const updateSubjectSetting = async (subjectSettingId: string) => {
         Address: ${subjectSetting.Teacher?.Address || ""}
         Gender: ${subjectSetting.Teacher?.Gender === 1 ? "Nam" : "Nữ"}
         TeacherIntroduction: ${subjectSetting.Quote.Content || ""}
-        Levels: ${subjectSetting.Levels.join(", ")}
         Experiences: ${subjectSetting.Experiences.Content}
         Educations: ${subjectSetting.Educations.Content}
         Price: ${subjectSetting.Price || "N/A"}
         Learn Types: ${subjectSetting.LearnTypes === 1 ? "Trực tiếp" : "Online"}
-        Active: ${subjectSetting.RegisterStatus === 3 ? "Yes" : "No"}
       `.trim()
       const embedding = await OpenaiService.generateEmbedding(text as string)
       const updateData = await PineconeService.updateVector(subjectSettingId, "teacher", embedding)
@@ -218,7 +216,9 @@ const teacherRecommendationByLearnHistory = async (req: Request) => {
 
 const teacherRecommendation = async (req: Request) => {
   try {
-    const prompt = JSON.stringify(req.body)
+    const {prompt} = req.body
+    // const intentPrompt = await OpenaiService.analyzeIntent(prompt)
+    // console.log(intentPrompt)
     const queryEmbedding = await getQueryEmbedding(prompt)
     const matches = await PineconeService.searchPineconeByQuery(queryEmbedding)
     let query = {} as any
