@@ -28,7 +28,7 @@ CommonRoute.get("/processAllSubjectSetting",
 CommonRoute.post("/teacherRecommend",
   PineconeController.teacherRecommendation
 )
-CommonRoute.get("/teacherRecommend",
+CommonRoute.get("/teacherRecommendationByLearnHistory",
   authMiddleware([Roles.ROLE_STUDENT]),
   PineconeController.teacherRecommendationByLearnHistory
 )
