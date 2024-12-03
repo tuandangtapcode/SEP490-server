@@ -45,7 +45,7 @@ const fncCreateLearnHistory = async (req: Request) => {
     const checkSendMail = await sendEmail(TeacherEmail, subject, content)
     if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
     const newLearnHistory = await LearnHistory.create({ ...remainBody, Student: UserID })
-    if(newLearnHistory) {
+    if (newLearnHistory) {
       EmbeddingPinecone.processLearnHistory(UserID)
     }
     return response(newLearnHistory, false, "Thêm thành công", 200)
@@ -333,8 +333,7 @@ const fncGetDetailLearnHistory = async (req: Request) => {
       ...learnHistory[0],
       Timetables: learnHistory[0].Timetables.map((i: any) => ({
         ...i,
-        IsDisabledAtendance: moment().isAfter(moment(i.StartTime)) ||
-          moment().isBefore(moment(i.EndTime).add(24, "hours"))
+        // IsDisabledAtendance: moment().isBetween(moment(i.EndTime), moment(i.EndTime).endOf("day")) ? false : true
       }))
     }
     return response(data, false, "Lấy data thành công", 200)

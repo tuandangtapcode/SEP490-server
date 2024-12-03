@@ -41,7 +41,7 @@ const fncGetDetailBlog = async (req: Request) => {
 
 const fncGetListBlogByTeacher = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, SubjectID, LearnType } = req.body as GetListBlogDTO
+    const { TextSearch, CurrentPage, PageSize, SubjectID, LearnType, RoleID, UserID } = req.body as GetListBlogDTO
     let query = {} as any
     if (!!SubjectID) {
       query = {
@@ -66,11 +66,21 @@ const fncGetListBlogByTeacher = async (req: Request) => {
       .skip((CurrentPage - 1) * PageSize)
       .limit(PageSize)
       .populate("Subject", ["_id", "SubjectName"])
+      .populate("User", ["_id", "FullName"])
+      .populate("TeacherReceive.Teacher", ["_id", "FullName"])
+      .lean()
     const total = Blog.countDocuments(query)
     const result = await Promise.all([blogs, total])
-
+    const data = result[0].map((i: any) => ({
+      ...i,
+      IsRegister: !!RoleID
+        ? !!i.TeacherReceive.some((t: any) => t.Teacher._id.equals(UserID))
+          ? false
+          : true
+        : false
+    }))
     return response(
-      { List: result[0], Total: result[1] },
+      { List: data, Total: result[1] },
       false,
       "Lấy ra bài viết thành công",
       200
@@ -273,7 +283,7 @@ const fncDeleteBlog = async (req: Request) => {
 const fncUpdateBlog = async (req: Request) => {
   try {
     const { BlogID, Title } = req.body as CreateUpdateBlogDTO
-   
+
     const updateBlog = await Blog.findOneAndUpdate(
       { _id: BlogID },
       { ...req.body },
@@ -328,14 +338,10 @@ const fncGetListBlogByUser = async (req: Request) => {
   }
 }
 
-
 const fncSendRequestReceive = async (req: Request) => {
   try {
     const UserID = req.user.ID
     const { BlogID } = req.params
-    if (!mongoose.Types.ObjectId.isValid(`${BlogID}`)) {
-      return response({}, true, "Blog không tồn tại", 200)
-    }
     const updateBlog = await Blog.findOneAndUpdate(
       { _id: BlogID },
       {
@@ -413,6 +419,20 @@ const fncChangeRegisterStatus = async (req: Request) => {
   }
 }
 
+const fncGetListBlogApproval = async (req: Request) => {
+  try {
+    const UserID = req.user.ID
+    const blogs = await Blog
+      .find(
+        { "TeacherReceive.Teacher": UserID },
+        { TeacherReceive: 0 }
+      )
+    return response(blogs, false, "Lấy data thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const BlogService = {
   fncCreateBlog,
   fncGetListBlog,
@@ -424,7 +444,7 @@ const BlogService = {
   fncGetListBlogByTeacher,
   fncChangeReceiveStatus,
   fncChangeRegisterStatus,
-
+  fncGetListBlogApproval
 }
 
 export default BlogService

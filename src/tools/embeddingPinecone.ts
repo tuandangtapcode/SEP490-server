@@ -110,7 +110,6 @@ const processAllSubjectSettings = async () => {
 
 }
 
-
 const getQueryEmbedding = async (query: string): Promise<number[]> => {
   return await OpenaiService.generateEmbedding(query)
 }
@@ -208,7 +207,8 @@ const teacherRecommendationByLearnHistory = async (req: Request) => {
         $sort: {
           TotalVotes: -1
         }
-      }
+      },
+      { $limit: 8 },
     ])
     return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
   } catch (error: any) {
@@ -308,14 +308,14 @@ const teacherRecommendation = async (req: Request) => {
         $sort: {
           TotalVotes: -1
         }
-      }
+      },
+      { $limit: 8 },
     ])
     return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
 }
-
 
 const EmbeddingPinecone = {
   processAllSubjectSettings,

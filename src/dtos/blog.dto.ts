@@ -24,7 +24,9 @@ export interface CreateUpdateBlogDTO {
 export interface GetListBlogDTO extends CommonDTO {
   SubjectID: ObjectId,
   RegisterStatus: number,
-  LearnType: number[]
+  LearnType: number[],
+  RoleID?: number,
+  UserID?: ObjectId
 }
 
 export interface GetListBlogByUserDTO extends CommonDTO {
