@@ -1,6 +1,8 @@
 import { OpenAI } from "openai"
 import dotenv from "dotenv"
 dotenv.config()
+import response from "../utils/response"
+import { Request } from "express"
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -15,6 +17,27 @@ const generateEmbedding = async (text: string): Promise<number[]> => {
 
   // Assuming response.data contains the embeddings
   return response.data[0].embedding
+}
+
+const generateText = async (req: Request) => {
+  {
+    try {
+      const { prompt } = req.body
+      const chat = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are a helpful assistant answer question of user about learning or what ever about learning" },
+          { role: "user", content: prompt },
+        ],
+        max_tokens: 300, // Adjust as needed
+        temperature: 0.7, // Adjust creativity level
+      })
+      const message = chat.choices[0]?.message?.content?.trim()
+      return response(message, false, "tạo câu trả lời thành công", 200)
+    } catch (error: any) {
+      return response({}, true, error.toString(), 500)
+    }
+  }
 }
 
 const getRecommendation = async (prompt: string) => {
@@ -73,7 +96,8 @@ const analyzeIntent = async (query: string) => {
 const OpenaiService = {
   generateEmbedding,
   getRecommendation,
-  analyzeIntent
+  analyzeIntent,
+  generateText
 }
 
 export default OpenaiService

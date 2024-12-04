@@ -16,7 +16,6 @@ import FileRoute from "./file.route"
 import CommonRoute from "./common.route"
 import CourseRoute from "./course.route"
 import ConfirmRoute from "./confirm.route"
-import GenerateRouter from "./generate.route"
 
 const routes = (app: Application) => {
   app.use("/account", AccountRoute)
@@ -36,7 +35,6 @@ const routes = (app: Application) => {
   app.use("/file", FileRoute)
   app.use("/course", CourseRoute)
   app.use("/confirm", ConfirmRoute)
-  app.use("/generate", GenerateRouter)
 }
 
 export default routes
