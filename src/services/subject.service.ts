@@ -94,7 +94,7 @@ const fncGetDetailSubject = async (req: Request) => {
     const SubjectID = req.params.SubjectID
     const subject = await getOneDocument(Subject, "_id", SubjectID)
     if (!subject) return response({}, true, "Môn học không tồn tại", 200)
-    return response(subject, true, "Môn học không tồn tại", 200)
+    return response(subject, true, "tìm kiếm môn học thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }

@@ -115,7 +115,9 @@ const getQueryEmbedding = async (query: string): Promise<number[]> => {
 const teacherRecommendationByLearnHistory = async (req: Request) => {
   try {
     const userID = req.user.ID
-    const learnHistory = await PineconeService.searchPineconeByID(userID)
+    const checkLearnHistoryExist = await LearnHistory.find({ Student: userID })
+    if(checkLearnHistoryExist){
+      const learnHistory = await PineconeService.searchPineconeByID(userID)
     const queryEmbedding = learnHistory[0].values
     const matches = await PineconeService.searchPineconeByQuery(queryEmbedding)
     let query = {} as any
@@ -209,6 +211,10 @@ const teacherRecommendationByLearnHistory = async (req: Request) => {
       { $limit: 8 },
     ])
     return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
+    } else {
+      return response({}, true, "Có lỗi xảy ra", 200)
+    }
+  
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
