@@ -1,6 +1,6 @@
 import { Request, Response } from "express"
 import CommonService from "../services/common.service"
-
+import OpenaiService from "../services/openai.service"
 const getListSystemKey = async (req: Request, res: Response) => {
   try {
     const response = await CommonService.fncGetListSystemKey()
@@ -56,13 +56,23 @@ const getListTabs = async (req: Request, res: Response) => {
   }
 }
 
+const chatbot = async (req: Request, res: Response) => {
+  try {
+    const response = await OpenaiService.generateText(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
 const CommonController = {
   getListSystemKey,
   createSystemKey,
   getProfitPercent,
   changeProfitPercent,
   insertParentKey,
-  getListTabs
+  getListTabs,
+  chatbot
 }
 
 export default CommonController
