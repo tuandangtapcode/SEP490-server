@@ -20,25 +20,39 @@ const generateEmbedding = async (text: string): Promise<number[]> => {
 }
 
 const generateText = async (req: Request) => {
-  {
-    try {
-      const { prompt } = req.body
-      const chat = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "You are a helpful assistant answer question of user about learning or what ever about learning" },
-          { role: "user", content: prompt },
-        ],
-        max_tokens: 300, // Adjust as needed
-        temperature: 0.7, // Adjust creativity level
-      })
-      const message = chat.choices[0]?.message?.content?.trim()
-      return response(message, false, "tạo câu trả lời thành công", 200)
-    } catch (error: any) {
-      return response({}, true, error.toString(), 500)
-    }
+  try {
+    const { prompt, history } = req.body; // 'history' is an array of previous messages
+
+    // Construct the conversation messages
+    const messages = [
+      { role: "system", content: "You are a helpful assistant who answers questions about learning or anything related to learning and talent subject" },
+      ...(history || []), // Include previous conversation history
+      { role: "user", content: prompt }, // Add the current user message
+    ];
+
+    // Call OpenAI's API
+    const chat = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages,
+      max_tokens: 300, // Adjust as needed
+      temperature: 0.7, // Adjust creativity level
+    });
+
+    // Get the assistant's response
+    const message = chat.choices[0]?.message?.content?.trim();
+
+    // Return the response and updated history
+    const updatedHistory = [
+      ...(history || []),
+      { role: "user", content: prompt },
+      { role: "assistant", content: message },
+    ];
+
+    return response({ message, updatedHistory }, false, "Tạo câu trả lời thành công", 200);
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500);
   }
-}
+};
 
 const getRecommendation = async (prompt: string) => {
   const response = await openai.chat.completions.create({
