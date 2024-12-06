@@ -59,12 +59,10 @@ const updateSubjectSetting = async (subjectSettingId: string) => {
         Address: ${subjectSetting.Teacher?.Address || ""}
         Gender: ${subjectSetting.Teacher?.Gender === 1 ? "Nam" : "Nữ"}
         TeacherIntroduction: ${subjectSetting.Quote.Content || ""}
-        Levels: ${subjectSetting.Levels.join(", ")}
         Experiences: ${subjectSetting.Experiences.Content}
         Educations: ${subjectSetting.Educations.Content}
         Price: ${subjectSetting.Price || "N/A"}
         Learn Types: ${subjectSetting.LearnTypes === 1 ? "Trực tiếp" : "Online"}
-        Active: ${subjectSetting.RegisterStatus === 3 ? "Yes" : "No"}
       `.trim()
       const embedding = await OpenaiService.generateEmbedding(text as string)
       const updateData = await PineconeService.updateVector(subjectSettingId, "teacher", embedding)
@@ -117,7 +115,9 @@ const getQueryEmbedding = async (query: string): Promise<number[]> => {
 const teacherRecommendationByLearnHistory = async (req: Request) => {
   try {
     const userID = req.user.ID
-    const learnHistory = await PineconeService.searchPineconeByID(userID)
+    const checkLearnHistoryExist = await LearnHistory.find({ Student: userID })
+    if(checkLearnHistoryExist){
+      const learnHistory = await PineconeService.searchPineconeByID(userID)
     const queryEmbedding = learnHistory[0].values
     const matches = await PineconeService.searchPineconeByQuery(queryEmbedding)
     let query = {} as any
@@ -211,6 +211,10 @@ const teacherRecommendationByLearnHistory = async (req: Request) => {
       { $limit: 8 },
     ])
     return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
+    } else {
+      return response({}, true, "Có lỗi xảy ra", 200)
+    }
+  
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -218,7 +222,9 @@ const teacherRecommendationByLearnHistory = async (req: Request) => {
 
 const teacherRecommendation = async (req: Request) => {
   try {
-    const prompt = JSON.stringify(req.body)
+    const {prompt} = req.body
+    // const intentPrompt = await OpenaiService.analyzeIntent(prompt)
+    // console.log(intentPrompt)
     const queryEmbedding = await getQueryEmbedding(prompt)
     const matches = await PineconeService.searchPineconeByQuery(queryEmbedding)
     let query = {} as any
