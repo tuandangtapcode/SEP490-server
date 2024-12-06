@@ -18,7 +18,7 @@ BlogRoute.post("/getListBlog",
 BlogRoute.post("/getListBlogByTeacher",
   BlogController.getListBlogByTeacher
 )
-BlogRoute.get("/deleteBlog/:BlogID",
+BlogRoute.post("/deleteBlog",
   authMiddleware([Roles.ROLE_STUDENT]),
   BlogController.deletedBlog
 )
@@ -39,12 +39,20 @@ BlogRoute.get("/sendRequestReceive/:BlogID",
   BlogController.sendRequestReceive
 )
 BlogRoute.post("/changeReceiveStatus",
-  authMiddleware([Roles.ROLE_STUDENT]),
+  authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
   BlogController.changeReceiveStatus
 )
 BlogRoute.post("/changeRegisterStatus",
   authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   BlogController.changeRegisterStatus
+)
+BlogRoute.post("/getListBlogApproval",
+  authMiddleware([Roles.ROLE_TEACHER]),
+  BlogController.getListBlogApproval
+)
+BlogRoute.get("/changeBlogPaid/:BlogID",
+  authMiddleware([Roles.ROLE_STUDENT]),
+  BlogController.changeBlogPaid
 )
 
 export default BlogRoute

@@ -1,6 +1,6 @@
 import Joi from 'joi'
-import { getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Request, Response } from 'express'
+import { getRegexObjectID } from '../utils/stringUtils'
 
 const createNotificaiton = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({

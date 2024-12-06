@@ -4,7 +4,6 @@ import BlogService from "../services/blog.service"
 const createBlog = async (req: Request, res: Response) => {
   try {
     const response = await BlogService.fncCreateBlog(req)
-    console.log("Schedules received:", req.body.Schedules);
     return res.status(response.statusCode).json(response)
 
   } catch (error: any) {
@@ -93,6 +92,24 @@ const changeRegisterStatus = async (req: Request, res: Response) => {
   }
 }
 
+const getListBlogApproval = async (req: Request, res: Response) => {
+  try {
+    const response = await BlogService.fncGetListBlogApproval(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
+const changeBlogPaid = async (req: Request, res: Response) => {
+  try {
+    const response = await BlogService.fncChangeBlogPaid(req)
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
+
 const BlogController = {
   createBlog,
   getListBlog,
@@ -103,7 +120,9 @@ const BlogController = {
   sendRequestReceive,
   getListBlogByTeacher,
   changeReceiveStatus,
-  changeRegisterStatus
+  changeRegisterStatus,
+  getListBlogApproval,
+  changeBlogPaid
 }
 
 export default BlogController

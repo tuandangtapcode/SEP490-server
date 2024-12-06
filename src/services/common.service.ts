@@ -2,7 +2,7 @@ import { Request } from "express"
 import ProfitPercent from "../models/profitpercent"
 import SystemKey from "../models/systemkey"
 import response from "../utils/response"
-import CacheService from "./redis.service"
+// import CacheService from "./redis.service"
 import { getOneDocument } from "../utils/queryFunction"
 import { Roles } from "../utils/constant"
 import TimeTable from "../models/timetable"
@@ -30,15 +30,7 @@ const ProfitPercentID = "66f92e193657dfff3345aa0f"
 
 const fncGetListSystemKey = async () => {
   try {
-    let systemKeys
-    const dataCacheRaw = await CacheService.getCache("systemkey") as string
-    const dataCache = JSON.parse(dataCacheRaw)
-    if (!!dataCache?.length) {
-      systemKeys = dataCache
-    } else {
-      systemKeys = await SystemKey.find()
-      CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
-    }
+    const systemKeys = await SystemKey.find()
     return response(systemKeys, false, "Lấy ra thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -49,7 +41,7 @@ const fncCreateSystemKey = async (req: Request) => {
   try {
     await SystemKey.create(req.body)
     const systemKeys = await SystemKey.find()
-    CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
+    // CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
     return response({}, false, "Thêm systemkey thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -103,7 +95,7 @@ const fncInsertParentKey = async (req: Request) => {
       { new: true }
     )
     const systemKeys = await SystemKey.find()
-    CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
+    // CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
     return response({}, false, "Thêm ParentKey thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

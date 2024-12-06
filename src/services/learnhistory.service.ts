@@ -65,16 +65,10 @@ const fncGetListLearnHistory = async (req: Request) => {
       ]: new mongoose.Types.ObjectId(`${ID}`),
     } as any
     if (!!LearnedStatus) {
-      query = {
-        ...query,
-        LearnedStatus: LearnedStatus
-      }
+      query.LearnedStatus = LearnedStatus
     }
     if (!!SubjectID) {
-      query = {
-        ...query,
-        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
-      }
+      query.Subject = new mongoose.Types.ObjectId(`${SubjectID}`)
     }
     const list = LearnHistory.aggregate([
       {
@@ -167,6 +161,9 @@ const fncGetListLearnHistory = async (req: Request) => {
             }
           ]
         }
+      },
+      {
+        $sort: { createdAt: -1 }
       },
       { $skip: (CurrentPage - 1) * PageSize },
       { $limit: PageSize }
@@ -333,7 +330,7 @@ const fncGetDetailLearnHistory = async (req: Request) => {
       ...learnHistory[0],
       Timetables: learnHistory[0].Timetables.map((i: any) => ({
         ...i,
-        // IsDisabledAtendance: moment().isBetween(moment(i.EndTime), moment(i.EndTime).endOf("day")) ? false : true
+        IsDisabledAtendance: moment().isBetween(moment(i.EndTime), moment(i.EndTime).endOf("day")) ? false : true
       }))
     }
     return response(data, false, "Lấy data thành công", 200)
@@ -349,16 +346,10 @@ const fncGetListLearnHistoryOfUser = async (req: Request) => {
       [RoleID === Roles.ROLE_STUDENT ? "Student" : "Teacher"]: new mongoose.Types.ObjectId(`${UserID}`)
     } as any
     if (!!LearnedStatus) {
-      query = {
-        ...query,
-        LearnedStatus: LearnedStatus
-      }
+      query.LearnedStatus = LearnedStatus
     }
     if (!!SubjectID) {
-      query = {
-        ...query,
-        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
-      }
+      query.Subject = new mongoose.Types.ObjectId(`${SubjectID}`)
     }
     const list = LearnHistory.aggregate([
       {
@@ -434,6 +425,9 @@ const fncGetListLearnHistoryOfUser = async (req: Request) => {
           Student: 1,
           Subject: 1,
         }
+      },
+      {
+        $sort: { createdAt: -1 }
       },
       { $skip: (CurrentPage - 1) * PageSize },
       { $limit: PageSize }

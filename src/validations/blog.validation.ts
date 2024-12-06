@@ -1,14 +1,15 @@
 import Joi from "joi"
-import { getRegexObjectID } from "../utils/commonFunction"
 import { NextFunction, Request, Response } from "express"
+import { getRegexObjectID } from "../utils/stringUtils"
 
 const createUpdateBlog = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     Subject: Joi.string().pattern(getRegexObjectID()).required(),
     Title: Joi.string().min(1).required(),
-    Price: Joi.number().integer().min(1).required(),
+    Price: Joi.number().min(1).required(),
+    ExpensePrice: Joi.number().min(1).required(),
     Gender: Joi.array().items(Joi.number().valid(1, 2).optional()).required(),
-    NumberSlot: Joi.number().integer().min(1).required(),
+    NumberSlot: Joi.number().min(1).required(),
     LearnType: Joi.array().items(Joi.number().valid(1, 2).optional()).required(),
     Address: Joi.string().min(1).optional(),
     ProfessionalLevel: Joi.number().valid(1, 2, 3).required(),

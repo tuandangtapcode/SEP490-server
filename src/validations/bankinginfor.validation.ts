@@ -1,6 +1,6 @@
 import Joi from 'joi'
-import { getRegexEmail, getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Request, Response } from 'express'
+import { getRegexObjectID } from '../utils/stringUtils'
 
 const createUpdateBankingInfor = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({

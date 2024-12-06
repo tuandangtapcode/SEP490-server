@@ -64,7 +64,6 @@ const fncGetChatWithUser = async (req: Request) => {
         Receiver
       ]
     })
-    // if (!chat) return response({}, true, "Chat không tồn tại", 200)
     return response(chat, false, "Lấy data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

@@ -1,6 +1,6 @@
 import Joi from "joi"
-import { getRegexEmail, getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Request, Response } from "express"
+import { getRegexEmail, getRegexObjectID } from "../utils/stringUtils"
 
 const createPayment = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
@@ -10,6 +10,7 @@ const createPayment = async (req: Request, res: Response, next: NextFunction) =>
     TraddingCode: Joi.number().min(1).required(),
     Receiver: Joi.string().pattern(getRegexObjectID()).optional(),
     PaymentMethod: Joi.number().valid(1, 2).required(),
+    Percent: Joi.number().required()
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })
@@ -26,7 +27,7 @@ const changePaymentStatus = async (req: Request, res: Response, next: NextFuncti
     PaymentStatus: Joi.number().min(1).max(3).required(),
     TotalFee: Joi.number().min(1).required(),
     FullName: Joi.string().min(1).required(),
-    RoleID: Joi.number().integer().valid(3, 4).required(),
+    RoleID: Joi.number().valid(3, 4).required(),
     Image: Joi.any()
   })
   try {

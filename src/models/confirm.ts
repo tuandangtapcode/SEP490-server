@@ -40,7 +40,7 @@ const ConfirmSchema = new Schema({
         EndTime: { type: Date }
       }
     ],
-    default: []
+    required: true
   },
   IsDeleted: {
     type: Boolean,

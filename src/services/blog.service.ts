@@ -6,21 +6,63 @@ import { Request } from "express"
 import {
   ChangeRegisterStatusDTO,
   CreateUpdateBlogDTO,
+  GetListBlogApprovalDTO,
   GetListBlogDTO
 } from "../dtos/blog.dto"
 import sendEmail from "../utils/send-mail"
-import mongoose, { ObjectId } from "mongoose"
+import mongoose from "mongoose"
+import { getRealScheduleForBlog } from "../utils/dateUtils"
+import TimeTable from "../models/timetable"
+import moment from "moment"
+import { Roles } from "../utils/constant"
 
 const fncCreateBlog = async (req: Request) => {
   try {
-    // const { Title } = req.body as CreateUpdateBlogDTO
+    const { NumberSlot, Schedules, StartDate } = req.body as CreateUpdateBlogDTO
     const UserID = req.user.ID
-    // const blog = await getOneDocument(Blog, "Title", Title)
-    // if (!!blog) return response({}, true, "Tiêu đề blog đã tồn tại", 200)
+    const realSchdules = getRealScheduleForBlog(NumberSlot, Schedules, StartDate)
+    let checkExistSchedules = [] as any[]
+    const blogs = await Blog
+      .find({
+        User: UserID,
+        IsDeleted: false
+      })
+      .select("_id RealSchedules")
+      .lean()
+    blogs.forEach((i: any) => {
+      i.RealSchedules.forEach((r: any) => {
+        const check = realSchdules.find((re: any) =>
+          new Date(r.StartTime) >= new Date(re.StartTime) &&
+          new Date(r.StartTime) <= new Date(re.EndTime)
+        )
+        if (!!check) checkExistSchedules.push(check)
+      })
+    })
+    if (!!checkExistSchedules.length)
+      return response(checkExistSchedules, true, "Lịch học của bạn đã trùng với 1 bài đăng khác", 200)
+    const timetables = await TimeTable
+      .find({
+        Student: UserID,
+        StartTime: { $gte: new Date() },
+        IsCancel: false,
+        Status: false
+      })
+      .select("StartTime EndTime")
+      .lean()
+    timetables.forEach((i: any) => {
+      const check = realSchdules.find((re: any) =>
+        new Date(i.StartTime) >= new Date(re.StartTime) &&
+        new Date(i.StartTime) <= new Date(re.EndTime)
+      )
+      if (!!check) checkExistSchedules.push(check)
+    })
+    if (!!checkExistSchedules.length)
+      return response(checkExistSchedules, true, "Lịch học của bạn đã trùng với lịch học trong thời khóa biểu", 200)
     const newCreateBlog = await Blog.create({
       ...req.body,
       RegisterStatus: 2,
       User: UserID,
+      RealSchedules: getRealScheduleForBlog(NumberSlot, Schedules, StartDate)
     })
     return response(newCreateBlog, false, "Tạo bài viết thành công", 201)
   } catch (error: any) {
@@ -31,9 +73,149 @@ const fncCreateBlog = async (req: Request) => {
 const fncGetDetailBlog = async (req: Request) => {
   try {
     const BlogID = req.params.BlogID
-    const blog = await getOneDocument(Blog, "_id", BlogID)
-    if (!blog) return response({}, true, "Blog không tồn tại", 200)
-    return response(blog, false, "Blog tồn tại", 200)
+    const blog = await Blog.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(`${BlogID}`),
+          IsDeleted: false
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "User",
+          foreignField: "_id",
+          as: "User",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account",
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email",
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                FullName: 1,
+                Email: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$User" },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      {
+        $unwind: {
+          path: "$TeacherReceive",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "TeacherReceive.Teacher",
+          foreignField: "_id",
+          as: "TeacherReceive.Teacher",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account",
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email",
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                FullName: 1,
+                Email: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {
+          path: "$TeacherReceive.Teacher",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $group: {
+          _id: "$_id",
+          User: { $first: "$User" },
+          Subject: { $first: "$Subject" },
+          Gender: { $first: "$Gender" },
+          Title: { $first: "$Title" },
+          Price: { $first: "$Price" },
+          NumberSlot: { $first: "$NumberSlot" },
+          LearnType: { $first: "$LearnType" },
+          Address: { $first: "$Address" },
+          ProfessionalLevel: { $first: "$ProfessionalLevel" },
+          Schedules: { $first: "$Schedules" },
+          RealSchedules: { $first: "$RealSchedules" },
+          StartDate: { $first: "$StartDate" },
+          TeacherReceive: { $push: "$TeacherReceive" },
+          IsDeleted: { $first: "$IsDeleted" },
+          RegisterStatus: { $first: "$RegisterStatus" },
+          IsPaid: { $first: "$IsDeleted" },
+        }
+      },
+      {
+        $addFields: {
+          TeacherReceive: {
+            $filter: {
+              input: "$TeacherReceive",
+              as: "item",
+              cond: { $ne: ["$$item", {}] }
+            }
+          }
+        }
+      },
+    ])
+    const teacher = blog[0].TeacherReceive.find((i: any) => i.ReceiveStatus === 3)
+    if (!teacher) return response({}, true, "Booking chưa được phép thanh toán", 200)
+    const data = {
+      TotalFee: blog[0].Price * blog[0].NumberSlot,
+      Receiver: teacher,
+      Subject: blog[0].Subject,
+      Schedules: blog[0].RealSchedules,
+      IsPaid: blog[0].IsPaid,
+      LearnType: blog[0].LearnType[0]
+    }
+    return response(data, false, "Blog tồn tại", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -42,24 +224,18 @@ const fncGetDetailBlog = async (req: Request) => {
 const fncGetListBlogByTeacher = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, SubjectID, LearnType, RoleID, UserID } = req.body as GetListBlogDTO
-    let query = {} as any
+    let query = {
+      RegisterStatus: 3,
+      IsDeleted: false
+    } as any
     if (!!SubjectID) {
-      query = {
-        ...query,
-        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
-      }
+      query.Subject = new mongoose.Types.ObjectId(`${SubjectID}`)
     }
     if (!!LearnType) {
-      query = {
-        ...query,
-        LearnType: LearnType
-      }
+      query.LearnType = LearnType
     }
     if (!!TextSearch) {
-      query = {
-        ...query,
-        Title: { $regex: TextSearch, $options: "i" }
-      }
+      query.Title = { $regex: TextSearch, $options: "i" }
     }
     const blogs = Blog
       .find(query)
@@ -67,20 +243,12 @@ const fncGetListBlogByTeacher = async (req: Request) => {
       .limit(PageSize)
       .populate("Subject", ["_id", "SubjectName"])
       .populate("User", ["_id", "FullName"])
-      .populate("TeacherReceive.Teacher", ["_id", "FullName"])
+      .select("_id User Subject Gender Title Price NumberSlot LearnType Address ProfessionalLevel Schedules StartDate ExpensePrice")
       .lean()
     const total = Blog.countDocuments(query)
     const result = await Promise.all([blogs, total])
-    const data = result[0].map((i: any) => ({
-      ...i,
-      IsRegister: !!RoleID
-        ? !!i.TeacherReceive.some((t: any) => t.Teacher._id.equals(UserID))
-          ? false
-          : true
-        : false
-    }))
     return response(
-      { List: data, Total: result[1] },
+      { List: result[0], Total: result[1] },
       false,
       "Lấy ra bài viết thành công",
       200
@@ -93,25 +261,15 @@ const fncGetListBlogByTeacher = async (req: Request) => {
 const fncGetListBlog = async (req: Request) => {
   try {
     const { TextSearch, CurrentPage, PageSize, SubjectID, RegisterStatus, LearnType } = req.body as GetListBlogDTO
-    let query = {
-    } as any
+    let query = {} as any
     if (!!SubjectID) {
-      query = {
-        ...query,
-        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
-      }
+      query.Subject = new mongoose.Types.ObjectId(`${SubjectID}`)
     }
     if (!!RegisterStatus) {
-      query = {
-        ...query,
-        RegisterStatus: RegisterStatus
-      }
+      query.RegisterStatus = RegisterStatus
     }
     if (!!LearnType.length) {
-      query = {
-        ...query,
-        LearnType: LearnType
-      }
+      query.LearnType = LearnType
     }
     const blogs = Blog.aggregate([
       {
@@ -171,6 +329,82 @@ const fncGetListBlog = async (req: Request) => {
         }
       },
       { $unwind: "$Subject" },
+      {
+        $unwind: {
+          path: "$TeacherReceive",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "TeacherReceive.Teacher",
+          foreignField: "_id",
+          as: "TeacherReceive.Teacher",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account",
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email",
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                FullName: 1,
+                Email: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: {
+          path: "$TeacherReceive.Teacher",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $group: {
+          _id: "$_id",
+          User: { $first: "$User" },
+          Subject: { $first: "$Subject" },
+          Gender: { $first: "$Gender" },
+          Title: { $first: "$Title" },
+          Price: { $first: "$Price" },
+          NumberSlot: { $first: "$NumberSlot" },
+          LearnType: { $first: "$LearnType" },
+          Address: { $first: "$Address" },
+          ProfessionalLevel: { $first: "$ProfessionalLevel" },
+          Schedules: { $first: "$Schedules" },
+          StartDate: { $first: "$StartDate" },
+          TeacherReceive: { $push: "$TeacherReceive" },
+          IsDeleted: { $first: "$IsDeleted" },
+          RegisterStatus: { $first: "$RegisterStatus" },
+        }
+      },
+      {
+        $addFields: {
+          TeacherReceive: {
+            $filter: {
+              input: "$TeacherReceive",
+              as: "item",
+              cond: { $ne: ["$$item", {}] }
+            }
+          }
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      },
       { $skip: (CurrentPage - 1) * PageSize },
       { $limit: PageSize }
     ])
@@ -244,8 +478,8 @@ const fncGetListBlog = async (req: Request) => {
     const result = await Promise.all([blogs, total])
     const data = result[0].map((i: any) => ({
       ...i,
-      IsConfirm: i.RegisterStatus === 1 ? false : true,
-      IsReject: i.RegisterStatus === 1 ? false : true
+      IsConfirm: i.RegisterStatus === 2 ? false : true,
+      IsReject: i.RegisterStatus === 2 ? false : true
     }))
     return response(
       {
@@ -264,13 +498,13 @@ const fncGetListBlog = async (req: Request) => {
 const fncDeleteBlog = async (req: Request) => {
   try {
     const UserID = req.user.ID
-    const { BlogID } = req.params
+    const { BlogID, IsDeleted } = req.body
     const deletedBlog = await Blog.findOneAndUpdate(
       {
         _id: BlogID,
         User: UserID
       },
-      { IsDeleted: true },
+      { IsDeleted: IsDeleted },
       { new: true }
     )
     if (!deletedBlog) return response({}, true, "Bài viết không tồn tại", 200)
@@ -298,25 +532,19 @@ const fncUpdateBlog = async (req: Request) => {
 
 const fncGetListBlogByUser = async (req: Request) => {
   try {
+    const UserID = req.user.ID
     const { TextSearch, CurrentPage, PageSize, SubjectID, RegisterStatus, LearnType } = req.body as GetListBlogDTO
-    let query = {} as any
+    let query = {
+      User: new mongoose.Types.ObjectId(`${UserID}`)
+    } as any
     if (!!SubjectID) {
-      query = {
-        ...query,
-        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
-      }
+      query.Subject = new mongoose.Types.ObjectId(`${SubjectID}`)
     }
     if (!!RegisterStatus) {
-      query = {
-        ...query,
-        RegisterStatus: RegisterStatus
-      }
+      query.RegisterStatus = RegisterStatus
     }
     if (!!TextSearch) {
-      query = {
-        ...query,
-        Title: { $regex: TextSearch, $options: "i" }
-      }
+      query.Title = { $regex: TextSearch, $options: "i" }
     }
     const blogs = Blog.find(query)
       .find(query)
@@ -324,10 +552,23 @@ const fncGetListBlogByUser = async (req: Request) => {
       .limit(PageSize)
       .populate("Subject", ["_id", "SubjectName"])
       .populate("TeacherReceive.Teacher", ["_id", "FullName"])
+      .select("_id User Subject Gender Title Price NumberSlot LearnType Address ProfessionalLevel Schedules StartDate TeacherReceive RegisterStatus RealSchedules IsDeleted")
+      .lean()
     const total = Blog.countDocuments(query)
     const result = await Promise.all([blogs, total])
+    const data = result[0].map((i: any) => ({
+      ...i,
+      TeacherReceive: i.TeacherReceive.map((t: any) => ({
+        ...t,
+        IsConfirm: t.ReceiveStatus === 1 ? false : true,
+        IsReject: t.ReceiveStatus === 1 ? false : true,
+      })),
+      IsPaid: !i.IsPaid
+        ? !!i.TeacherReceive.some((t: any) => t.ReceiveStatus === 3)
+        : false
+    }))
     return response(
-      { List: result[0], Total: result[1] },
+      { List: data, Total: result[1] },
       false,
       "Lấy ra bài viết thành công",
       200
@@ -342,17 +583,37 @@ const fncSendRequestReceive = async (req: Request) => {
   try {
     const UserID = req.user.ID
     const { BlogID } = req.params
-    const updateBlog = await Blog.findOneAndUpdate(
+    let checkExistSchedules = [] as any[]
+    const blog = await getOneDocument(Blog, "_id", BlogID)
+    if (!blog) return response({}, true, "Blog không tồn tại", 200)
+    const realSchdules = getRealScheduleForBlog(blog.NumberSlot, blog.Schedules, blog.StartDate)
+    const timetables = await TimeTable
+      .find({
+        Student: UserID,
+        StartTime: { $gte: new Date() },
+        IsCancel: false,
+        Status: false
+      })
+      .select("StartTime EndTime")
+      .lean()
+    timetables.forEach((i: any) => {
+      const check = realSchdules.find((re: any) =>
+        new Date(i.StartTime) >= new Date(re.StartTime) &&
+        new Date(i.StartTime) <= new Date(re.EndTime)
+      )
+      if (!!check) checkExistSchedules.push(check)
+    })
+    if (!!checkExistSchedules.length)
+      return response(checkExistSchedules, true, "Lịch dạy của bạn đã trùng với lịch học của học sinh đăng bài", 200)
+    await Blog.updateOne(
       { _id: BlogID },
       {
         $push: {
           TeacherReceive: { Teacher: UserID }
         }
-      },
-      { new: true }
+      }
     )
-    if (!updateBlog) return response({}, true, "Blog không tồn tại", 200)
-    return response(updateBlog, false, "Gửi yêu cầu thành công", 200)
+    return response({}, false, "Gửi yêu cầu thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -360,23 +621,97 @@ const fncSendRequestReceive = async (req: Request) => {
 
 const fncChangeReceiveStatus = async (req: Request) => {
   try {
-    const { BlogID, TeacherID } = req.body
-    const blog = await Blog.findById(BlogID)
+    const { RoleID } = req.user
+    const { BlogID, TeacherID, ReceiveStatus } = req.body
+    let newTeacherReceive = [] as any[]
+    const blog = await getOneDocument(Blog, "_id", BlogID) as any
     if (!blog) return response({}, true, "Không tìm thấy bài viết", 200)
-    blog.TeacherReceive.forEach((teacher) => {
-      if (teacher.Teacher && teacher.Teacher.toString() === TeacherID) {
-        teacher.ReceiveStatus = 3
-      } else {
-        teacher.ReceiveStatus = 2
+    if (ReceiveStatus === 3) {
+      newTeacherReceive = blog.TeacherReceive.map((i: any) => {
+        if (i.Teacher.equals(TeacherID)) {
+          return {
+            ...i,
+            ReceiveStatus: 3
+          }
+        } else {
+          return {
+            ...i,
+            ReceiveStatus: 2
+          }
+        }
+      })
+    } else {
+      newTeacherReceive = blog.TeacherReceive.map((i: any) => {
+        if (i.Teacher.equals(TeacherID)) {
+          return {
+            ...i,
+            ReceiveStatus: 2
+          }
+        } else {
+          return i
+        }
+      })
+    }
+    let data = {} as any
+    if (RoleID === Roles.ROLE_TEACHER) {
+      const newBlog = await Blog
+        .findOneAndUpdate(
+          { _id: BlogID },
+          {
+            ...blog,
+            TeacherReceive: newTeacherReceive
+          },
+          { new: true }
+        )
+        .populate("Subject", ["_id", "SubjectName"])
+        .populate("TeacherReceive.Teacher", ["_id", "FullName"])
+        .select("_id User Subject Gender Title Price NumberSlot LearnType Address ProfessionalLevel Schedules StartDate TeacherReceive RegisterStatus RealSchedules")
+        .lean() as any
+      data = {
+        ...newBlog,
+        TeacherReceive: newBlog.TeacherReceive.map((t: any) => ({
+          ...t,
+          IsConfirm: t.ReceiveStatus === 1 ? false : true,
+          IsReject: t.ReceiveStatus === 1 ? false : true,
+        }))
       }
-    })
-    await blog.save()
-    return response(
-      {},
-      false,
-      "Trạng thái nhận bài viết đã được cập nhật thành công",
-      200
-    )
+    } else {
+      const newBlog = await Blog
+        .findOneAndUpdate(
+          { _id: BlogID },
+          {
+            ...blog,
+            TeacherReceive: newTeacherReceive
+          },
+          { new: true }
+        )
+        .populate("Subject", ["_id", "SubjectName"])
+        .populate("TeacherReceive.Teacher", ["_id", "FullName"])
+        .populate("User", ["_id", "FullName"])
+        .select("_id User Subject Gender Title Price NumberSlot LearnType Address ProfessionalLevel Schedules StartDate TeacherReceive RegisterStatus")
+        .lean() as any
+      data = {
+        _id: newBlog._id,
+        User: newBlog.User,
+        Subject: newBlog.Subject,
+        Gender: newBlog.Gender,
+        Title: newBlog.Title,
+        Price: newBlog.Price,
+        NumberSlot: newBlog.NumberSlot,
+        LearnType: newBlog.LearnType,
+        Address: newBlog.Address,
+        ProfessionalLevel: newBlog.ProfessionalLevel,
+        Schedules: newBlog.Schedules,
+        StartDate: newBlog.StartDate,
+        RegisterStatus: newBlog.RegisterStatus,
+        TeacherReceive: newBlog.TeacherReceive.map((t: any) => ({
+          ...t,
+          IsConfirm: t.ReceiveStatus === 1 ? false : true,
+          IsReject: t.ReceiveStatus === 1 ? false : true,
+        })),
+      }
+    }
+    return response(data, false, "Trạng thái đăng ký của giáo viên đã được cập nhật", 200)
   } catch (error: any) {
     console.error(error)
     return response({}, true, error.toString(), 500)
@@ -422,12 +757,69 @@ const fncChangeRegisterStatus = async (req: Request) => {
 const fncGetListBlogApproval = async (req: Request) => {
   try {
     const UserID = req.user.ID
-    const blogs = await Blog
-      .find(
-        { "TeacherReceive.Teacher": UserID },
-        { TeacherReceive: 0 }
+    const { SubjectID, ReceiveStatus, CurrentPage, PageSize, ReceiveDate } = req.body as GetListBlogApprovalDTO
+    let query = {
+      "TeacherReceive.Teacher": UserID,
+      IsDeleted: false
+    } as any
+    if (!!SubjectID) {
+      query.Subject = SubjectID
+    }
+    if (!!ReceiveStatus) {
+      query["TeacherReceive.ReceiveStatus"] = ReceiveStatus
+    }
+    if (!!ReceiveDate) {
+      query["TeacherReceive.ReceiveDate"] = ReceiveDate
+    }
+    const blogs = Blog
+      .find(query)
+      .skip((CurrentPage - 1) * PageSize)
+      .limit(PageSize)
+      .populate("User", ["_id", "FullName"])
+      .populate("Subject", ["_id", "SubjectName"])
+      .select("_id User Subject Gender Title Price NumberSlot LearnType Address ProfessionalLevel Schedules StartDate TeacherReceive")
+    const total = Blog.countDocuments(query)
+    const result = await Promise.all([blogs, total])
+    const data = result[0].map((i: any) => ({
+      _id: i._id,
+      User: i.User,
+      Subject: i.Subject,
+      Gender: i.Gender,
+      Title: i.Title,
+      Price: i.Price,
+      NumberSlot: i.NumberSlot,
+      LearnType: i.LearnType,
+      Address: i.Address,
+      ProfessionalLevel: i.ProfessionalLevel,
+      Schedules: i.Schedules,
+      StartDate: i.StartDate,
+      ReceiveStatus: i.TeacherReceive.find((t: any) => t.Teacher.equals(UserID)).ReceiveStatus,
+      ReceiveDate: i.TeacherReceive.find((t: any) => t.Teacher.equals(UserID)).ReceiveDate,
+      IsCancel: i.TeacherReceive.find((t: any) => t.Teacher.equals(UserID)).ReceiveStatus === 1 ? false : true
+    }))
+    return response(
+      { List: data.reverse(), Total: result[1] },
+      false,
+      "Lấy data thành công",
+      200
+    )
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncChangeBlogPaid = async (req: Request) => {
+  try {
+    const { BlogID } = req.params
+    const updateBlog = await Blog
+      .findOneAndUpdate(
+        { _id: BlogID },
+        { IsPaid: true },
+        { new: true }
       )
-    return response(blogs, false, "Lấy data thành công", 200)
+      .lean() as any
+    if (!updateBlog) return response({}, true, "Có lỗi xảy ra", 200)
+    return response(updateBlog, false, "Thanh toán thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -444,7 +836,8 @@ const BlogService = {
   fncGetListBlogByTeacher,
   fncChangeReceiveStatus,
   fncChangeRegisterStatus,
-  fncGetListBlogApproval
+  fncGetListBlogApproval,
+  fncChangeBlogPaid
 }
 
 export default BlogService

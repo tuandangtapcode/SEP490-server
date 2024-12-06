@@ -19,7 +19,7 @@ const LearnHistorySchema = new Schema({
   },
   RegisterDate: {
     type: Date,
-    default: () => new Date()
+    default: new Date()
   },
   TotalLearned: {
     type: Number,

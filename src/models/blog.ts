@@ -26,6 +26,10 @@ const BlogSchema = new Schema({
     type: Number,
     required: true
   },
+  ExpensePrice: {
+    type: Number,
+    required: true
+  },
   NumberSlot: {
     type: Number,
     required: true
@@ -52,7 +56,16 @@ const BlogSchema = new Schema({
         EndTime: { type: Date }
       }
     ],
-    default: []
+    required: true
+  },
+  RealSchedules: {
+    type: [
+      {
+        StartTime: { type: Date },
+        EndTime: { type: Date }
+      }
+    ],
+    required: true
   },
   StartDate: {
     type: Date,
@@ -68,12 +81,20 @@ const BlogSchema = new Schema({
         ReceiveStatus: {
           type: Number,
           default: 1
+        },
+        ReceiveDate: {
+          type: Date,
+          default: new Date()
         }
       }
     ],
     default: []
   },
   IsDeleted: {
+    type: Boolean,
+    default: false
+  },
+  IsPaid: {
     type: Boolean,
     default: false
   },

@@ -19,6 +19,10 @@ const CourseSchema = new Schema({
     type: Number,
     required: true
   },
+  ExpensePrice: {
+    type: Number,
+    required: true
+  },
   Title: {
     type: String,
     required: true

@@ -1,7 +1,8 @@
-const express = require('express');
-import GenerateController from "../controllers/generate.controller";
+import express from "express"
+import GenerateController from "../controllers/generate.controller"
 
-const GenerateRouter = express.Router();
-GenerateRouter.post('/generateText', GenerateController.generateText);
+const GenerateRouter = express.Router()
+
+GenerateRouter.post('/generateText', GenerateController.generateText)
 
 export default GenerateRouter

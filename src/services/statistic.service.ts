@@ -3,10 +3,10 @@ import { Request } from "express"
 import LearnHistory from "../models/learnhistory"
 import Payment from "../models/payment"
 import User from "../models/user"
-import { getCurrentWeekRange } from "../utils/commonFunction"
 import { Roles } from "../utils/constant"
 import { StatisticTotalUserDTO } from "../dtos/statistic.dto"
 import response from "../utils/response"
+import { getCurrentWeekRange } from "../utils/dateUtils"
 
 const getResultData = (TotalTeacher: number, TotalStudent: number) => {
   return {
@@ -171,6 +171,24 @@ const fncStatisticFinancial = async (req: Request) => {
       {
         $match: {
           ...query,
+          PaymentType: 1
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalFeeSum: {
+            $sum: {
+              $multiply: ["$TotalFee", { $subtract: [1, "$Percent"] }]
+            }
+          }
+        }
+      }
+    ])
+    const costPaid = Payment.aggregate([
+      {
+        $match: {
+          ...query,
           $or: [
             { PaymentType: 2 },
             { PaymentType: 3 }
@@ -184,11 +202,12 @@ const fncStatisticFinancial = async (req: Request) => {
         }
       }
     ])
-    const result = await Promise.all([revenue, expense])
+    const result = await Promise.all([revenue, expense, costPaid])
     return response(
       {
         Revenue: !!result[0][0]?.totalFeeSum ? result[0][0]?.totalFeeSum : 0,
         Expense: !!result[1][0]?.totalFeeSum ? result[1][0]?.totalFeeSum : 0,
+        CostPaid: !!result[2][0]?.totalFeeSum ? result[2][0]?.totalFeeSum : 0,
         Profit: !!result[0][0]?.totalFeeSum && !!result[1][0]?.totalFeeSum
           ? result[0][0]?.totalFeeSum - result[1][0]?.totalFeeSum
           : 0

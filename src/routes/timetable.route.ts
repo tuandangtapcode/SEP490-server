@@ -11,7 +11,7 @@ TimeTableRoute.post("/createTimeTable",
   TimeTableValidation.createTimeTable,
   TimeTableController.createTimeTable
 )
-TimeTableRoute.get("/getTimeTableOfTeacherOrStudent/:UserID",
+TimeTableRoute.post("/getTimeTableOfTeacherOrStudent",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
   TimeTableController.getTimeTableOfTeacherOrStudent
 )
