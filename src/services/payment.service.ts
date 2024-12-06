@@ -3,7 +3,6 @@ dotenv.config()
 import { Roles } from "../utils/constant"
 import ExcelJS from "exceljs"
 import Payment from "../models/payment"
-import { formatMoney } from "../utils/commonFunction"
 import sendEmail from "../utils/send-mail"
 import iconv from "iconv-lite"
 import { Request, Response } from "express"
@@ -15,6 +14,7 @@ import {
   GetListTransferDTO,
 } from "../dtos/payment.dto"
 import response from "../utils/response"
+import { formatMoney } from "../utils/stringUtils"
 
 const PaymentType = [
   {
@@ -72,16 +72,10 @@ const fncGetListPaymentHistoryByUser = async (req: Request) => {
       TraddingCode: { $regex: TraddingCode, $options: "i" }
     } as any
     if (!!PaymentStatus) {
-      query = {
-        ...query,
-        PaymentStatus: PaymentStatus
-      }
+      query.PaymentStatus = PaymentStatus
     }
     if (!!PaymentType) {
-      query = {
-        ...query,
-        PaymentType: PaymentType
-      }
+      query.PaymentType = PaymentType
     }
     const payments = Payment
       .find(query)
@@ -168,10 +162,7 @@ const fncGetListPayment = async (req: Request) => {
       PaymentStatus: 2
     } as any
     if (!!PaymentType) {
-      query = {
-        ...query,
-        PaymentType: PaymentType
-      }
+      query.PaymentType = PaymentType
     }
     const payments = Payment.aggregate([
       {
@@ -385,7 +376,10 @@ const fncGetListTransfer = async (req: Request) => {
           ]
         }
       },
-      { $unwind: "$Receiver" }
+      { $unwind: "$Receiver" },
+      {
+        $sort: { PaymentTime: -1 }
+      },
     ])
     return response(payments, false, "Lấy data thành công", 200)
   } catch (error: any) {

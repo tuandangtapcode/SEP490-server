@@ -1,6 +1,6 @@
 import Joi from 'joi'
-import { getRegexEmail, getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Request, Response } from 'express'
+import { getRegexEmail, getRegexObjectID } from '../utils/stringUtils'
 
 const createConfirm = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
@@ -12,7 +12,7 @@ const createConfirm = async (req: Request, res: Response, next: NextFunction) =>
     TeacherEmail: Joi.string().pattern(getRegexEmail()).required(),
     Subject: Joi.string().pattern(getRegexObjectID()).required(),
     SubjectName: Joi.string().min(1).required(),
-    TotalFee: Joi.number().integer().min(1).required(),
+    TotalFee: Joi.number().min(1).required(),
     LearnType: Joi.number().valid(1, 2).required(),
     Address: Joi.string().min(1).optional(),
     Times: Joi.array().items(Joi.string().min(1)).required(),
@@ -35,7 +35,7 @@ const updateConfirm = async (req: Request, res: Response, next: NextFunction) =>
     Sender: Joi.string().pattern(getRegexObjectID()).required(),
     Receiver: Joi.string().pattern(getRegexObjectID()).required(),
     Subject: Joi.string().pattern(getRegexObjectID()).required(),
-    TotalFee: Joi.number().integer().min(1).required(),
+    TotalFee: Joi.number().min(1).required(),
     LearnType: Joi.number().valid(1, 2).required(),
     Address: Joi.string().min(1).optional(),
     Schedules: Joi.array().items(Joi.object({

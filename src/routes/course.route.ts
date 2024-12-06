@@ -22,7 +22,7 @@ CourseRoute.post("/getListCourseByTeacher",
 CourseRoute.post("/getListCourseOfTeacher",
   CourseController.getListCourseOfTeacher
 )
-CourseRoute.get("/deleteCourse/:CourseID",
+CourseRoute.post("/deleteCourse",
   authMiddleware([Roles.ROLE_TEACHER, Roles.ROLE_ADMIN]),
   CourseController.deleteCourse
 )

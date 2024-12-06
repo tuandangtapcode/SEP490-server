@@ -39,6 +39,10 @@ const TimeTableSchema = new Schema({
     type: Date,
     required: true
   },
+  AttendanceTime: {
+    type: Date,
+    default: null
+  },
   LearnType: {
     type: Number,
     required: true
@@ -50,6 +54,10 @@ const TimeTableSchema = new Schema({
   Status: {
     type: Boolean,
     default: false
+  },
+  Price: {
+    type: Number,
+    required: true
   },
   IsCancel: {
     type: Boolean,

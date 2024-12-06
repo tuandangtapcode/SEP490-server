@@ -78,7 +78,8 @@ export const getDetailProfile = async (ID: string, RoleID: number) => {
               {
                 $project: {
                   _id: 1,
-                  Subject: 1
+                  Subject: 1,
+                  RegisterStatus: 1
                 }
               }
             ]

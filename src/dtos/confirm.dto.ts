@@ -2,6 +2,7 @@ import { ObjectId } from "mongoose"
 
 export interface CreateConfirmDTO {
   Sender: ObjectId,
+  CourseID?: ObjectId,
   StudentName: string,
   Receiver: ObjectId,
   TeacherName: string,

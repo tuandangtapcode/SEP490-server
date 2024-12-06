@@ -40,11 +40,15 @@ const PaymentSchema = new Schema({
   },
   PaymentTime: {
     type: Date,
-    default: () => new Date()
+    default: new Date()
   },
   RequestAxplanationAt: {
     type: Date,
     default: null
+  },
+  Percent: {
+    type: Number,
+    required: true
   }
 }, {
   timestamps: true

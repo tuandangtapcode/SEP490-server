@@ -30,6 +30,7 @@ const fncGetListFeedbackOfTeacher = async (req: Request) => {
       .find(query)
       .skip((CurrentPage - 1) * PageSize)
       .limit(PageSize)
+      .sort({ createdAt: -1 })
     // .populate("User", ["FullName", "AvatarPath"])
     const total = Feedback.countDocuments(query)
     const result = await Promise.all([feedbacks, total])
