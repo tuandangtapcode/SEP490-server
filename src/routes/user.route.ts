@@ -3,7 +3,10 @@ import UserController from "../controllers/user.controller"
 import authMiddleware from "../middlewares/auth.middleware"
 import { Roles } from "../utils/constant"
 import UserValidation from "../validations/user.validation"
+import User from "../models/user"
 import SubjectSetting from "../models/subjectsetting"
+import Payment from "../models/payment"
+import Account from "../models/account"
 
 const UserRoute = express.Router()
 
@@ -98,5 +101,18 @@ UserRoute.post("/getListAccountStaff",
   authMiddleware([Roles.ROLE_ADMIN]),
   UserController.getListAccountStaff
 )
+UserRoute.get("/resetPasswordAccountStaff/:UserID",
+  authMiddleware([Roles.ROLE_ADMIN]),
+  UserController.resetPasswordAccountStaff
+)
+UserRoute.get("/updatePrice", async (req: Request, res: Response) => {
+  const account = await Account.find().lean()
+  const user = await User.find({
+    _id: {
+      $nin: account.map((a: any) => a.UserID)
+    }
+  })
+  return res.status(200).json("Update thanfh cong")
+})
 
 export default UserRoute

@@ -27,7 +27,7 @@ const getStartTime = (listConfirm: any[], confirmID: any) => {
 
 const fncCreateConfirm = async (req: Request) => {
   try {
-    const { TeacherName, StudentName, SubjectName, TeacherEmail, Times, ...remainBody } =
+    const { TeacherName, StudentName, SubjectName, TeacherEmail, Times, CourseID, ...remainBody } =
       req.body as CreateConfirmDTO
     const subject = "THÔNG BÁO HỌC SINH ĐĂNG KÝ HỌC"
     const content = `
@@ -57,7 +57,10 @@ const fncCreateConfirm = async (req: Request) => {
                 `
     const checkSendMail = await sendEmail(TeacherEmail, subject, content)
     if (!checkSendMail) return response({}, true, "Có lỗi xảy ra trong quá trình gửi mail", 200)
-    const newConfirm = await Confirm.create(remainBody)
+    const newConfirm = await Confirm.create({
+      ...remainBody,
+      Course: !!CourseID ? CourseID : null
+    })
     return response(newConfirm, false, "Yêu cầu booking của bạn đã được gửi. Hãy chờ giáo viên xác nhận.", 201)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -164,17 +167,6 @@ const fncChangeConfirmStatus = async (req: Request) => {
       .populate("Sender", ["_id", "FullName"])
       .populate("Subject", ["_id", "SubjectName"])
       .lean() as any
-    if (ConfirmStatus == 2 && !!confirm.CourseID) {
-      const updateCourse = await Course.findOneAndUpdate(
-        { _id: confirm.CourseID },
-        {
-          $inc: {
-            QuantityLearner: 1
-          }
-        }
-      )
-      if (!updateCourse) response({}, true, "Có lỗi xảy ra trong quá trình gửi update course", 200)
-    }
     return response(
       updateConfirm,
       false,
@@ -195,6 +187,17 @@ const fncGetListConfirm = async (req: Request) => {
   try {
     const { ID, RoleID } = req.user
     const { PageSize, CurrentPage, TextSearch } = req.body as CommonDTO
+    let timeTables = [] as any[]
+    if (RoleID === Roles.ROLE_STUDENT) {
+      timeTables = await TimeTable
+        .find({
+          Student: ID,
+          StartTime: { $gte: new Date() },
+          IsCancel: false,
+          Status: false
+        })
+        .lean()
+    }
     const confirms = Confirm.aggregate([
       {
         $match: {
@@ -294,11 +297,11 @@ const fncGetListConfirm = async (req: Request) => {
             {
               "Receiver.FullName": { $regex: TextSearch, $options: "i" },
             },
-            {
-              "Subject.SubjectName": { $regex: TextSearch, $options: "i" },
-            }
           ]
         }
+      },
+      {
+        $sort: { createdAt: -1 }
       },
       { $skip: (CurrentPage - 1) * PageSize },
       { $limit: PageSize }
@@ -347,9 +350,9 @@ const fncGetListConfirm = async (req: Request) => {
       {
         $lookup: {
           from: "users",
-          localField: "Recevier",
+          localField: "Receiver",
           foreignField: "_id",
-          as: "Recevier",
+          as: "Receiver",
           pipeline: [
             {
               $lookup: {
@@ -375,7 +378,7 @@ const fncGetListConfirm = async (req: Request) => {
           ]
         }
       },
-      { $unwind: "$Recevier" },
+      { $unwind: "$Receiver" },
       {
         $lookup: {
           from: "subjects",
@@ -408,13 +411,23 @@ const fncGetListConfirm = async (req: Request) => {
           ]
         }
       },
+      {
+        $group: {
+          _id: "$_id"
+        }
+      },
+      {
+        $count: "total"
+      }
     ])
     const result = await Promise.all([confirms, total])
     const data = result[0].map((i: any) => ({
       ...i,
       // IsUpdate: RoleID === Roles.ROLE_TEACHER || i.ConfirmStatus !== 1 ? false : true,
       IsConfirm: RoleID !== Roles.ROLE_TEACHER || [1, 2, 3].includes(i.ConfirmStatus) ? false : true,
-      IsPaid: RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 2 && !i.IsPaid ? true : false,
+      IsPaid: RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 2 && !i.IsPaid
+        ? true
+        : false,
       IsReject: (RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 1) ||
         (RoleID === Roles.ROLE_TEACHER && i.ConfirmStatus === 4)
         ? true
@@ -423,6 +436,12 @@ const fncGetListConfirm = async (req: Request) => {
       IsDisabledConfirm: i.ConfirmStatus === 4 && i.Schedules
         .map((sche: any) => new Date(sche.StartTime).toISOString())
         .some((schedule: any) => getStartTime(result[0], i._id).includes(schedule)),
+      IsDisabledPaid: timeTables.some((t: any) =>
+        i.Schedules.some((s: any) =>
+          moment(t.StartTime).isAfter(moment(s.StartTime)) &&
+          moment(t.StartTime).isBefore(moment(s.EndTime))
+        )
+      )
     }))
     return response(
       {
@@ -447,7 +466,8 @@ const fncGetDetailConfirm = async (req: Request) => {
     const confirm = await Confirm.aggregate([
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(`${ConfirmID}`)
+          _id: new mongoose.Types.ObjectId(`${ConfirmID}`),
+          IsDeleted: false
         }
       },
       {
@@ -501,6 +521,7 @@ const fncGetDetailConfirm = async (req: Request) => {
       { $unwind: "$Subject" },
     ])
     if (!confirm[0]) return response({}, true, "Booking không tồn tại", 200)
+    if (confirm[0].ConfirmStatus !== 2) return response({}, true, "Booking chưa được phép thanh toán", 200)
     return response(confirm[0], false, "Lấy dữ liệu thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -510,12 +531,25 @@ const fncGetDetailConfirm = async (req: Request) => {
 const fncChangeConfirmPaid = async (req: Request) => {
   try {
     const { ConfirmID } = req.params
-    const updateConfirm = await Confirm.updateOne(
-      { _id: ConfirmID },
-      { IsPaid: true },
-      { new: true }
-    )
+    const updateConfirm = await Confirm
+      .findOneAndUpdate(
+        { _id: ConfirmID },
+        { IsPaid: true },
+        { new: true }
+      )
+      .lean() as any
     if (!updateConfirm) return response({}, true, "Có lỗi xảy ra", 200)
+    if (!!updateConfirm.Course) {
+      const updateCourse = await Course.findOneAndUpdate(
+        { _id: updateConfirm.Course },
+        {
+          $inc: {
+            QuantityLearner: 1
+          }
+        }
+      )
+      if (!updateCourse) response({}, true, "Có lỗi xảy ra trong quá trình gửi update course", 200)
+    }
     return response(updateConfirm, false, "Thanh toán thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

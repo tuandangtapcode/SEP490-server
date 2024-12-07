@@ -8,6 +8,7 @@ import {
 } from "../dtos/message.dto"
 
 export const ADMIN_ID = "66f682358a03bbcf9bf04c03"
+export const STAFF_ID = "67476613fa551a62e2f8b72b"
 
 const fncCreateMessage = async (req: Request) => {
   try {
@@ -16,7 +17,7 @@ const fncCreateMessage = async (req: Request) => {
     const { Content, ChatID, Receiver } = req.body as CreateMessageDTO
     if (!ChatID) {
       newChat = await Chat.create({
-        Members: !!Receiver ? [UserID, Receiver] : [UserID, ADMIN_ID],
+        Members: !!Receiver ? [UserID, Receiver] : [UserID, STAFF_ID],
         LastMessage: Content
       })
     } else {
@@ -63,7 +64,6 @@ const fncGetChatWithUser = async (req: Request) => {
         Receiver
       ]
     })
-    // if (!chat) return response({}, true, "Chat không tồn tại", 200)
     return response(chat, false, "Lấy data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -75,7 +75,7 @@ const fncGetChatOfAdmin = async () => {
     const chats = await Chat
       .find({
         Members: {
-          $elemMatch: { $eq: ADMIN_ID }
+          $elemMatch: { $eq: STAFF_ID }
         }
       })
       .sort({ UpdatedAt: -1 })
@@ -98,7 +98,7 @@ const fncGetChatOfUser = async (req: Request) => {
       .sort({ updatedAt: -1 })
       .populate("Members", ["_id", "FullName", "AvatarPath"])
     const filteredChats = chats.filter(chat =>
-      !chat.Members.some(member => member.equals(ADMIN_ID))
+      !chat.Members.some(member => member.equals(STAFF_ID))
     )
     return response(filteredChats, false, "Lấy data thành công", 200)
   } catch (error: any) {

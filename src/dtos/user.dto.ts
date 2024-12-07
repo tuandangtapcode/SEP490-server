@@ -71,8 +71,9 @@ export interface UpdateSubjectSettingDTO {
     StartDate: string,
     EndDate: string
   }[],
-  Price: string,
-  LearnTypes: number[]
+  Price: number,
+  LearnTypes: number[],
+  ExpensePrice: number
 }
 
 export interface ConfirmSubjectSettingDTO {
@@ -109,4 +110,6 @@ export interface GetListSubjectSettingDTO extends CommonDTO {
 export interface CreateAccountStaff {
   FullName: string,
   Email: string,
+  Password: string,
+  Phone: string
 }

@@ -1,5 +1,4 @@
 import Joi from 'joi'
-import { getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Response, Request } from 'express'
 import mongoose from 'mongoose'
 import response from '../utils/response'

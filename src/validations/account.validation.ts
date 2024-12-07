@@ -1,14 +1,11 @@
 import Joi from "joi"
-import {
-  getRegexEmail,
-  getRegexPassword,
-} from "../utils/commonFunction"
 import { NextFunction, Request, Response } from "express"
+import { getRegexEmail, getRegexPassword } from "../utils/stringUtils"
 
 const register = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
-    RoleID: Joi.number().integer().valid(3, 4).required(),
+    RoleID: Joi.number().valid(3, 4).required(),
     FullName: Joi.string().min(1).max(30).required(),
     IsByGoogle: Joi.boolean().required(),
     AvatarPath: Joi.string().min(1).optional(),

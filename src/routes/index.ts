@@ -10,14 +10,12 @@ import BankingInforRoute from "./bankinginfor.route"
 import NotificationRoute from "./notification.route"
 import LearnHistoryRoute from "./learnhistory.route"
 import FeedbackRoute from "./feedback.route"
-import IssueRoute from "./issue.route"
 import StatisticRoute from "./statistic.route"
 import { Application } from "express"
 import FileRoute from "./file.route"
 import CommonRoute from "./common.route"
 import CourseRoute from "./course.route"
 import ConfirmRoute from "./confirm.route"
-import GenerateRouter from "./generate.route"
 
 const routes = (app: Application) => {
   app.use("/account", AccountRoute)
@@ -33,12 +31,10 @@ const routes = (app: Application) => {
   app.use("/notification", NotificationRoute)
   app.use("/learnhistory", LearnHistoryRoute)
   app.use("/feedback", FeedbackRoute)
-  app.use("/issue", IssueRoute)
   app.use("/statistic", StatisticRoute)
   app.use("/file", FileRoute)
   app.use("/course", CourseRoute)
   app.use("/confirm", ConfirmRoute)
-  app.use("/generate", GenerateRouter)
 }
 
 export default routes

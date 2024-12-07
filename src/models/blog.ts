@@ -26,12 +26,12 @@ const BlogSchema = new Schema({
     type: Number,
     required: true
   },
-  NumberSlot: {
+  ExpensePrice: {
     type: Number,
     required: true
   },
-  Content: {
-    type: String,
+  NumberSlot: {
+    type: Number,
     required: true
   },
   LearnType: {
@@ -44,14 +44,32 @@ const BlogSchema = new Schema({
     type: String,
     default: null
   },
+  ProfessionalLevel: {
+    type: Number,
+    required: true
+  },
   Schedules: {
+    type: [
+      {
+        DateValue: { type: Number },
+        StartTime: { type: Date },
+        EndTime: { type: Date }
+      }
+    ],
+    required: true
+  },
+  RealSchedules: {
     type: [
       {
         StartTime: { type: Date },
         EndTime: { type: Date }
       }
     ],
-    default: []
+    required: true
+  },
+  StartDate: {
+    type: Date,
+    required: true
   },
   TeacherReceive: {
     type: [
@@ -63,6 +81,10 @@ const BlogSchema = new Schema({
         ReceiveStatus: {
           type: Number,
           default: 1
+        },
+        ReceiveDate: {
+          type: Date,
+          default: new Date()
         }
       }
     ],
@@ -72,9 +94,13 @@ const BlogSchema = new Schema({
     type: Boolean,
     default: false
   },
-  IsActivate: {
+  IsPaid: {
     type: Boolean,
     default: false
+  },
+  RegisterStatus: {
+    type: Number,
+    default: 1
   },
 }, {
   timestamps: true

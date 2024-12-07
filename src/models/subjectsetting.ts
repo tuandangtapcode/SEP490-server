@@ -57,6 +57,10 @@ const SubjectSettingSchema = new Schema({
     type: Number,
     default: null
   },
+  ExpensePrice: {
+    type: Number,
+    default: null
+  },
   LearnTypes: {
     type: [
       { type: Number }

@@ -1,6 +1,6 @@
 import Joi from "joi"
-import { getRegexObjectID } from "../utils/commonFunction"
 import { NextFunction, Request, Response } from "express"
+import { getRegexObjectID } from "../utils/stringUtils"
 
 const createTimeTable = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.array().items(
@@ -10,8 +10,9 @@ const createTimeTable = async (req: Request, res: Response, next: NextFunction) 
       Subject: Joi.string().pattern(getRegexObjectID()).required(),
       StartTime: Joi.date().required(),
       EndTime: Joi.date().required(),
-      LearnType: Joi.number().integer().valid(1, 2).required(),
-      Address: Joi.string().min(1).optional()
+      LearnType: Joi.number().valid(1, 2).required(),
+      Address: Joi.string().min(1).optional(),
+      Price: Joi.number().required()
     })
   )
   try {

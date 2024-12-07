@@ -3,7 +3,6 @@ dotenv.config()
 import { Roles } from "../utils/constant"
 import ExcelJS from "exceljs"
 import Payment from "../models/payment"
-import { formatMoney } from "../utils/commonFunction"
 import sendEmail from "../utils/send-mail"
 import iconv from "iconv-lite"
 import { Request, Response } from "express"
@@ -13,9 +12,9 @@ import {
   GetListPaymentDTO,
   GetListPaymentHistoryByUserDTO,
   GetListTransferDTO,
-  SendRequestExplanationDTO,
 } from "../dtos/payment.dto"
 import response from "../utils/response"
+import { formatMoney } from "../utils/stringUtils"
 
 const PaymentType = [
   {
@@ -73,16 +72,10 @@ const fncGetListPaymentHistoryByUser = async (req: Request) => {
       TraddingCode: { $regex: TraddingCode, $options: "i" }
     } as any
     if (!!PaymentStatus) {
-      query = {
-        ...query,
-        PaymentStatus: PaymentStatus
-      }
+      query.PaymentStatus = PaymentStatus
     }
     if (!!PaymentType) {
-      query = {
-        ...query,
-        PaymentType: PaymentType
-      }
+      query.PaymentType = PaymentType
     }
     const payments = Payment
       .find(query)
@@ -169,10 +162,7 @@ const fncGetListPayment = async (req: Request) => {
       PaymentStatus: 2
     } as any
     if (!!PaymentType) {
-      query = {
-        ...query,
-        PaymentType: PaymentType
-      }
+      query.PaymentType = PaymentType
     }
     const payments = Payment.aggregate([
       {
@@ -362,82 +352,6 @@ const fncGetListTransfer = async (req: Request) => {
             },
             {
               $lookup: {
-                from: "issues",
-                foreignField: "Teacher",
-                localField: "_id",
-                as: "Issues",
-                pipeline: [
-                  {
-                    $match: {
-                      "createdAt": { $gte: new Date(FromDate), $lte: new Date(ToDate) }
-                    }
-                  },
-                  {
-                    $lookup: {
-                      from: "users",
-                      localField: "Sender",
-                      foreignField: "_id",
-                      as: "Sender",
-                      pipeline: [
-                        {
-                          $lookup: {
-                            from: "accounts",
-                            localField: "_id",
-                            foreignField: "UserID",
-                            as: "Account"
-                          }
-                        },
-                        { $unwind: '$Account' },
-                        {
-                          $addFields: {
-                            Email: "$Account.Email"
-                          }
-                        },
-                        {
-                          $project: {
-                            _id: 1,
-                            FullName: 1,
-                            Email: 1
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  { $unwind: "$Sender" },
-                  {
-                    $lookup: {
-                      from: "users",
-                      localField: "Teacher",
-                      foreignField: "_id",
-                      as: "Teacher",
-                      pipeline: [
-                        {
-                          $project: {
-                            _id: 1,
-                            FullName: 1,
-                            Email: 1
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  { $unwind: "$Teacher" },
-                  {
-                    $project: {
-                      _id: 1,
-                      Title: 1,
-                      Content: 1,
-                      Timetable: 1,
-                      IsHandle: 1,
-                      Sender: 1,
-                      Teacher: 1
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              $lookup: {
                 from: "accounts",
                 localField: "_id",
                 foreignField: "UserID",
@@ -455,7 +369,6 @@ const fncGetListTransfer = async (req: Request) => {
                 _id: 1,
                 FullName: 1,
                 TimeTables: 1,
-                Issues: 1,
                 Email: 1,
                 RoleID: 1
               }
@@ -463,63 +376,12 @@ const fncGetListTransfer = async (req: Request) => {
           ]
         }
       },
-      { $unwind: "$Receiver" }
+      { $unwind: "$Receiver" },
+      {
+        $sort: { PaymentTime: -1 }
+      },
     ])
-    const data = payments.map((i: any) => ({
-      ...i,
-      IsViewIssue: !i.Receiver.Issues.length,
-      IsSendRequestExplantion: !i.Receiver.Issues.length || !!i.RequestAxplanationAt
-    }))
-    return response(data, false, "Lấy data thành công", 200)
-  } catch (error: any) {
-    return response({}, true, error.toString(), 500)
-  }
-}
-
-const fncSendRequestExplanation = async (req: Request) => {
-  try {
-    const UserID = req.user.ID
-    const { PaymentID, Email, FullName, Issues } = req.body as SendRequestExplanationDTO
-    const updatePayment = await Payment.findOneAndUpdate({ _id: PaymentID, Sender: UserID }, { RequestAxplanationAt: Date.now() })
-    if (!updatePayment) return response({}, true, "Có lỗi xảy ra", 200)
-    const subject = "THÔNG BÁO GIẢI TRÌNH BUỔI HỌC BỊ REPORT"
-    const content = `
-                <html>
-                <head>
-                <style>
-                    p {
-                        color: #333;
-                    }
-                </style>
-                </head>
-                <body>
-                  <p style="margin-top: 30px; margin-bottom:30px; text-align:center; font-weigth: 700; font-size: 20px">THÔNG BÁO GIẢI TRÌNH BUỔI HỌC BỊ REPORT</p>
-                  <p style="margin-bottom:10px">Xin chào ${FullName},</p>
-                  <p style="margin-bottom:10px">Talent LearningHub thông báo: Chúng tôi xin thông báo về các buổi học bạn bị report trong tuần qua:</p>
-                  ${Issues.map((i, idx) =>
-      `<div>
-                    <p style="font-weight: 600; font-size: 17px">Lần report thứ ${idx + 1}</p>
-                    <div>
-                      Ngày học: ${i.DateAt}
-                    </div>
-                    <div>
-                      Thời gian: ${i.Time}
-                    </div>
-                    <div>
-                      Tiêu đề report: ${i.Title}
-                    </div>
-                    <div>
-                      Nội dung report: ${i.Content}
-                    </div>
-                  </div>`
-    )}
-                  <p style="margin-top: 30px; margin-bottom:10px">Bạn phải giải trình về những report trên trong vòng 48h. Nếu trong vòng 48h bạn không giải trình thì bạn sẽ mất toàn bộ số tiền giảng dạy trong tuần qua và nếu hệ thống ghi nhận quá nhiều lần bị báo cáo hệ thống sẽ khóa tài khoản của bạn.</p>
-                  <p style="margin-top: 30px; margin-bottom:10px">Mọi thắc mắc vui lòng gửi đến địa chỉ email này.</p>
-                </body>
-                </html>
-                `
-    await sendEmail(Email, subject, content)
-    return response({}, false, "Đã gửi yêu cầu giải trình cho giáo viên", 200)
+    return response(payments, false, "Lấy data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -540,7 +402,6 @@ const PaymentService = {
   fncGetListPayment,
   fncExportExcel,
   fncGetListTransfer,
-  fncSendRequestExplanation
 }
 
 export default PaymentService

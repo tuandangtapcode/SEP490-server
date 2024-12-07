@@ -8,6 +8,7 @@ const index = pinecone.index(process.env.PINECONE_INDEX_NAME!, process.env.PINEC
 
 const upsertVector = async (
   id: string,
+  namespace: string,
   values: number[],
   metadata: Record<string, any> = {}
 ): Promise<void> => {
@@ -21,29 +22,66 @@ const upsertVector = async (
       },
     ]
     // Upsert the vector into the Pinecone index
-    await index.namespace("teacher").upsert(vectors)
+    await index.namespace(namespace).upsert(vectors)
 
-    console.log(`Successfully upserted vector with id: ${id}`)
   } catch (error) {
-    console.error("Error upserting vector:", error)
     throw error
   }
 }
 
-const searchPinecone = async (queryEmbedding: number[]) => {
+
+const updateVector = async (
+  id: string,
+  namespace: string,
+  values: number[],
+): Promise<void> => {
+  try {
+    await index.namespace(namespace).update(
+      {
+        id: id,
+        values: values
+      }
+    )
+  } catch (error) {
+    throw error
+  }
+}
+
+
+const deleteVector = async (
+  id: string,
+  namespace: string
+): Promise<void> => {
+  try {
+    await index.namespace(namespace).deleteOne(id)
+  } catch (error) {
+    throw error
+  }
+}
+
+const searchPineconeByQuery = async (queryEmbedding: number[]) => {
   const result = await index.namespace('teacher').query({
     vector: queryEmbedding,
-    topK: 5, // Retrieve the top 5 most similar items
-    includeValues: true,
-    includeMetadata: true, // Include metadata for recommendation
+    topK: 5,
   })
+  return result.matches
+}
 
-  return result.matches // Array of the closest matches
+const searchPineconeByID = async (id: string) => {
+  const result = await index.namespace('learnhistory').query({
+    id: id,
+    topK: 1,
+    includeValues: true,
+  })
+  return result.matches
 }
 
 const PineconeService = {
   upsertVector,
-  searchPinecone
+  searchPineconeByQuery,
+  searchPineconeByID,
+  updateVector,
+  deleteVector
 }
 
 export default PineconeService

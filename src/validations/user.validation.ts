@@ -1,15 +1,15 @@
 import Joi from 'joi'
-import { getRegexEmail, getRegexObjectID } from '../utils/commonFunction'
 import { NextFunction, Response, Request } from 'express'
+import { getRegexEmail, getRegexObjectID, getRegexPassword, getRegexPhoneNumber } from '../utils/stringUtils'
 
 const changeProfile = async (req: Request, res: Response, next: NextFunction) => {
   const trueCondition = Joi.object({
     FullName: Joi.string().min(1).required(),
     Address: Joi.string().min(1).required(),
     AvatarPath: Joi.string().min(1).required(),
-    Phone: Joi.string().min(1).required(),
+    Phone: Joi.string().pattern(getRegexPhoneNumber()).required(),
     DateOfBirth: Joi.date().required(),
-    Gender: Joi.number().integer().valid(1, 2).required(),
+    Gender: Joi.number().valid(1, 2).required(),
     Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
   })
   try {
@@ -52,7 +52,8 @@ const updateSubjectSetting = async (req: Request, res: Response, next: NextFunct
     Price: Joi.number().required().required(),
     LearnTypes: Joi.array().items(Joi.number().valid(1, 2).required()).required(),
     IntroVideos: Joi.array().items(Joi.string().optional()).required(),
-    Certificates: Joi.array().items(Joi.string().required()).required()
+    Certificates: Joi.array().items(Joi.string().required()).required(),
+    ExpensePrice: Joi.number().required().required(),
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })
@@ -111,6 +112,8 @@ const createAccountStaff = async (req: Request, res: Response, next: NextFunctio
   const trueCondition = Joi.object({
     FullName: Joi.string().min(1).required(),
     Email: Joi.string().min(3).max(100).pattern(getRegexEmail()).required(),
+    Phone: Joi.string().pattern(getRegexPhoneNumber()).required(),
+    Password: Joi.string().min(8).max(100).pattern(getRegexPassword()).required(),
   })
   try {
     await trueCondition.validateAsync(req.body, { abortEarly: false })

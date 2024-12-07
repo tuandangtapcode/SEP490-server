@@ -29,10 +29,7 @@ const fncGetListSubject = async (req: Request) => {
       IsDeleted: false
     } as any
     if (!!SubjectCateID) {
-      query = {
-        ...query,
-        SubjectCateID: SubjectCateID
-      }
+      query.SubjectCateID = SubjectCateID
     }
     const subject = Subject
       .find(query)
@@ -94,7 +91,7 @@ const fncGetDetailSubject = async (req: Request) => {
     const SubjectID = req.params.SubjectID
     const subject = await getOneDocument(Subject, "_id", SubjectID)
     if (!subject) return response({}, true, "Môn học không tồn tại", 200)
-    return response(subject, true, "Môn học không tồn tại", 200)
+    return response(subject, true, "tìm kiếm môn học thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -102,15 +99,6 @@ const fncGetDetailSubject = async (req: Request) => {
 
 const fncGetListRecommendSubject = async (req: Request) => {
   try {
-    // const { Subjects } = req.body as { Subjects: [ObjectId] }
-    // let query = {} as any
-    // if (!!Subjects) {
-    //   query = {
-    //     _id: {
-    //       $in: Subjects.map((i: any) => new mongoose.Types.ObjectId(`${i}`))
-    //     }
-    //   }
-    // }
     const subjects = await Subject
       .find()
       .limit(8)

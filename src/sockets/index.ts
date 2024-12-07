@@ -20,8 +20,6 @@ const socket = (io: any) => {
 
     socket.on("send-message", SocketService.sendMessage(socket))
 
-    socket.on("user-logout", SocketService.userLogout())
-
     socket.on("join-meeting-room", SocketService.joinMeetingRoom(socket))
 
     socket.on("toggle-handler", SocketService.toggleHandler(io))
@@ -34,11 +32,13 @@ const socket = (io: any) => {
 
     socket.on("send-noted-confirm", SocketService.sendNotedConfirm(socket))
 
+    socket.on("send-change-receive-status", SocketService.changeReceiveStatus(socket))
+
     socket.on('disconnect', () => {
       console.log(`người dùng ${socket.id} đã ngắt kết nối`)
       const index = userOnlines.findIndex((i: any) => i.SocketID === socket.id)
       userOnlines.splice(index, 1)
-      console.log(userOnlines)
+      console.log("userOnlines", userOnlines)
     })
   })
 

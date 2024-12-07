@@ -3,7 +3,6 @@ import Account from "../models/account"
 import User from "../models/user"
 import bcrypt from "bcrypt"
 import { Roles } from "../utils/constant"
-import { encodeData, randomPassword } from "../utils/commonFunction"
 import sendEmail from "../utils/send-mail"
 import { getOneDocument } from "../utils/queryFunction"
 import {
@@ -12,6 +11,8 @@ import {
   RegisterDTO
 } from "../dtos/account.dto"
 import response from "../utils/response"
+import { randomPassword } from "../utils/randomUtils"
+import { encodeData } from "../utils/tokenUtils"
 const saltRounds = 10
 
 const fncRegister = async (req: Request, res: Response) => {
@@ -100,6 +101,7 @@ const fncLogin = async (req: Request, res: Response) => {
     const getAccount = await getOneDocument(Account, "Email", Email)
     if (!getAccount) return response({}, true, "Email không tồn tại", 200)
     if (!getAccount.IsActive) return response({}, true, "Tài khoản đã bị khóa", 200)
+    if (!getAccount.Password) return response({}, true, "Mật khẩu không chính xác", 200)
     const check = bcrypt.compareSync(Password, getAccount.Password)
     if (!check) return response({}, true, "Mật khẩu không chính xác", 200)
     const token = encodeData({
