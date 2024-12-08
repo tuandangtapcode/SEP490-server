@@ -7,6 +7,9 @@ import { Query } from "mongoose";
 import Account from '../../src/models/account';
 import UserSerivce from '../../src/services/user.service';
 import * as queryFunction from '../../src/utils/queryFunction';
+import response from '../../src/utils/response'
+import SubjectSetting from '../../src/models/subjectsetting';
+import { Socket } from 'net';
 
 describe('fncGetDetailProfile', () => {
     let sandbox: sinon.SinonSandbox;
@@ -80,23 +83,76 @@ describe('fncGetDetailProfile', () => {
         expect(response.statusCode).to.equal(200); // Status code 200 as per your base function logic
         expect(response.data).to.deep.equal({}); // Data should be empty if no user is found
     });
+});
 
-    it('should handle errors gracefully', async () => {
-        const validUserId = new mongoose.Types.ObjectId();
+describe('fncGetDetailTeacher', () => {
+    let sandbox: sinon.SinonSandbox;
+
+    beforeEach(() => {
+        sandbox = sinon.createSandbox();
+    });
+
+    afterEach(() => {
+        sandbox.restore();
+    });
+
+    it('should return an error if SubjectID is invalid', async () => {
         const req = {
-          user: { ID: validUserId.toString() },
+            body: {
+                TeacherID: new mongoose.Types.ObjectId().toString(),
+                SubjectID: 'invalid-id',
+            },
         } as Partial<Request>;
-      
-        // Simulate an error in the aggregate query
-        const errorMessage = 'Database error';
-        sandbox.stub(User, 'aggregate').throws(new Error(errorMessage));
-      
-        const response = await UserSerivce.fncGetDetailProfile(req as Request);
-      
-        // Assertions
+
+        const response = await UserSerivce.fncGetDetailTeacher(req as Request);
+
         expect(response.isError).to.be.true;
-        expect(response.msg).to.equal('Có lỗi xảy ra'); // Check for the base function's generic error message
-        expect(response.statusCode).to.equal(200); // Expecting 200, as that's what the base function returns in case of an error
-        expect(response.data).to.deep.equal({});
-      });
+        expect(response.msg).to.equal('ID môn học không tồn tại');
+        expect(response.statusCode).to.equal(200);
+    });
+
+    it('should return an error if TeacherID is invalid', async () => {
+        const req = {
+            body: {
+                TeacherID: 'invalid-id',
+                SubjectID: new mongoose.Types.ObjectId().toString(),
+            },
+        } as Partial<Request>;
+
+        const response = await UserSerivce.fncGetDetailTeacher(req as Request);
+
+        expect(response.isError).to.be.true;
+        expect(response.msg).to.equal('ID giáo viên không tồn tại');
+        expect(response.statusCode).to.equal(200);
+    });
+
+    it('should return an error if the teacher does not exist', async () => {
+        const req = {
+            body: {
+                TeacherID: new mongoose.Types.ObjectId().toString(),
+                SubjectID: new mongoose.Types.ObjectId().toString(),
+            },
+            headers: { 'x-forwarded-for': '127.0.0.1' },
+            connection: { remoteAddress: '127.0.0.1' } as unknown, // Cast to `unknown`
+        } as Partial<Request>; // Convert to Partial<Request>
+
+        const aggregateStub = sandbox.stub(SubjectSetting, 'aggregate').resolves([]); // Mock no teacher found
+
+        // Mock the behavior of `find().populate().select()`
+        const mockSelect = sandbox.stub().resolves([]); // `select` resolves an empty array
+        const mockPopulate = sandbox.stub().returns({ select: mockSelect } as any); // Chain `populate` to `select`
+        const findStub = sandbox.stub(SubjectSetting, 'find').returns({ populate: mockPopulate } as any); // Mock `find` to return a query-like object
+
+        const response = await UserSerivce.fncGetDetailTeacher(req as Request);
+
+        // Assertions
+        expect(aggregateStub.calledOnce).to.be.true;
+        expect(findStub.calledOnce).to.be.true;
+        expect(mockPopulate.calledOnce).to.be.true; // Ensure `populate` was called
+        expect(mockSelect.calledOnce).to.be.true; // Ensure `select` was called
+        expect(response.isError).to.be.true;
+        expect(response.msg).to.equal('Giáo viên không tồn tại');
+        expect(response.statusCode).to.equal(200);
+    });
+
 });
