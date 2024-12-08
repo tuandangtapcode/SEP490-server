@@ -156,11 +156,10 @@ const fncGetListTeacher = async (req: Request) => {
       RoleID: Roles.ROLE_TEACHER
     } as any
     if (!!RegisterStatus) {
-      queryUser = {
-        ...queryUser,
-        RegisterStatus: RegisterStatus
-      }
+      queryUser.RegisterStatus = RegisterStatus
     }
+    console.log("query", queryUser);
+
     const users = User.aggregate([
       {
         $match: queryUser
@@ -197,6 +196,12 @@ const fncGetListTeacher = async (req: Request) => {
               }
             }
           ]
+        }
+      },
+      {
+        $unwind: {
+          path: "$BankingInfor",
+          preserveNullAndEmptyArrays: true
         }
       },
       {
@@ -248,9 +253,6 @@ const fncGetListTeacher = async (req: Request) => {
     const result = await Promise.all([users, total])
     const data = result[0].map((i: any) => ({
       ...i,
-      BankingInfor: !!i.BankingInfor.length
-        ? i.BankingInfor[0]
-        : {},
       IsConfirm: i.RegisterStatus === 2 || !i.Account.IsActive ? false : true,
       IsReject: i.RegisterStatus === 2 || !i.Account.IsActive ? false : true,
     }))
@@ -288,16 +290,10 @@ const fncGetListTeacherByUser = async (req: Request) => {
     const subject = await getOneDocument(Subject, "_id", SubjectID)
     if (!subject) return response({}, true, "Có lỗi xảy ra", 200)
     if (!!Level.length) {
-      query = {
-        ...query,
-        Levels: { $in: Level }
-      }
+      query.Levels = { $in: Level }
     }
     if (!!LearnType.length) {
-      query = {
-        ...query,
-        LearnTypes: { $in: LearnType }
-      }
+      query.LearnTypes = { $in: LearnType }
     }
     let teacherQuery = {
       "Teacher.FullName": { $regex: TextSearch, $options: "i" },
@@ -876,28 +872,16 @@ const fncGetListSubjectSetting = async (req: Request) => {
       req.body as GetListSubjectSettingDTO
     let query = {} as any
     if (!!SubjectID) {
-      query = {
-        ...query,
-        Subject: new mongoose.Types.ObjectId(`${SubjectID}`)
-      }
+      query.Subject = new mongoose.Types.ObjectId(`${SubjectID}`)
     }
     if (!!Level.length) {
-      query = {
-        ...query,
-        Levels: { $in: Level }
-      }
+      query.Levels = { $in: Level }
     }
     if (!!LearnType.length) {
-      query = {
-        ...query,
-        LearnTypes: { $in: LearnType }
-      }
+      query.LearnTypes = { $in: LearnType }
     }
     if (!!RegisterStatus) {
-      query = {
-        ...query,
-        RegisterStatus: RegisterStatus
-      }
+      query.RegisterStatus = RegisterStatus
     }
     let teacherQuery = {
       "Teacher.FullName": { $regex: TextSearch, $options: "i" },
@@ -975,8 +959,26 @@ const fncGetListSubjectSetting = async (req: Request) => {
           as: "Teacher",
           pipeline: [
             {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                Email: "$Account.Email",
+                IsActive: "$Account.IsActive"
+              }
+            },
+            {
               $project: {
                 FullName: 1,
+                RegisterStatus: 1,
+                Email: 1,
+                IsActive: 1
               }
             }
           ]
@@ -986,6 +988,22 @@ const fncGetListSubjectSetting = async (req: Request) => {
       {
         $match: teacherQuery
       },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                SubjectName: 1,
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
       {
         $group: {
           _id: "$_id"

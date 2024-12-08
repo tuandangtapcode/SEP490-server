@@ -25,6 +25,7 @@ const fncGetListCourse = async (req: Request) => {
 			.find()
 			.skip((CurrentPage - 1) * PageSize)
 			.limit(PageSize)
+			.sort({ createdAt: -1 })
 		const total = Course.countDocuments()
 		const result = await Promise.all([course, total])
 		return response(
@@ -55,14 +56,22 @@ const fncUpdateCourse = async (req: Request) => {
 
 const fncDeleteCourse = async (req: Request) => {
 	try {
-		const { CourseID } = req.params
+		const { CourseID, IsDeleted } = req.body
 		const deletedCourse = await Course.findByIdAndUpdate(
 			CourseID,
-			{ IsDeleted: true },
+			{ IsDeleted: IsDeleted },
 			{ new: true }
 		)
 		if (!deletedCourse) return response({}, true, "Có lỗi xảy ra", 200)
-		return response(deletedCourse, false, "Xoá gói học thành công", 200)
+		return response(
+			{},
+			false,
+			!!IsDeleted
+				? "Ẩn khóa học thành công"
+				: "Hiện khóa học thành công"
+			,
+			200
+		)
 	} catch (error: any) {
 		return response({}, true, error.toString(), 500)
 	}

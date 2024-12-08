@@ -3,7 +3,6 @@ import Account from "../models/account"
 import User from "../models/user"
 import bcrypt from "bcrypt"
 import { Roles } from "../utils/constant"
-import { encodeData, randomPassword } from "../utils/commonFunction"
 import sendEmail from "../utils/send-mail"
 import { getOneDocument } from "../utils/queryFunction"
 import {
@@ -12,6 +11,8 @@ import {
   RegisterDTO
 } from "../dtos/account.dto"
 import response from "../utils/response"
+import { randomPassword } from "../utils/randomUtils"
+import { encodeData } from "../utils/tokenUtils"
 const saltRounds = 10
 
 const fncRegister = async (req: Request, res: Response) => {

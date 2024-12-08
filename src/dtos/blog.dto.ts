@@ -1,5 +1,5 @@
 import { ObjectId } from "mongoose"
-import { CommonDTO } from "./common.dto"
+import { CommonDTO, PaginationDTO } from "./common.dto"
 
 export interface CreateUpdateBlogDTO {
   User: ObjectId,
@@ -7,7 +7,7 @@ export interface CreateUpdateBlogDTO {
   Gender: number[],
   Title: string,
   Price: number,
-  Content: string,
+  ExpensePrice: number,
   NumberSlot: number,
   LearnType: number[],
   Address: string,
@@ -15,8 +15,8 @@ export interface CreateUpdateBlogDTO {
   ProfessionalLevel: number,
   Schedules: {
     DateValue: number,
-    StartTime: string,
-    EndTime: string
+    StartTime: Date,
+    EndTime: Date
   }[],
   BlogID?: ObjectId
 }
@@ -39,4 +39,10 @@ export interface ChangeRegisterStatusDTO {
   Email: string,
   Reason?: string,
   RegisterStatus: number
+}
+
+export interface GetListBlogApprovalDTO extends PaginationDTO {
+  SubjectID: ObjectId,
+  ReceiveStatus: number,
+  ReceiveDate: Date
 }

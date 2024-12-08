@@ -12,21 +12,21 @@ import SubjectSetting from '../../src/models/subjectsetting';
 import { Socket } from 'net';
 
 describe('fncGetDetailProfile', () => {
-    let sandbox: sinon.SinonSandbox;
+    let sandbox: sinon.SinonSandbox
 
     beforeEach(() => {
-        sandbox = sinon.createSandbox();
-    });
+        sandbox = sinon.createSandbox()
+    })
 
     afterEach(() => {
-        sandbox.restore();
-    });
+        sandbox.restore()
+    })
 
     it('should successfully retrieve user profile details', async () => {
-        const validUserId = new mongoose.Types.ObjectId(); // Generate a valid ObjectId
+        const validUserId = new mongoose.Types.ObjectId() // Generate a valid ObjectId
         const req = {
             user: { ID: validUserId.toString() },
-        } as Partial<Request>;
+        } as Partial<Request>
 
         const mockUserData = [
             {
@@ -44,25 +44,25 @@ describe('fncGetDetailProfile', () => {
                 ],
                 Email: 'john.doe@example.com',
             },
-        ];
+        ]
 
-        const aggregateStub = sandbox.stub(User, 'aggregate').resolves(mockUserData);
+        const aggregateStub = sandbox.stub(User, 'aggregate').resolves(mockUserData)
 
-        const response = await UserSerivce.fncGetDetailProfile(req as Request);
+        const response = await UserSerivce.fncGetDetailProfile(req as Request)
 
         // Assertions
-        expect(aggregateStub.calledOnce).to.be.true;
-        expect(response.isError).to.be.false;
-        expect(response.msg).to.equal('Lấy ra thành công');
-        expect(response.statusCode).to.equal(200);
-        expect(response.data).to.deep.equal(mockUserData[0]);
-    });
+        expect(aggregateStub.calledOnce).to.be.true
+        expect(response.isError).to.be.false
+        expect(response.msg).to.equal('Lấy ra thành công')
+        expect(response.statusCode).to.equal(200)
+        expect(response.data).to.deep.equal(mockUserData[0])
+    })
 
     it('should return an error if no user is found', async () => {
-        const validUserId = new mongoose.Types.ObjectId();
+        const validUserId = new mongoose.Types.ObjectId()
         const req = {
             user: { ID: validUserId.toString() },
-        } as Partial<Request>;
+        } as Partial<Request>
 
         // Mock the getDetailProfile function to return a response with error
         const getDetailProfileStub = sandbox.stub(UserSerivce, 'fncGetDetailProfile').resolves({
@@ -70,11 +70,11 @@ describe('fncGetDetailProfile', () => {
             isError: true,
             msg: 'Có lỗi xảy ra', // Simulate error message when no user found
             statusCode: 200,
-        });
+        })
 
         // Call the service method
-        const response = await UserSerivce.fncGetDetailProfile(req as Request);
-        console.log('response', response);
+        const response = await UserSerivce.fncGetDetailProfile(req as Request)
+        console.log('response', response)
 
         // Assertions
         expect(getDetailProfileStub.calledOnce).to.be.true; // Verify that getDetailProfile was called

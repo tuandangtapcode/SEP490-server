@@ -3,7 +3,7 @@ import Confirm from "../models/confirm"
 
 const checkConfirmExpire = async () => {
   try {
-    console.log("cron job checkConfirmExpire");
+    console.log("cron job checkConfirmExpire")
     const confirms = await Confirm
       .find({
         $or: [

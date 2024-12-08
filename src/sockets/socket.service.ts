@@ -21,7 +21,7 @@ const addUserOnline = (socket: any) => {
           SocketID: socket.id
         })
       }
-      console.log("userOnlines", userOnlines);
+      console.log("userOnlines", userOnlines)
     }
   }
 }
@@ -43,7 +43,6 @@ const sendFeedback = (io: any) => {
 
 const sendDeactiveAccount = (socket: any) => {
   return (data: String) => {
-    // io.sockets.emit('get-deactive', data)
   }
 }
 
@@ -65,13 +64,6 @@ const sendMessage = (socket: any) => {
     if (!!user) {
       socket.to(user.SocketID).emit("get-message", data)
     }
-  }
-}
-
-const userLogout = () => {
-  return (data: String) => {
-    const index = userOnlines.findIndex((i: any) => i.UserID === data)
-    userOnlines.splice(index, 1)
   }
 }
 
@@ -126,6 +118,16 @@ const sendNotedConfirm = (socket: any) => {
   }
 }
 
+const changeReceiveStatus = (socket: any) => {
+  return (data: any) => {
+    const user = userOnlines.find((i: any) => i.UserID === data.Receiver)
+    console.log("user", user);
+    if (!!user) {
+      socket.to(user.SocketID).emit('listen-change-receive-status', data)
+    }
+  }
+}
+
 const SocketService = {
   addUserOnline,
   sendNotification,
@@ -134,13 +136,13 @@ const SocketService = {
   joinRoom,
   leaveRoom,
   sendMessage,
-  userLogout,
   joinMeetingRoom,
   toggleHandler,
   inactiveAccount,
   leaveMeetingRoom,
   sendMessageMeetingRoom,
-  sendNotedConfirm
+  sendNotedConfirm,
+  changeReceiveStatus
 }
 
 export default SocketService

@@ -71,8 +71,9 @@ export interface UpdateSubjectSettingDTO {
     StartDate: string,
     EndDate: string
   }[],
-  Price: string,
-  LearnTypes: number[]
+  Price: number,
+  LearnTypes: number[],
+  ExpensePrice: number
 }
 
 export interface ConfirmSubjectSettingDTO {

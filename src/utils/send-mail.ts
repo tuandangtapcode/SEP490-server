@@ -17,7 +17,7 @@ const sendEmail = async (to: string, subject: string, content: string, attachmen
 
   transporter.verify((error, success) => {
     if (error) {
-      console.log("error", error.toString());
+      console.log("error", error.toString())
       return false
     }
   })
