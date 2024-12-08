@@ -7,6 +7,9 @@ import User from "../models/user"
 import SubjectSetting from "../models/subjectsetting"
 import Payment from "../models/payment"
 import Account from "../models/account"
+import BankingInfor from "../models/bankinginfor"
+import LearnHistory from "../models/learnhistory"
+import Notification from "../models/notification"
 
 const UserRoute = express.Router()
 
@@ -106,13 +109,23 @@ UserRoute.get("/resetPasswordAccountStaff/:UserID",
   UserController.resetPasswordAccountStaff
 )
 UserRoute.get("/updatePrice", async (req: Request, res: Response) => {
-  const account = await Account.find().lean()
-  const user = await User.find({
-    _id: {
-      $nin: account.map((a: any) => a.UserID)
+  const account = await User.find().lean()
+  const list = await Account.find({
+    UserID: {
+      $nin: account.map((i: any) => i._id)
     }
   })
-  return res.status(200).json("Update thanfh cong")
+  // let updateList = [] as any[]
+  // account.forEach((i: any) => {
+  //   updateList.push(
+  //     User.updateOne(
+  //       { _id: i._id },
+  //       { $unset: { Subjects: "" } }
+  //     )
+  //   )
+  // })
+  // await Promise.all(updateList)
+  return res.status(200).json({ list, total: list.length })
 })
 
 export default UserRoute

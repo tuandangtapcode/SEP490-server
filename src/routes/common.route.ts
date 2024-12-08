@@ -44,5 +44,8 @@ CommonRoute.post("/getListTabs",
   ]),
   CommonController.getListTabs
 )
+CommonRoute.get("/getTotalUserAndSubject",
+  CommonController.getTotalUserAndSubject
+)
 
 export default CommonRoute

@@ -32,6 +32,10 @@ const LearnHistorySchema = new Schema({
   LearnedStatus: {
     type: Number,
     default: 1
+  },
+  IsDeleted: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

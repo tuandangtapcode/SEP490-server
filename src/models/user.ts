@@ -30,12 +30,6 @@ const UserSchema = new Schema({
     type: Number,
     default: null
   },
-  Subjects: {
-    type: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Subjects" }
-    ],
-    default: []
-  },
   Experiences: {
     type: [
       { type: String }
