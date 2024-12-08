@@ -29,7 +29,6 @@ const getProfitPercent = async (req: Request, res: Response) => {
   }
 }
 
-
 const changeProfitPercent = async (req: Request, res: Response) => {
   try {
     const response = await CommonService.fncChangeProfitPercent(req)
@@ -66,6 +65,14 @@ const chatbot = async (req: Request, res: Response) => {
   }
 }
 
+const getTotalUserAndSubject = async (req: Request, res: Response) => {
+  try {
+    const response = await CommonService.fncGetTotalUserAndSubject()
+    return res.status(response.statusCode).json(response)
+  } catch (error: any) {
+    return res.status(500).json(error.toString())
+  }
+}
 const CommonController = {
   getListSystemKey,
   createSystemKey,
@@ -73,7 +80,8 @@ const CommonController = {
   changeProfitPercent,
   insertParentKey,
   getListTabs,
-  chatbot
+  chatbot,
+  getTotalUserAndSubject
 }
 
 export default CommonController

@@ -58,9 +58,9 @@ export const selectFieldForTeacher = {
 
 export const selectFieldForStudent = {
   forAggregate: {
-    Subjects: 1
+    // Subjects: 1
   },
-  forFind: "Subjects"
+  forFind: ""
 }
 
 const fncGetDetailProfile = async (req: Request) => {
@@ -158,8 +158,6 @@ const fncGetListTeacher = async (req: Request) => {
     if (!!RegisterStatus) {
       queryUser.RegisterStatus = RegisterStatus
     }
-    console.log("query", queryUser);
-
     const users = User.aggregate([
       {
         $match: queryUser
@@ -173,6 +171,7 @@ const fncGetListTeacher = async (req: Request) => {
           pipeline: [
             {
               $project: {
+                _id: 1,
                 Email: 1,
                 IsActive: 1
               }
@@ -190,6 +189,7 @@ const fncGetListTeacher = async (req: Request) => {
           pipeline: [
             {
               $project: {
+                _id: 1,
                 BankID: 1,
                 UserBankAccount: 1,
                 UserBankName: 1
@@ -1158,6 +1158,7 @@ const fncGetListAccountStaff = async (req: Request) => {
           pipeline: [
             {
               $project: {
+                _id: 1,
                 Email: 1,
                 IsActive: 1
               }

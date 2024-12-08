@@ -7,6 +7,8 @@ import { getOneDocument } from "../utils/queryFunction"
 import { Roles } from "../utils/constant"
 import TimeTable from "../models/timetable"
 import SubjectSetting from "../models/subjectsetting"
+import User from "../models/user"
+import Subject from "../models/subject"
 
 const getTabs = (RoleID: number, IsByGoogle: boolean) => {
   let tabs = [] as any[]
@@ -113,13 +115,33 @@ const fncGetListTabs = async (req: Request) => {
   }
 }
 
+const fncGetTotalUserAndSubject = async () => {
+  try {
+    const totalTeacher = await User.countDocuments({
+      RoleID: 3,
+      RegisterStatus: 3
+    })
+    const totalStudent = await User.countDocuments({
+      RoleID: 4,
+      RegisterStatus: 3
+    })
+    const totalSubject = await Subject.countDocuments({
+      IsDeleted: false
+    })
+    return response({ totalTeacher, totalStudent, totalSubject }, false, 'Lấy data thành công', 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const CommonService = {
   fncGetListSystemKey,
   fncCreateSystemKey,
   fncGetProfitPercent,
   fncChangeProfitPercent,
   fncInsertParentKey,
-  fncGetListTabs
+  fncGetListTabs,
+  fncGetTotalUserAndSubject
 }
 
 export default CommonService

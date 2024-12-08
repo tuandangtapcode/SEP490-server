@@ -27,6 +27,10 @@ const NotificationSchema = new Schema({
   IsNew: {
     type: Boolean,
     default: true
+  },
+  IsDeleted: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true
