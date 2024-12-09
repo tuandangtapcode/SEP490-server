@@ -39,7 +39,7 @@ const fncCreateBlog = async (req: Request) => {
       })
     })
     if (!!checkExistSchedules.length)
-      return response(checkExistSchedules, true, "Lịch học của bạn đã trùng với 1 bài đăng khác", 200)
+      return response(checkExistSchedules, true, "Lịch học của bạn đã trùng với bài đăng khác", 200)
     const timetables = await TimeTable
       .find({
         Student: UserID,
@@ -148,6 +148,14 @@ const fncGetDetailBlog = async (req: Request) => {
                 localField: "_id",
                 foreignField: "UserID",
                 as: "Account",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      Email: 1,
+                    }
+                  }
+                ]
               }
             },
             { $unwind: '$Account' },
@@ -193,29 +201,29 @@ const fncGetDetailBlog = async (req: Request) => {
           IsPaid: { $first: "$IsDeleted" },
         }
       },
-      {
-        $addFields: {
-          TeacherReceive: {
-            $filter: {
-              input: "$TeacherReceive",
-              as: "item",
-              cond: { $ne: ["$$item", {}] }
-            }
-          }
-        }
-      },
+      // {
+      //   $addFields: {
+      //     TeacherReceive: {
+      //       $filter: {
+      //         input: "$TeacherReceive",
+      //         as: "item",
+      //         cond: { $ne: ["$$item", {}] }
+      //       }
+      //     }
+      //   }
+      // },
     ])
-    const teacher = blog[0].TeacherReceive.find((i: any) => i.ReceiveStatus === 3)
-    if (!teacher) return response({}, true, "Booking chưa được phép thanh toán", 200)
-    const data = {
-      TotalFee: blog[0].Price * blog[0].NumberSlot,
-      Receiver: teacher,
-      Subject: blog[0].Subject,
-      Schedules: blog[0].RealSchedules,
-      IsPaid: blog[0].IsPaid,
-      LearnType: blog[0].LearnType[0]
-    }
-    return response(data, false, "Blog tồn tại", 200)
+    // const teacher = blog[0].TeacherReceive.find((i: any) => i.ReceiveStatus === 3)
+    // if (!teacher) return response({}, true, "Booking chưa được phép thanh toán", 200)
+    // const data = {
+    //   TotalFee: blog[0].Price * blog[0].NumberSlot,
+    //   Receiver: teacher,
+    //   Subject: blog[0].Subject,
+    //   Schedules: blog[0].RealSchedules,
+    //   IsPaid: blog[0].IsPaid,
+    //   LearnType: blog[0].LearnType[0]
+    // }
+    return response(blog[0], false, "Blog tồn tại", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -223,16 +231,13 @@ const fncGetDetailBlog = async (req: Request) => {
 
 const fncGetListBlogByTeacher = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, SubjectID, LearnType, RoleID, UserID } = req.body as GetListBlogDTO
+    const { TextSearch, CurrentPage, PageSize, SubjectID } = req.body as GetListBlogDTO
     let query = {
       RegisterStatus: 3,
       IsDeleted: false
     } as any
     if (!!SubjectID) {
       query.Subject = new mongoose.Types.ObjectId(`${SubjectID}`)
-    }
-    if (!!LearnType) {
-      query.LearnType = LearnType
     }
     if (!!TextSearch) {
       query.Title = { $regex: TextSearch, $options: "i" }
@@ -288,6 +293,15 @@ const fncGetListBlog = async (req: Request) => {
                 localField: "_id",
                 foreignField: "UserID",
                 as: "Account",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      Email: 1,
+                      IsActive: 1
+                    }
+                  }
+                ]
               }
             },
             { $unwind: '$Account' },
@@ -508,7 +522,14 @@ const fncDeleteBlog = async (req: Request) => {
       { new: true }
     )
     if (!deletedBlog) return response({}, true, "Bài viết không tồn tại", 200)
-    return response(deletedBlog, false, "Xoá bài viết thành công", 200)
+    return response(
+      {},
+      false,
+      !!IsDeleted
+        ? "Ẩn bài viết thành công"
+        : "Hiện bài viết thành công",
+      200
+    )
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -563,9 +584,13 @@ const fncGetListBlogByUser = async (req: Request) => {
         IsConfirm: t.ReceiveStatus === 1 ? false : true,
         IsReject: t.ReceiveStatus === 1 ? false : true,
       })),
-      IsPaid: !i.IsPaid
+      IsPayment: !i.IsPaid
         ? !!i.TeacherReceive.some((t: any) => t.ReceiveStatus === 3)
-        : false
+        : false,
+      IsDisabled: new Date() > new Date(i.StartDate) || !!i.TeacherReceive.length
+        ? false
+        : true
+
     }))
     return response(
       { List: data, Total: result[1] },
@@ -586,6 +611,8 @@ const fncSendRequestReceive = async (req: Request) => {
     let checkExistSchedules = [] as any[]
     const blog = await getOneDocument(Blog, "_id", BlogID)
     if (!blog) return response({}, true, "Blog không tồn tại", 200)
+    const teacher = blog.TeacherReceive.find((i: any) => i.Teacher.equals(UserID))
+    if (!!teacher) return response({}, true, "Bạn đã đăng ký lớp học này", 200)
     const realSchdules = getRealScheduleForBlog(blog.NumberSlot, blog.Schedules, blog.StartDate)
     const timetables = await TimeTable
       .find({

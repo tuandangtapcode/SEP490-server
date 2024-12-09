@@ -111,7 +111,19 @@ const fncStatisticNewRegisteredUser = async (req: Request) => {
           200
         )
       default:
-        return response({}, true, "Key không tồn tại", 404)
+        teacher = User.countDocuments({
+          RoleID: Roles.ROLE_TEACHER
+        })
+        student = User.countDocuments({
+          RoleID: Roles.ROLE_STUDENT
+        })
+        result = await Promise.all([teacher, student])
+        return response(
+          getResultData(result[0], result[1]),
+          false,
+          "Lấy data thành công",
+          200
+        )
     }
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

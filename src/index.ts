@@ -14,6 +14,7 @@ import schedule from "node-schedule"
 import getListPaymentInCurrentWeek from "./tools/getListPaymentInCurrentWeek"
 import socket from "./sockets/index"
 import checkConfirmExpire from "./tools/checkConfirmExpire"
+import checkBlogExpire from "./tools/checkBlogExpire"
 
 const app = express()
 const server = http.createServer(app)
@@ -59,6 +60,7 @@ schedule.scheduleJob('0 23 * * 0', () => {
 // đặt lịch tự động gọi hàm kiểm tra confirm hết hạn và update trạng thái
 schedule.scheduleJob('0 0 * * *', () => {
   checkConfirmExpire()
+  checkBlogExpire()
 })
 
 socket(io)

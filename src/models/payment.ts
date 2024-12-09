@@ -42,13 +42,13 @@ const PaymentSchema = new Schema({
     type: Date,
     default: new Date()
   },
-  RequestAxplanationAt: {
-    type: Date,
-    default: null
-  },
   Percent: {
     type: Number,
     required: true
+  },
+  IsDeleted: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

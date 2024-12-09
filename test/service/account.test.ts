@@ -3,7 +3,7 @@ import sinon from 'sinon'
 import { Request, Response } from 'express'
 import AccountService from '../../src/services/account.service'
 import * as queryFunction from '../../src/utils/queryFunction'
-import * as commonFunction from '../../src/utils/commonFunction'
+import * as commonFunction from '../../src/utils/tokenUtils'
 import * as response from '../../src/utils/response'
 import proxyquire from 'proxyquire'
 
