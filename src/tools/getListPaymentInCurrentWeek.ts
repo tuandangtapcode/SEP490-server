@@ -5,11 +5,13 @@ import { Roles } from "../utils/constant"
 import TimeTable from "../models/timetable"
 import { getCurrentWeekRange } from "../utils/dateUtils"
 import { randomNumber } from "../utils/randomUtils"
+import ProfitPercent from "../models/profitpercent"
 
 const getListPaymentInCurrentWeek = async () => {
   try {
     console.log("cron job getListPaymentInCurrentWeek")
     const { startOfWeek, endOfWeek } = getCurrentWeekRange()
+    const profitPercent = await ProfitPercent.find().lean()
     const timetables = await TimeTable.aggregate([
       {
         $match: {
@@ -53,8 +55,8 @@ const getListPaymentInCurrentWeek = async () => {
       },
     ])
     let teacherReported = [] as any
-    timetables.forEach((i: any) => {
-      if (!!i.TimeTables.length) {
+    if (!!timetables.length) {
+      timetables.forEach((i: any) => {
         const newPayment = Payment.create({
           Sender: ADMIN_ID,
           Receiver: i.TeacherID,
@@ -63,12 +65,13 @@ const getListPaymentInCurrentWeek = async () => {
           TotalFee: i.TotalPrice,
           Description: `Thanh toán tiền dạy học cho giảng viên ${i.TeacherName}`,
           PaymentStatus: 1,
-          PaymentMethod: 2
+          PaymentMethod: 2,
+          Percent: profitPercent[0].Percent
         })
         teacherReported.push(newPayment)
-      }
-    })
-    await Promise.all(teacherReported)
+      })
+      await Promise.all(teacherReported)
+    }
   } catch (error: any) {
     console.log("error cron job getListPaymentInCurrentWeek", error.toString())
   }

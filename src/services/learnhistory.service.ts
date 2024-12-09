@@ -292,7 +292,9 @@ const fncGetDetailLearnHistory = async (req: Request) => {
                 StartTime: 1,
                 EndTime: 1,
                 IsCancel: 1,
-                Teacher: 1
+                Teacher: 1,
+                Price: 1,
+                AttendanceTime: 1
               }
             }
           ]
@@ -330,7 +332,7 @@ const fncGetDetailLearnHistory = async (req: Request) => {
       ...learnHistory[0],
       Timetables: learnHistory[0].Timetables.map((i: any) => ({
         ...i,
-        IsDisabledAtendance: moment().isBetween(moment(i.EndTime), moment(i.EndTime).endOf("day")) ? false : true
+        // IsDisabledAtendance: moment().isBetween(moment(i.EndTime), moment(i.EndTime).endOf("day")) ? false : true
       }))
     }
     return response(data, false, "Lấy data thành công", 200)

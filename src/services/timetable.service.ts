@@ -240,9 +240,10 @@ const fncGetTimeTableByUser = async (req: Request) => {
         ? true
         : false,
       IsUpdateTimeTable: moment().isAfter(moment(i.StartTime).diff(12, "hours")) &&
-        moment().isBefore(moment(i.EndTime))
-        ? true
-        : false,
+        moment().isBefore(moment(i.StartTime)) ||
+        moment().isAfter(i.EndTime)
+        ? false
+        : true,
     }))
     return response({ List: data, ButtonShow }, false, "Lấy data thành công", 200)
   } catch (error: any) {
