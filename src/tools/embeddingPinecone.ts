@@ -75,6 +75,7 @@ const updateSubjectSetting = async (subjectSettingId: string) => {
 
 const processLearnHistory = async (userID: string) => {
   try {
+    console.log("chạy đến đây rồi")
     const learnHistory = await LearnHistory.find({ Student: userID })
       .populate("Subject", ["_id", "SubjectName", "Description"])
       .populate("Teacher", ["_id", "FullName", "Address", "Description", "Gender"])
@@ -87,15 +88,16 @@ const processLearnHistory = async (userID: string) => {
       `.trim()
     const embedding = await OpenaiService.generateEmbedding(text as string)
     const checkLearnHistory = await PineconeService.searchPineconeByID(userID)
+    console.log(checkLearnHistory)
     if (!checkLearnHistory[0]) {
-      await PineconeService.updateVector(userID, "learnhistory", embedding)
-    }
-    else {
       await PineconeService.upsertVector(userID, "learnhistory", embedding, {
         student: learnHistory.Student?.FullName || "",
         gender: learnHistory.Student?.Gender === 1 ? "Nam" : "Nữ",
         address: learnHistory.Student?.Address || "",
       })
+    }
+    else {
+      await PineconeService.updateVector(userID, "learnhistory", embedding)
     }
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -107,7 +109,13 @@ const processAllSubjectSettings = async () => {
   for (const subjectSetting of subjectSettings) {
     await processSubjectSetting(subjectSetting._id.toString())
   }
+}
 
+const processAllLearnHistory = async () => {
+  const learnHistory = await LearnHistory.find()
+  for (const LearnHistories of learnHistory) {
+    await processLearnHistory(LearnHistories.Student.toString())
+  }
 }
 
 const getQueryEmbedding = async (query: string): Promise<number[]> => {
@@ -335,6 +343,7 @@ const EmbeddingPinecone = {
   updateSubjectSetting,
   teacherRecommendation,
   teacherRecommendationByLearnHistory,
+  processAllLearnHistory
 }
 
 export default EmbeddingPinecone
