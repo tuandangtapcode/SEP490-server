@@ -86,14 +86,16 @@ const processLearnHistory = async (userID: string) => {
       TeacherInformation: ${learnHistory.Teacher?.Description || ""}
       `.trim()
     const embedding = await OpenaiService.generateEmbedding(text as string)
-    if (learnHistory.length === 1) {
+    const checkLearnHistory = await PineconeService.searchPineconeByID(userID)
+    if (!checkLearnHistory[0]) {
+      await PineconeService.updateVector(userID, "learnhistory", embedding)
+    }
+    else {
       await PineconeService.upsertVector(userID, "learnhistory", embedding, {
         student: learnHistory.Student?.FullName || "",
         gender: learnHistory.Student?.Gender === 1 ? "Nam" : "Nữ",
         address: learnHistory.Student?.Address || "",
       })
-    } else if (learnHistory.length > 1) {
-      await PineconeService.updateVector(userID, "learnhistory", embedding)
     }
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -118,7 +120,7 @@ const teacherRecommendationByLearnHistory = async (req: Request) => {
     const checkLearnHistoryExist = await LearnHistory.find({ Student: userID })
     if (checkLearnHistoryExist) {
       const learnHistory = await PineconeService.searchPineconeByID(userID)
-      if(!learnHistory[0]){
+      if (!learnHistory[0]) {
         return response({}, true, "không có data trong hệ thống", 200)
       }
       const queryEmbedding = learnHistory[0].values
