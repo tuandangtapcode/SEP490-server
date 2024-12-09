@@ -25,6 +25,9 @@ CommonRoute.post("/insertParentKey",
 CommonRoute.get("/processAllSubjectSetting",
   PineconeController.processAllSubjectSetting
 )
+CommonRoute.get("/processAllLearnHistory",
+  PineconeController.processAllLearnHistory
+)
 CommonRoute.post("/teacherRecommend",
   PineconeController.teacherRecommendation
 )

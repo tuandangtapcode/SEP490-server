@@ -75,6 +75,7 @@ const updateSubjectSetting = async (subjectSettingId: string) => {
 
 const processLearnHistory = async (userID: string) => {
   try {
+    console.log("chạy đến đây rồi")
     const learnHistory = await LearnHistory.find({ Student: userID })
       .populate("Subject", ["_id", "SubjectName", "Description"])
       .populate("Teacher", ["_id", "FullName", "Address", "Description", "Gender"])
@@ -86,13 +87,16 @@ const processLearnHistory = async (userID: string) => {
       TeacherInformation: ${learnHistory.Teacher?.Description || ""}
       `.trim()
     const embedding = await OpenaiService.generateEmbedding(text as string)
-    if (learnHistory.length === 1) {
+    const checkLearnHistory = await PineconeService.searchPineconeByID(userID)
+    console.log(checkLearnHistory)
+    if (!checkLearnHistory[0]) {
       await PineconeService.upsertVector(userID, "learnhistory", embedding, {
         student: learnHistory.Student?.FullName || "",
         gender: learnHistory.Student?.Gender === 1 ? "Nam" : "Nữ",
         address: learnHistory.Student?.Address || "",
       })
-    } else if (learnHistory.length > 1) {
+    }
+    else {
       await PineconeService.updateVector(userID, "learnhistory", embedding)
     }
   } catch (error: any) {
@@ -105,7 +109,13 @@ const processAllSubjectSettings = async () => {
   for (const subjectSetting of subjectSettings) {
     await processSubjectSetting(subjectSetting._id.toString())
   }
+}
 
+const processAllLearnHistory = async () => {
+  const learnHistory = await LearnHistory.find()
+  for (const LearnHistories of learnHistory) {
+    await processLearnHistory(LearnHistories.Student.toString())
+  }
 }
 
 const getQueryEmbedding = async (query: string): Promise<number[]> => {
@@ -118,7 +128,7 @@ const teacherRecommendationByLearnHistory = async (req: Request) => {
     const checkLearnHistoryExist = await LearnHistory.find({ Student: userID })
     if (checkLearnHistoryExist) {
       const learnHistory = await PineconeService.searchPineconeByID(userID)
-      if(!learnHistory[0]){
+      if (!learnHistory[0]) {
         return response({}, true, "không có data trong hệ thống", 200)
       }
       const queryEmbedding = learnHistory[0].values
@@ -333,6 +343,7 @@ const EmbeddingPinecone = {
   updateSubjectSetting,
   teacherRecommendation,
   teacherRecommendationByLearnHistory,
+  processAllLearnHistory
 }
 
 export default EmbeddingPinecone
