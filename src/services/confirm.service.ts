@@ -425,7 +425,7 @@ const fncGetListConfirm = async (req: Request) => {
       ...i,
       // IsUpdate: RoleID === Roles.ROLE_TEACHER || i.ConfirmStatus !== 1 ? false : true,
       IsConfirm: RoleID !== Roles.ROLE_TEACHER || [1, 2, 3].includes(i.ConfirmStatus) ? false : true,
-      IsPaid: RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 2 && !i.IsPaid
+      IsPayment: RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 2 && !i.IsPaid
         ? true
         : false,
       IsReject: (RoleID === Roles.ROLE_STUDENT && i.ConfirmStatus === 1) ||

@@ -26,8 +26,8 @@ SubjectRoute.get("/deleteSubject/:SubjectID",
 SubjectRoute.get("/getDetailSubject/:SubjectID",
   SubjectController.getDetailSubject
 )
-SubjectRoute.post("/getListRecommendSubject",
-  SubjectController.getListRecommendSubject
+SubjectRoute.get("/getListTopSubject",
+  SubjectController.getListTopSubject
 )
 
 export default SubjectRoute

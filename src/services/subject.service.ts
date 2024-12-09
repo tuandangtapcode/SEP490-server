@@ -7,6 +7,7 @@ import {
   GetListSubjectDTO,
 } from "../dtos/subject.dto"
 import mongoose, { ObjectId } from "mongoose"
+import Confirm from "../models/confirm"
 
 const fncCreateSubject = async (req: Request) => {
   try {
@@ -89,19 +90,55 @@ const fncDeleteSubject = async (req: Request) => {
 const fncGetDetailSubject = async (req: Request) => {
   try {
     const SubjectID = req.params.SubjectID
+    if (!mongoose.Types.ObjectId.isValid(`${SubjectID}`)) {
+      return response({}, true, "ID môn học không tồn tại", 200)
+    }
     const subject = await getOneDocument(Subject, "_id", SubjectID)
     if (!subject) return response({}, true, "Môn học không tồn tại", 200)
-    return response(subject, true, "tìm kiếm môn học thành công", 200)
+    return response(subject, false, "tìm kiếm môn học thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
 }
 
-const fncGetListRecommendSubject = async (req: Request) => {
+const fncGetListTopSubject = async () => {
   try {
-    const subjects = await Subject
-      .find()
-      .limit(8)
+    const subjects = await Confirm.aggregate([
+      {
+        $group: {
+          _id: "$Subject",
+          Total: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "_id",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      {
+        $sort:
+          { Total: -1 }
+      },
+      { $limit: 8 },
+      {
+        $project: {
+          SubjectName: "$Subject.SubjectName",
+          Total: 1
+        }
+      }
+    ])
     return response(subjects, false, "Lấy data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -114,7 +151,7 @@ const SubjectService = {
   fncUpdateSubject,
   fncDeleteSubject,
   fncGetDetailSubject,
-  fncGetListRecommendSubject
+  fncGetListTopSubject
 }
 
 export default SubjectService

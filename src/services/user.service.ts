@@ -287,8 +287,6 @@ const fncGetListTeacherByUser = async (req: Request) => {
       RegisterStatus: 3,
       IsDisabled: false
     } as any
-    const subject = await getOneDocument(Subject, "_id", SubjectID)
-    if (!subject) return response({}, true, "Có lỗi xảy ra", 200)
     if (!!Level.length) {
       query.Levels = { $in: Level }
     }
@@ -315,6 +313,11 @@ const fncGetListTeacherByUser = async (req: Request) => {
         }
       },
       {
+        $addFields: {
+          TotalVotes: { $sum: "$Votes" }
+        }
+      },
+      {
         $lookup: {
           from: "users",
           localField: "Teacher",
@@ -322,13 +325,25 @@ const fncGetListTeacherByUser = async (req: Request) => {
           as: "Teacher",
           pipeline: [
             {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
+              }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                IsActive: "$Account.IsActive",
+              }
+            },
+            {
               $project: {
-                _id: 1,
                 FullName: 1,
-                RegisterStatus: 1,
-                Gender: 1,
                 AvatarPath: 1,
-                Address: 1,
+                RegisterStatus: 1,
+                IsActive: 1,
               }
             }
           ]
@@ -336,18 +351,39 @@ const fncGetListTeacherByUser = async (req: Request) => {
       },
       { $unwind: "$Teacher" },
       {
-        $match: teacherQuery
+        $match: {
+          "Teacher.RegisterStatus": 3,
+          "Teacher.IsActive": true,
+        }
       },
       {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      {
         $project: {
+          _id: 1,
+          Subject: 1,
+          Levels: 1,
           Price: 1,
+          LearnTypes: 1,
           Teacher: 1,
           TotalVotes: 1,
           Votes: 1
         }
-      },
-      {
-        $sort: { Price: SortByPrice }
       },
       { $skip: (CurrentPage - 1) * PageSize },
       { $limit: PageSize }
@@ -392,7 +428,6 @@ const fncGetListTeacherByUser = async (req: Request) => {
     const result = await Promise.all([teachers, total])
     return response(
       {
-        Subject: subject,
         List: result[0],
         Total: !!result[1].length ? result[1][0].total : 0
       },
@@ -773,6 +808,25 @@ const fncResponseConfirmSubjectSetting = async (req: Request) => {
 
 const fncGetListTopTeacher = async (req: Request) => {
   try {
+    const { IsBlogPage } = req.body
+    const selectFiled = !!IsBlogPage
+      ? {
+        _id: 1,
+        Subject: 1,
+        Teacher: 1,
+        TotalVotes: 1,
+        Votes: 1
+      }
+      : {
+        _id: 1,
+        Subject: 1,
+        Levels: 1,
+        Price: 1,
+        LearnTypes: 1,
+        Teacher: 1,
+        TotalVotes: 1,
+        Votes: 1
+      }
     const topTeachers = await SubjectSetting.aggregate([
       {
         $match: {
@@ -842,25 +896,22 @@ const fncGetListTopTeacher = async (req: Request) => {
       },
       { $unwind: "$Subject" },
       {
-        $project: {
-          _id: 1,
-          Subject: 1,
-          Levels: 1,
-          Price: 1,
-          LearnTypes: 1,
-          Teacher: 1,
-          TotalVotes: 1,
-          Votes: 1
-        }
+        $project: selectFiled
       },
-      { $limit: 8 },
+      { $limit: !!IsBlogPage ? 3 : 8 },
       {
         $sort: {
           TotalVotes: -1
         }
       },
     ])
-    return response(topTeachers, false, "Lấy data thành công", 200)
+    let data = [] as any[]
+    topTeachers.forEach((i: any) => {
+      if (!!i.Votes.length) {
+        data.push(i)
+      }
+    })
+    return response(data, false, "Lấy data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }

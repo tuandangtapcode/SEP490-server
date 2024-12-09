@@ -10,6 +10,7 @@ import Account from "../models/account"
 import BankingInfor from "../models/bankinginfor"
 import LearnHistory from "../models/learnhistory"
 import Notification from "../models/notification"
+import Subject from "../models/subject"
 
 const UserRoute = express.Router()
 
@@ -74,7 +75,7 @@ UserRoute.post("/responseConfirmSubjectSetting",
   authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   UserController.responseConfirmSubjectSetting
 )
-UserRoute.get("/getListTopTeacher",
+UserRoute.post("/getListTopTeacher",
   UserController.getListTopTeacher
 )
 UserRoute.post("/changeCareerInformation",
@@ -109,23 +110,27 @@ UserRoute.get("/resetPasswordAccountStaff/:UserID",
   UserController.resetPasswordAccountStaff
 )
 UserRoute.get("/updatePrice", async (req: Request, res: Response) => {
-  const account = await User.find().lean()
-  const list = await Account.find({
-    UserID: {
-      $nin: account.map((i: any) => i._id)
-    }
-  })
+  // const account = await Subject.find().lean()
+  // const list = await Subject.find({
+  //   UserID: {
+  //     $nin: account.map((i: any) => i._id)
+  //   }
+  // })
   // let updateList = [] as any[]
   // account.forEach((i: any) => {
   //   updateList.push(
-  //     User.updateOne(
+  //     Subject.updateOne(
   //       { _id: i._id },
-  //       { $unset: { Subjects: "" } }
+  //       { Description: `${i.SubjectName} là một nhạc cụ tuyệt vời, phù hợp với mọi lứa tuổi và không yêu cầu kinh nghiệm trước đó, nhưng sẽ đặc biệt thích hợp với những người kiên nhẫn, tỉ mỉ và có tinh thần kỷ luật. Học piano không chỉ đòi hỏi đam mê với âm nhạc mà còn cần khả năng tập trung, sự chăm chỉ luyện tập và mong muốn cải thiện bản thân. Dù bạn là người sáng tạo, thích thử thách hay đơn giản tìm kiếm niềm vui, hành trình chinh phục những phím đàn sẽ giúp bạn phát triển kỹ năng tư duy, cảm xúc và khả năng biểu đạt âm nhạc một cách đầy cảm hứng.` }
   //     )
   //   )
   // })
   // await Promise.all(updateList)
-  return res.status(200).json({ list, total: list.length })
+  const result = await SubjectSetting.updateMany(
+    { Votes: { $exists: false } }, // Điều kiện: Tài liệu không có trường Votes
+    { $set: { Votes: [] } }        // Thêm trường Votes với giá trị là mảng rỗng
+  )
+  return res.status(200).json("Update thành công")
 })
 
 export default UserRoute

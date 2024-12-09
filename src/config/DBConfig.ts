@@ -4,7 +4,7 @@ dotenv.config()
 
 const connect = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI_AZURE as string)
+    await mongoose.connect(process.env.MONGODB_URI_CLOUD as string)
     console.log("Connect successfully!!")
   } catch (error) {
     console.log("Connect failures!!")
