@@ -123,12 +123,27 @@ const createAccountStaff = async (req: Request, res: Response, next: NextFunctio
   }
 }
 
+const updateAccountStaff = async (req: Request, res: Response, next: NextFunction) => {
+  const trueCondition = Joi.object({
+    FullName: Joi.string().min(1).required(),
+    Phone: Joi.string().pattern(getRegexPhoneNumber()).required(),
+    UserID: Joi.string().pattern(getRegexObjectID()).required()
+  })
+  try {
+    await trueCondition.validateAsync(req.body, { abortEarly: false })
+    next()
+  } catch (error: any) {
+    return res.status(400).json(error.toString())
+  }
+}
+
 const UserValidation = {
   updateSubjectSetting,
   changeProfile,
   changeCareerInformation,
   updateSchedule,
-  createAccountStaff
+  createAccountStaff,
+  updateAccountStaff
 }
 
 export default UserValidation

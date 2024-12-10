@@ -9,13 +9,11 @@ describe('fncCreateBankingInfor', () => {
     let sandbox: sinon.SinonSandbox
 
     beforeEach(() => {
-        sandbox = sinon.createSandbox() // Create a sandbox to reset stubs between tests
+        sandbox = sinon.createSandbox() 
     })
-
     afterEach(() => {
-        sandbox.restore() // Restore the sandbox after each test
+        sandbox.restore() 
     })
-
     it('should successfully create banking information', async () => {
         const req = {
             user: { ID: 'user123' },
@@ -25,8 +23,6 @@ describe('fncCreateBankingInfor', () => {
                 UserBankAccount: 987654321,
             },
         } as Partial<Request>
-
-        // Create a mock banking information object that will be returned as a Mongoose document
         const mockBankingInforData = {
             _id: new mongoose.Types.ObjectId(),
             User: new mongoose.Types.ObjectId(),
@@ -36,21 +32,11 @@ describe('fncCreateBankingInfor', () => {
             createdAt: new Date(),
             updatedAt: new Date(),
         }
-
-        // Create a Mongoose model for 'BankingInfor'
         const BankingInforModel = mongoose.model('BankingInfor', BankingInfor.schema)
-
-        // Create a mock instance of a Mongoose document using the model
         const mockBankingInforDoc = new BankingInforModel(mockBankingInforData)
-
-        // Stub the 'create' method to return the mock Mongoose document
         const createStub = sandbox.stub(BankingInfor, 'create').resolves([mockBankingInforDoc])
-
-        // Call the service function
         const response = await BankingInforService.fncCreateBankingInfor(req as Request)
-
-        // Assertions
-        expect(createStub.calledOnce).to.be.true // Ensure create is called once
+        expect(createStub.calledOnce).to.be.true 
         expect(response.isError).to.be.false
         expect(response.msg).to.equal('Tạo thông tin banking thành công')
         expect(response.statusCode).to.equal(201)
@@ -62,7 +48,7 @@ describe('fncCreateBankingInfor', () => {
     it('should return an error if creation fails', async () => {
         const userId = new mongoose.Types.ObjectId()
         const req = {
-            user: { ID: userId.toString() },  // Simulate the request with user data
+            user: { ID: userId.toString() }, 
             body: {
                 BankID: 1,
                 UserBankName: 'John Doe Bank',
@@ -70,13 +56,10 @@ describe('fncCreateBankingInfor', () => {
             },
         } as Partial<Request>
 
-        // Mock BankingInfor.create to simulate an error (e.g., validation failure)
         sandbox.stub(BankingInfor, 'create').rejects(new Error('Database error'))
 
-        // Call the service function
         const response = await BankingInforService.fncCreateBankingInfor(req as Request)
 
-        // Assertions
         expect(response.isError).to.be.true
         expect(response.msg).to.equal('Error: Database error')
         expect(response.statusCode).to.equal(500)

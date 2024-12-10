@@ -9,11 +9,11 @@ describe('fncCreateTimeTable', () => {
   let sandbox: sinon.SinonSandbox
 
   beforeEach(() => {
-    sandbox = sinon.createSandbox() // Create a sandbox to reset stubs between tests
+    sandbox = sinon.createSandbox() 
   })
 
   afterEach(() => {
-    sandbox.restore() // Restore the sandbox after each test
+    sandbox.restore() 
   })
 
   it('should successfully create a new timetable', async () => {
@@ -30,8 +30,6 @@ describe('fncCreateTimeTable', () => {
         },
       ],
     } as Partial<Request>
-
-    // Mock the insertMany function to simulate successful insertion
     const insertManyStub = sandbox.stub(TimeTable, 'insertMany').resolves([
       {
         Teacher: 'teacher123',
@@ -44,8 +42,6 @@ describe('fncCreateTimeTable', () => {
         _id: 'timetable123',
       },
     ])
-
-    // Mock the response utility directly, as it's the default export
     const responseStub = sandbox.stub(responsed, 'default').returns({
       data: [
         {
@@ -63,8 +59,6 @@ describe('fncCreateTimeTable', () => {
       msg: 'Thêm thành công',
       statusCode: 201,
     })
-
-    // Call the service method
     const response = await TimeTableService.fncCreateTimeTable(req as Request)
 
     // Assertions

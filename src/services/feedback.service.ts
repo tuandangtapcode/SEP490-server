@@ -1,3 +1,4 @@
+import { CommonDTO } from "../dtos/common.dto"
 import { CreateFeedbackDTO, GetListFeedbackOfTeacherDTO } from "../dtos/feedback.dto"
 import Feedback from "../models/feedback"
 import SubjectSetting from "../models/subjectsetting"
@@ -24,7 +25,8 @@ const fncGetListFeedbackOfTeacher = async (req: Request) => {
     const { CurrentPage, PageSize, TeacherID } =
       req.body as GetListFeedbackOfTeacherDTO
     let query = {
-      Teacher: TeacherID
+      Teacher: TeacherID,
+      IsDeleted: false
     }
     const feedbacks = Feedback
       .find(query)
@@ -62,16 +64,125 @@ const fncDeleteFeedback = async (req: Request) => {
 
 const fncGetListFeedback = async (req: Request) => {
   try {
-
-  } catch (error) {
-
+    const { TextSearch, CurrentPage, PageSize } = req.body as CommonDTO
+    const feedbacks = Feedback.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "User",
+          foreignField: "_id",
+          as: "User",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$User" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: {
+          $or: [
+            { "User.FullName": { $regex: TextSearch, $options: "i" } },
+            { "Teacher.FullName": { $regex: TextSearch, $options: "i" } }
+          ]
+        }
+      },
+      { $skip: (CurrentPage - 1) * PageSize },
+      { $limit: PageSize }
+    ])
+    const total = Feedback.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "User",
+          foreignField: "_id",
+          as: "User",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$User" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                FullName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: {
+          $or: [
+            { "User.FullName": { $regex: TextSearch, $options: "i" } },
+            { "Teacher.FullName": { $regex: TextSearch, $options: "i" } }
+          ]
+        }
+      },
+      {
+        $group: {
+          _id: "$_id"
+        }
+      },
+      {
+        $count: "total"
+      }
+    ])
+    const result = await Promise.all([feedbacks, total])
+    return response(
+      {
+        List: result[0],
+        Total: !!result[1].length ? result[1][0].total : 0,
+      },
+      false,
+      "Lay dat thanh cong",
+      200
+    )
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
   }
 }
 
 const FeedbackSerivce = {
   fncCreateFeedback,
   fncDeleteFeedback,
-  fncGetListFeedbackOfTeacher
+  fncGetListFeedbackOfTeacher,
+  fncGetListFeedback
 }
 
 export default FeedbackSerivce
