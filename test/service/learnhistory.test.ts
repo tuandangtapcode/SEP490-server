@@ -31,11 +31,7 @@ describe('fncCreateLearnHistory', () => {
         TotalLearned: 10,
       },
     } as Partial<Request>
-
-    // Stub email sending
     const sendEmailStub = sandbox.stub(sendEmail, 'default').resolves(true)
-
-    // Stub LearnHistory.create
     const mockLearnHistory = {
       _id: 'learnhistory123',
       Teacher: 'teacher123',
@@ -46,10 +42,7 @@ describe('fncCreateLearnHistory', () => {
       LearnedStatus: 1,
     }
     const createStub = sandbox.stub(LearnHistory, 'create').resolves(mockLearnHistory as any)
-
     const response = await LearnHistoryService.fncCreateLearnHistory(req as Request)
-
-    // Assertions
     expect(sendEmailStub.calledOnce).to.be.true
     expect(createStub.calledOnce).to.be.true
     expect(response.isError).to.be.false

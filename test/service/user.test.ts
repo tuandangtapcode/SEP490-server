@@ -64,22 +64,20 @@ describe('fncGetDetailProfile', () => {
             user: { ID: validUserId.toString() },
         } as Partial<Request>
 
-        // Mock the getDetailProfile function to return a response with error
         const getDetailProfileStub = sandbox.stub(UserSerivce, 'fncGetDetailProfile').resolves({
             data: {},
             isError: true,
-            msg: 'Có lỗi xảy ra', // Simulate error message when no user found
+            msg: 'Có lỗi xảy ra', 
             statusCode: 200,
         })
 
-        // Call the service method
         const response = await UserSerivce.fncGetDetailProfile(req as Request)
-        // Assertions
-        expect(getDetailProfileStub.calledOnce).to.be.true; // Verify that getDetailProfile was called
-        expect(response.isError).to.be.true; // Expect isError to be true as no user is found
-        expect(response.msg).to.equal('Có lỗi xảy ra'); // Message from your base function
-        expect(response.statusCode).to.equal(200); // Status code 200 as per your base function logic
-        expect(response.data).to.deep.equal({}); // Data should be empty if no user is found
+
+        expect(getDetailProfileStub.calledOnce).to.be.true; 
+        expect(response.isError).to.be.true; 
+        expect(response.msg).to.equal('Có lỗi xảy ra'); 
+        expect(response.statusCode).to.equal(200); 
+        expect(response.data).to.deep.equal({}); 
     });
 });
 
