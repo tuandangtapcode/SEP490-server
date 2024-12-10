@@ -76,14 +76,19 @@ const fncUpdateSubjectCate = async (req: Request) => {
 
 const fncDeleteSubjectCate = async (req: Request) => {
   try {
-    const { SubjectCateID } = req.params
+    const { SubjectCateID, IsDeleted } = req.body
     const deletedSubjectCate = await SubjectCate.findByIdAndUpdate(
       SubjectCateID,
-      { IsDeleted: true },
+      { IsDeleted: IsDeleted },
       { new: true }
     )
     if (!deletedSubjectCate) return response({}, true, "Có lỗi xảy ra", 200)
-    return response(deletedSubjectCate, false, "Xoá danh mục thành công", 200)
+    return response(
+      deletedSubjectCate,
+      false,
+      !!IsDeleted ? "Ẩn danh mục môn học thành công" : "Hiện danh mục môn học thành công",
+      200)
+
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -137,13 +142,37 @@ const fncGetListSubjectCateAndSubject = async () => {
   }
 }
 
+const fncGetListSubjectCateByAdmin = async (req: Request) => {
+  try {
+    const { TextSearch, CurrentPage, PageSize } = req.body as CommonDTO
+    const query = {
+      SubjectCateName: { $regex: TextSearch, $options: "i" },
+    }
+    const subjectCates = SubjectCate
+      .find(query)
+      .skip((CurrentPage - 1) * PageSize)
+      .limit(PageSize)
+    const total = SubjectCate.countDocuments(query)
+    const result = await Promise.all([subjectCates, total])
+    return response(
+      { List: result[0], Total: result[1] },
+      false,
+      "Lấy ra thành công",
+      200
+    )
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const SubjectCateService = {
   fncCreateSubjectCate,
   fncGetListSubjectCate,
   fncUpdateSubjectCate,
   fncDeleteSubjectCate,
   fncGetDetailSubjectCate,
-  fncGetListSubjectCateAndSubject
+  fncGetListSubjectCateAndSubject,
+  fncGetListSubjectCateByAdmin
 }
 
 export default SubjectCateService

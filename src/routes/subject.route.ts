@@ -19,7 +19,7 @@ SubjectRoute.post("/updateSubject",
   SubjectValidation.createUpdateSubject,
   SubjectController.updateSubject
 )
-SubjectRoute.get("/deleteSubject/:SubjectID",
+SubjectRoute.post("/deleteSubject",
   authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   SubjectController.deleteSubject
 )
@@ -28,6 +28,10 @@ SubjectRoute.get("/getDetailSubject/:SubjectID",
 )
 SubjectRoute.get("/getListTopSubject",
   SubjectController.getListTopSubject
+)
+SubjectRoute.post("/getListSubjectByAdmin",
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
+  SubjectController.getListSubjectByAdmin
 )
 
 export default SubjectRoute

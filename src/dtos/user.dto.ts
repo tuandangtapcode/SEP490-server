@@ -113,3 +113,9 @@ export interface CreateAccountStaff {
   Password: string,
   Phone: string
 }
+
+export interface UpdateAccountStaffDTO {
+  FullName: string,
+  Phone: string,
+  UserID: ObjectId
+}

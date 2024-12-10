@@ -7,7 +7,7 @@ import sendEmail from "../utils/send-mail"
 import { getOneDocument } from "../utils/queryFunction"
 import {
   ChangePasswordDTO,
-  Login,
+  LoginDTO,
   RegisterDTO
 } from "../dtos/account.dto"
 import response from "../utils/response"
@@ -97,7 +97,7 @@ const fncCheckAuth = async (req: Request) => {
 
 const fncLogin = async (req: Request, res: Response) => {
   try {
-    const { Password, Email } = req.body as Login
+    const { Password, Email } = req.body as LoginDTO
     const getAccount = await getOneDocument(Account, "Email", Email)
     if (!getAccount) return response({}, true, "Email không tồn tại", 200)
     if (!getAccount.IsActive) return response({}, true, "Tài khoản đã bị khóa", 200)

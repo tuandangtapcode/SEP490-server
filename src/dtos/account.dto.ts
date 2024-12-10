@@ -8,7 +8,7 @@ export interface RegisterDTO {
   AvatarPath: string
 }
 
-export interface Login {
+export interface LoginDTO {
   Password: string,
   Email: string
 }

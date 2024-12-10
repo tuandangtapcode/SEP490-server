@@ -109,6 +109,11 @@ UserRoute.get("/resetPasswordAccountStaff/:UserID",
   authMiddleware([Roles.ROLE_ADMIN]),
   UserController.resetPasswordAccountStaff
 )
+UserRoute.post("/updateAccountStaff",
+  authMiddleware([Roles.ROLE_ADMIN]),
+  UserValidation.updateAccountStaff,
+  UserController.updateAccountStaff
+)
 UserRoute.get("/updatePrice", async (req: Request, res: Response) => {
   // const account = await Subject.find().lean()
   // const list = await Subject.find({
@@ -126,9 +131,9 @@ UserRoute.get("/updatePrice", async (req: Request, res: Response) => {
   //   )
   // })
   // await Promise.all(updateList)
-  const result = await SubjectSetting.updateMany(
-    { Votes: { $exists: false } }, // Điều kiện: Tài liệu không có trường Votes
-    { $set: { Votes: [] } }        // Thêm trường Votes với giá trị là mảng rỗng
+  const result = await Subject.updateMany(
+    { IsDeleted: true }, // Điều kiện: Tài liệu không có trường Votes
+    { IsDeleted: false }        // Thêm trường Votes với giá trị là mảng rỗng
   )
   return res.status(200).json("Update thành công")
 })
