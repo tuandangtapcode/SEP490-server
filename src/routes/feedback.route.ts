@@ -15,8 +15,12 @@ FeedbackRoute.post("/getListFeedbackOfTeacher",
   FeedbackController.getListFeedbackOfTeacher
 )
 FeedbackRoute.get("/deleteFeedback/:FeedbackID",
-  authMiddleware([Roles.ROLE_STUDENT]),
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   FeedbackController.deletedFeedback
+)
+FeedbackRoute.post("/getListFeedback",
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
+  FeedbackController.getListFeedback
 )
 
 

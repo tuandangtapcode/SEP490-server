@@ -23,8 +23,7 @@ const fncCreateSubject = async (req: Request) => {
 
 const fncGetListSubject = async (req: Request) => {
   try {
-    const { TextSearch, CurrentPage, PageSize, SubjectCateID } =
-      req.body as GetListSubjectDTO
+    const { TextSearch, CurrentPage, PageSize, SubjectCateID } = req.body as GetListSubjectDTO
     let query = {
       SubjectName: { $regex: TextSearch, $options: "i" },
       IsDeleted: false
@@ -74,14 +73,19 @@ const fncUpdateSubject = async (req: Request) => {
 
 const fncDeleteSubject = async (req: Request) => {
   try {
-    const { SubjectID } = req.params
+    const { SubjectID, IsDeleted } = req.body
     const deletedSubject = await Subject.findByIdAndUpdate(
       SubjectID,
-      { IsDeleted: true },
+      { IsDeleted: IsDeleted },
       { new: true }
     )
     if (!deletedSubject) return response({}, true, "Có lỗi xảy ra", 200)
-    return response(deletedSubject, false, "Xoá môn học thành công", 200)
+    return response(
+      deletedSubject,
+      false,
+      !!IsDeleted ? "Ẩn môn học thành công" : "Hiện môn học thành công",
+      200
+    )
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -145,13 +149,40 @@ const fncGetListTopSubject = async () => {
   }
 }
 
+const fncGetListSubjectByAdmin = async (req: Request) => {
+  try {
+    const { TextSearch, CurrentPage, PageSize, SubjectCateID } = req.body as GetListSubjectDTO
+    let query = {
+      SubjectName: { $regex: TextSearch, $options: "i" },
+    } as any
+    if (!!SubjectCateID) {
+      query.SubjectCateID = SubjectCateID
+    }
+    const subject = Subject
+      .find(query)
+      .skip((CurrentPage - 1) * PageSize)
+      .limit(PageSize)
+    const total = Subject.countDocuments(query)
+    const result = await Promise.all([subject, total])
+    return response(
+      { List: result[0], Total: result[1] },
+      false,
+      "Lấy ra thành công",
+      200
+    )
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const SubjectService = {
   fncCreateSubject,
   fncGetListSubject,
   fncUpdateSubject,
   fncDeleteSubject,
   fncGetDetailSubject,
-  fncGetListTopSubject
+  fncGetListTopSubject,
+  fncGetListSubjectByAdmin
 }
 
 export default SubjectService

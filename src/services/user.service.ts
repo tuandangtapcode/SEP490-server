@@ -17,6 +17,7 @@ import {
   GetListTeacherDTO,
   InactiveOrActiveAccountDTO,
   ResponseConfirmRegisterDTO,
+  UpdateAccountStaffDTO,
   UpdateSchedulesDTO,
   UpdateSubjectSettingDTO
 } from "../dtos/user.dto"
@@ -1229,7 +1230,8 @@ const fncGetListAccountStaff = async (req: Request) => {
           _id: 1,
           FullName: 1,
           Email: 1,
-          IsActive: 1
+          IsActive: 1,
+          Phone: 1
         }
       },
       { $skip: (CurrentPage - 1) * PageSize },
@@ -1264,6 +1266,20 @@ const fncResetPasswordAccountStaff = async (req: Request) => {
   }
 }
 
+const fncUpdateAccountStaff = async (req: Request) => {
+  try {
+    const { UserID } = req.body as UpdateAccountStaffDTO
+    const updateAccount = await User.findOneAndUpdate(
+      { _id: UserID },
+      { ...req.body }
+    )
+    if (!updateAccount) return response({}, true, "Có lỗi xảy ra", 200)
+    return response({}, false, "Chỉnh sửa thông tin staff thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const UserSerivce = {
   fncGetDetailProfile,
   fncChangeProfile,
@@ -1286,7 +1302,8 @@ const UserSerivce = {
   fncDisabledOrEnabledSubjectSetting,
   fncCreateAccountStaff,
   fncGetListAccountStaff,
-  fncResetPasswordAccountStaff
+  fncResetPasswordAccountStaff,
+  fncUpdateAccountStaff
 }
 
 export default UserSerivce

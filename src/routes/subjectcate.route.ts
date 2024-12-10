@@ -19,7 +19,7 @@ SubjectCateRoute.post("/updateSubjectCate",
   SubjectCateValidation.createUpdateSubjectCate,
   SubjectCateController.updateSubjectCate
 )
-SubjectCateRoute.get("/deleteSubjectCate/:SubjectCateID",
+SubjectCateRoute.post("/deleteSubjectCate",
   authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
   SubjectCateController.deleteSubjectCate
 )
@@ -28,6 +28,10 @@ SubjectCateRoute.post("/getDetailSubjectCate",
 )
 SubjectCateRoute.get("/getListSubjectCateAndSubject",
   SubjectCateController.getListSubjectCateAndSubject
+)
+SubjectCateRoute.post("/getListSubjectCateByAdmin",
+  authMiddleware([Roles.ROLE_ADMIN, Roles.ROLE_STAFF]),
+  SubjectCateController.getListSubjectCateByAdmin
 )
 
 export default SubjectCateRoute
