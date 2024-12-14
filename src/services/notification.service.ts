@@ -39,8 +39,11 @@ const fncGetListNotification = async (req: Request) => {
       .find({
         Receiver: ReceiverID
       })
-      .limit(5)
       .populate('Sender', ['_id', 'FullName', 'RoleID'])
+      .sort({
+        createdAt: -1
+      })
+      .limit(5)
     const notificationsNew = notifications.filter(i => !!i.IsNew)
     return response(
       { List: notifications, IsNew: notificationsNew.length },
