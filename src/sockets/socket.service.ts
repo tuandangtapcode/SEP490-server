@@ -121,7 +121,6 @@ const sendNotedConfirm = (socket: any) => {
 const changeReceiveStatus = (socket: any) => {
   return (data: any) => {
     const user = userOnlines.find((i: any) => i.UserID === data.Receiver)
-    console.log("user", user);
     if (!!user) {
       socket.to(user.SocketID).emit('listen-change-receive-status', data)
     }

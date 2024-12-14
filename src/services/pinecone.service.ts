@@ -62,7 +62,7 @@ const deleteVector = async (
 const searchPineconeByQuery = async (queryEmbedding: number[]) => {
   const result = await index.namespace('teacher').query({
     vector: queryEmbedding,
-    topK: 5,
+    topK: 10,
   })
   return result.matches
 }

@@ -899,20 +899,14 @@ const fncGetListTopTeacher = async (req: Request) => {
       {
         $project: selectFiled
       },
-      { $limit: !!IsBlogPage ? 3 : 8 },
       {
         $sort: {
           TotalVotes: -1
         }
       },
+      { $limit: !!IsBlogPage ? 3 : 8 },
     ])
-    let data = [] as any[]
-    topTeachers.forEach((i: any) => {
-      if (!!i.Votes.length) {
-        data.push(i)
-      }
-    })
-    return response(data, false, "Lấy data thành công", 200)
+    return response(topTeachers, false, "Lấy data thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }

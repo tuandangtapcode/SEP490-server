@@ -109,8 +109,8 @@ const fncGetDetailSubjectCate = async (req: Request) => {
     }
     const subjects = Subject
       .find(query)
-      .skip((CurrentPage - 1) * PageSize)
-      .limit(PageSize)
+    // .skip((CurrentPage - 1) * PageSize)
+    // .limit(PageSize)
     const total = Subject.countDocuments(query)
     const result = await Promise.all([subjects, total])
     return response(
