@@ -2,11 +2,9 @@ import { Request } from "express"
 import ProfitPercent from "../models/profitpercent"
 import SystemKey from "../models/systemkey"
 import response from "../utils/response"
-// import CacheService from "./redis.service"
+import CacheService from "./redis.service"
 import { getOneDocument } from "../utils/queryFunction"
 import { Roles } from "../utils/constant"
-import TimeTable from "../models/timetable"
-import SubjectSetting from "../models/subjectsetting"
 import User from "../models/user"
 import Subject from "../models/subject"
 
@@ -32,7 +30,15 @@ const ProfitPercentID = "66f92e193657dfff3345aa0f"
 
 const fncGetListSystemKey = async () => {
   try {
-    const systemKeys = await SystemKey.find()
+    let systemKeys
+    const dataCacheRaw = await CacheService.getCache("systemkey") as string
+    const dataCache = JSON.parse(dataCacheRaw)
+    if (!!dataCache?.length) {
+      systemKeys = dataCache
+    } else {
+      systemKeys = await SystemKey.find()
+      await CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
+    }
     return response(systemKeys, false, "Lấy ra thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -43,7 +49,7 @@ const fncCreateSystemKey = async (req: Request) => {
   try {
     await SystemKey.create(req.body)
     const systemKeys = await SystemKey.find()
-    // CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
+    await CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
     return response({}, false, "Thêm systemkey thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -97,7 +103,7 @@ const fncInsertParentKey = async (req: Request) => {
       { new: true }
     )
     const systemKeys = await SystemKey.find()
-    // CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
+    await CacheService.setCache("systemkey", JSON.stringify(systemKeys), 28800)
     return response({}, false, "Thêm ParentKey thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -117,18 +123,28 @@ const fncGetListTabs = async (req: Request) => {
 
 const fncGetTotalUserAndSubject = async () => {
   try {
-    const totalTeacher = await User.countDocuments({
+    const totalTeacher = User.countDocuments({
       RoleID: 3,
       RegisterStatus: 3
     })
-    const totalStudent = await User.countDocuments({
+    const totalStudent = User.countDocuments({
       RoleID: 4,
       RegisterStatus: 3
     })
-    const totalSubject = await Subject.countDocuments({
+    const totalSubject = Subject.countDocuments({
       IsDeleted: false
     })
-    return response({ totalTeacher, totalStudent, totalSubject }, false, 'Lấy data thành công', 200)
+    const result = await Promise.all([totalTeacher, totalStudent, totalSubject])
+    return response(
+      {
+        TotalTeacher: result[0],
+        TotalStudent: result[1],
+        TotalSubject: result[2]
+      },
+      false,
+      'Lấy data thành công',
+      200
+    )
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }

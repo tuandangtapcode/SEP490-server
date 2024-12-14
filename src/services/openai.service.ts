@@ -21,14 +21,14 @@ const generateEmbedding = async (text: string): Promise<number[]> => {
 
 const generateText = async (req: Request) => {
   try {
-    const { prompt, history } = req.body; // 'history' is an array of previous messages
+    const { prompt, history } = req.body // 'history' is an array of previous messages
 
     // Construct the conversation messages
     const messages = [
       { role: "system", content: "You are a helpful assistant who answers questions about learning or anything related to learning and talent subject" },
       ...(history || []), // Include previous conversation history
       { role: "user", content: prompt }, // Add the current user message
-    ];
+    ]
 
     // Call OpenAI's API
     const chat = await openai.chat.completions.create({
@@ -36,23 +36,23 @@ const generateText = async (req: Request) => {
       messages,
       max_tokens: 300, // Adjust as needed
       temperature: 0.7, // Adjust creativity level
-    });
+    })
 
     // Get the assistant's response
-    const message = chat.choices[0]?.message?.content?.trim();
+    const message = chat.choices[0]?.message?.content?.trim()
 
     // Return the response and updated history
     const updatedHistory = [
       ...(history || []),
       { role: "user", content: prompt },
       { role: "assistant", content: message },
-    ];
+    ]
 
-    return response({ message, updatedHistory }, false, "Tạo câu trả lời thành công", 200);
+    return response({ message, updatedHistory }, false, "Tạo câu trả lời thành công", 200)
   } catch (error: any) {
-    return response({}, true, error.toString(), 500);
+    return response({}, true, error.toString(), 500)
   }
-}; 
+}
 
 const getRecommendation = async (prompt: string) => {
   const response = await openai.chat.completions.create({
@@ -86,7 +86,7 @@ const analyzeIntent = async (query: string) => {
     - Learn Types: Trực tiếp hoặc Online, nếu không thì trả về 'Không xác định'
     - Query: ${query}
     Đảm bảo trả về kết quả dưới dạng một đoạn văn bản hoàn chỉnh, không phải JSON.
-  `;
+  `
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
@@ -96,16 +96,16 @@ const analyzeIntent = async (query: string) => {
     ],
     max_tokens: 500,
     temperature: 0.3,
-  });
+  })
 
   try {
     // Lấy và trả về nội dung trả về dưới dạng một chuỗi văn bản
-    return response.choices[0]?.message?.content?.trim() || "";
+    return response.choices[0]?.message?.content?.trim() || ""
   } catch (error) {
-    console.error("Error parsing OpenAI response:", error);
-    return "";
+    console.error("Error parsing OpenAI response:", error)
+    return ""
   }
-};
+}
 
 const OpenaiService = {
   generateEmbedding,

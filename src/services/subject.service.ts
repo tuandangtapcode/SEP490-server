@@ -8,6 +8,7 @@ import {
 } from "../dtos/subject.dto"
 import mongoose, { ObjectId } from "mongoose"
 import Confirm from "../models/confirm"
+import CacheService from "./redis.service"
 
 const fncCreateSubject = async (req: Request) => {
   try {
@@ -28,6 +29,23 @@ const fncGetListSubject = async (req: Request) => {
       SubjectName: { $regex: TextSearch, $options: "i" },
       IsDeleted: false
     } as any
+    if (!PageSize && !CurrentPage) {
+      let subjects = [] as any[]
+      const dataCacheRaw = await CacheService.getCache("subject") as string
+      const dataCache = JSON.parse(dataCacheRaw)
+      if (!!dataCache?.length) {
+        subjects = dataCache
+      } else {
+        subjects = await Subject.find()
+        await CacheService.setCache("subject", JSON.stringify(subjects), 28800)
+      }
+      return response(
+        { List: subjects, Total: subjects.length },
+        false,
+        "Lấy ra thành công",
+        200
+      )
+    }
     if (!!SubjectCateID) {
       query.SubjectCateID = SubjectCateID
     }
@@ -65,6 +83,8 @@ const fncUpdateSubject = async (req: Request) => {
       { new: true, runValidators: true }
     )
     if (!updatedSubject) return response({}, true, "Có lỗi xảy ra", 200)
+    const subjects = await Subject.find()
+    await CacheService.setCache("subject", JSON.stringify(subjects), 28800)
     return response(updatedSubject, false, "Cập nhật môn học thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -80,6 +100,8 @@ const fncDeleteSubject = async (req: Request) => {
       { new: true }
     )
     if (!deletedSubject) return response({}, true, "Có lỗi xảy ra", 200)
+    const subjects = await Subject.find()
+    await CacheService.setCache("subject", JSON.stringify(subjects), 28800)
     return response(
       deletedSubject,
       false,

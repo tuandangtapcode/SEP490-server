@@ -7,6 +7,7 @@ import OpenaiService from "../services/openai.service"
 import User from "../models/user"
 import Subject from "../models/subject"
 import LearnHistory from "../models/learnhistory"
+import CacheService from "../services/redis.service"
 
 const processSubjectSetting = async (subjectSettingId: string) => {
   try {
@@ -125,21 +126,133 @@ const getQueryEmbedding = async (query: string): Promise<number[]> => {
 const teacherRecommendationByLearnHistory = async (req: Request) => {
   try {
     const userID = req.user.ID
+    let subjectsetting = [] as any[]
     const checkLearnHistoryExist = await LearnHistory.find({ Student: userID })
-    if (checkLearnHistoryExist) {
-      const learnHistory = await PineconeService.searchPineconeByID(userID)
-      if (!learnHistory[0]) {
-        return response({}, true, "không có data trong hệ thống", 200)
+    if (!checkLearnHistoryExist.length) return response({}, true, "Người dùng không có lịch sử học tập", 200)
+    const learnHistory = await PineconeService.searchPineconeByID(userID)
+    const queryEmbedding = learnHistory[0].values
+    const matches = await PineconeService.searchPineconeByQuery(queryEmbedding)
+    let query = {} as any
+    query = {
+      _id: {
+        $in: matches.map((i: any) => new mongoose.Types.ObjectId(`${i.id}`))
       }
-      const queryEmbedding = learnHistory[0].values
-      const matches = await PineconeService.searchPineconeByQuery(queryEmbedding)
-      let query = {} as any
-      query = {
-        _id: {
-          $in: matches.map((i: any) => new mongoose.Types.ObjectId(`${i.id}`))
-        }
+    }
+    const dataCacheRaw = await CacheService.getCache("teacherRecommend") as string
+    const dataCache = JSON.parse(dataCacheRaw)
+    if (!!dataCache?.length) {
+      subjectsetting = dataCache
+    } else {
+      subjectsetting = await SubjectSetting.aggregate([
+        {
+          $match: query
+        },
+        {
+          $addFields: {
+            TotalVotes: { $sum: "$Votes" }
+          }
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "Teacher",
+            foreignField: "_id",
+            as: "Teacher",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "accounts",
+                  localField: "_id",
+                  foreignField: "UserID",
+                  as: "Account"
+                }
+              },
+              { $unwind: '$Account' },
+              {
+                $addFields: {
+                  IsActive: "$Account.IsActive",
+                }
+              },
+              {
+                $project: {
+                  FullName: 1,
+                  AvatarPath: 1,
+                  RegisterStatus: 1,
+                  IsActive: 1,
+                }
+              }
+            ]
+          }
+        },
+        { $unwind: "$Teacher" },
+        {
+          $match: {
+            "Teacher.RegisterStatus": 3,
+            "Teacher.IsActive": true,
+          }
+        },
+        {
+          $lookup: {
+            from: "subjects",
+            localField: "Subject",
+            foreignField: "_id",
+            as: "Subject",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  SubjectName: 1
+                }
+              }
+            ]
+          }
+        },
+        { $unwind: "$Subject" },
+        {
+          $project: {
+            _id: 1,
+            Subject: 1,
+            Levels: 1,
+            Price: 1,
+            LearnTypes: 1,
+            Teacher: 1,
+            TotalVotes: 1,
+            Votes: 1
+          }
+        },
+        {
+          $sort: {
+            TotalVotes: -1
+          }
+        },
+        // { $limit: 8 },
+      ])
+      await CacheService.setCache("teacherRecommend", JSON.stringify(subjectsetting), 28800)
+    }
+    return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const teacherRecommendation = async (req: Request) => {
+  try {
+    const { prompt } = req.body
+    let subjectsetting = [] as any[]
+    const queryEmbedding = await getQueryEmbedding(prompt)
+    const matches = await PineconeService.searchPineconeByQuery(queryEmbedding)
+    let query = {} as any
+    query = {
+      _id: {
+        $in: matches.map((i: any) => new mongoose.Types.ObjectId(`${i.id}`))
       }
-      const subjectsetting = await SubjectSetting.aggregate([
+    }
+    const dataCacheRaw = await CacheService.getCache("teacherRecommend") as string
+    const dataCache = JSON.parse(dataCacheRaw)
+    if (!!dataCache?.length) {
+      subjectsetting = dataCache
+    } else {
+      subjectsetting = await SubjectSetting.aggregate([
         {
           $match: query
         },
@@ -223,113 +336,8 @@ const teacherRecommendationByLearnHistory = async (req: Request) => {
         },
         { $limit: 8 },
       ])
-      return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
-    } else {
-      return response({}, true, "Có lỗi xảy ra", 200)
+      await CacheService.setCache("teacherRecommend", JSON.stringify(subjectsetting), 28800)
     }
-
-  } catch (error: any) {
-    return response({}, true, error.toString(), 500)
-  }
-}
-
-const teacherRecommendation = async (req: Request) => {
-  try {
-    const { prompt } = req.body
-    // const intentPrompt = await OpenaiService.analyzeIntent(prompt)
-    // console.log(intentPrompt)
-    const queryEmbedding = await getQueryEmbedding(prompt)
-    const matches = await PineconeService.searchPineconeByQuery(queryEmbedding)
-    let query = {} as any
-    query = {
-      _id: {
-        $in: matches.map((i: any) => new mongoose.Types.ObjectId(`${i.id}`))
-      }
-    }
-    const subjectsetting = await SubjectSetting.aggregate([
-      {
-        $match: query
-      },
-      {
-        $addFields: {
-          TotalVotes: { $sum: "$Votes" }
-        }
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "Teacher",
-          foreignField: "_id",
-          as: "Teacher",
-          pipeline: [
-            {
-              $lookup: {
-                from: "accounts",
-                localField: "_id",
-                foreignField: "UserID",
-                as: "Account"
-              }
-            },
-            { $unwind: '$Account' },
-            {
-              $addFields: {
-                IsActive: "$Account.IsActive",
-              }
-            },
-            {
-              $project: {
-                FullName: 1,
-                AvatarPath: 1,
-                RegisterStatus: 1,
-                IsActive: 1,
-              }
-            }
-          ]
-        }
-      },
-      { $unwind: "$Teacher" },
-      {
-        $match: {
-          "Teacher.RegisterStatus": 3,
-          "Teacher.IsActive": true,
-        }
-      },
-      {
-        $lookup: {
-          from: "subjects",
-          localField: "Subject",
-          foreignField: "_id",
-          as: "Subject",
-          pipeline: [
-            {
-              $project: {
-                _id: 1,
-                SubjectName: 1
-              }
-            }
-          ]
-        }
-      },
-      { $unwind: "$Subject" },
-      {
-        $project: {
-          _id: 1,
-          Subject: 1,
-          Levels: 1,
-          Price: 1,
-          LearnTypes: 1,
-          Teacher: 1,
-          TotalVotes: 1,
-          Votes: 1
-        }
-      },
-      {
-        $sort: {
-          TotalVotes: -1
-        }
-      },
-      { $limit: 8 },
-    ])
     return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
