@@ -244,8 +244,12 @@ const fncGetListTeacher = async (req: Request) => {
           ...selectFieldForTeacher.forAggregate,
           Account: 1,
           SubjectSettings: 1,
-          BankingInfor: 1
+          BankingInfor: 1,
+          updatedAt: 1
         }
+      },
+      {
+        $sort: { updatedAt: -1 }
       },
       { $skip: (CurrentPage - 1) * PageSize },
       { $limit: PageSize }
@@ -540,7 +544,8 @@ const fncGetDetailTeacher = async (req: Request) => {
     const listSubjects = await SubjectSetting
       .find({
         Teacher: TeacherID,
-        RegisterStatus: 3
+        RegisterStatus: 3,
+        IsDisabled: false
       })
       .populate("Subject", ["_id", "SubjectName"])
       .select("Subject")
@@ -990,6 +995,9 @@ const fncGetListSubjectSetting = async (req: Request) => {
         }
       },
       { $unwind: "$Subject" },
+      {
+        $sort: { updatedAt: -1 }
+      },
       { $skip: (CurrentPage - 1) * PageSize },
       { $limit: PageSize }
     ])

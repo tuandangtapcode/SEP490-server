@@ -296,7 +296,7 @@ const fncGetListTransfer = async (req: Request) => {
             { PaymentType: 2 }
           ],
           PaymentStatus: 1,
-          PaymentTime: { $gte: new Date(FromDate), $lte: new Date(ToDate) }
+          // PaymentTime: { $gte: new Date(FromDate), $lte: new Date(ToDate) }
         }
       },
       {
