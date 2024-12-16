@@ -89,7 +89,6 @@ const processLearnHistory = async (userID: string) => {
       `.trim()
     const embedding = await OpenaiService.generateEmbedding(text as string)
     const checkLearnHistory = await PineconeService.searchPineconeByID(userID)
-    console.log(checkLearnHistory)
     if (!checkLearnHistory[0]) {
       await PineconeService.upsertVector(userID, "learnhistory", embedding, {
         student: learnHistory.Student?.FullName || "",
@@ -136,100 +135,94 @@ const teacherRecommendationByLearnHistory = async (req: Request) => {
     query = {
       _id: {
         $in: matches.map((i: any) => new mongoose.Types.ObjectId(`${i.id}`))
-      }
+      },
+      RegisterStatus: 3,
+      IsDisabled: false
     }
-    const dataCacheRaw = await CacheService.getCache("teacherRecommend") as string
-    console.log("dataCacheRaw", dataCacheRaw);
-    const dataCache = JSON.parse(dataCacheRaw)
-    if (!!dataCache?.length) {
-      subjectsetting = dataCache
-    } else {
-      subjectsetting = await SubjectSetting.aggregate([
-        {
-          $match: query
-        },
-        {
-          $addFields: {
-            TotalVotes: { $sum: "$Votes" }
-          }
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "Teacher",
-            foreignField: "_id",
-            as: "Teacher",
-            pipeline: [
-              {
-                $lookup: {
-                  from: "accounts",
-                  localField: "_id",
-                  foreignField: "UserID",
-                  as: "Account"
-                }
-              },
-              { $unwind: '$Account' },
-              {
-                $addFields: {
-                  IsActive: "$Account.IsActive",
-                }
-              },
-              {
-                $project: {
-                  FullName: 1,
-                  AvatarPath: 1,
-                  RegisterStatus: 1,
-                  IsActive: 1,
-                }
+    subjectsetting = await SubjectSetting.aggregate([
+      {
+        $match: query
+      },
+      {
+        $addFields: {
+          TotalVotes: { $sum: "$Votes" }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
               }
-            ]
-          }
-        },
-        { $unwind: "$Teacher" },
-        {
-          $match: {
-            "Teacher.RegisterStatus": 3,
-            "Teacher.IsActive": true,
-          }
-        },
-        {
-          $lookup: {
-            from: "subjects",
-            localField: "Subject",
-            foreignField: "_id",
-            as: "Subject",
-            pipeline: [
-              {
-                $project: {
-                  _id: 1,
-                  SubjectName: 1
-                }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                IsActive: "$Account.IsActive",
               }
-            ]
-          }
-        },
-        { $unwind: "$Subject" },
-        {
-          $project: {
-            _id: 1,
-            Subject: 1,
-            Levels: 1,
-            Price: 1,
-            LearnTypes: 1,
-            Teacher: 1,
-            TotalVotes: 1,
-            Votes: 1
-          }
-        },
-        {
-          $sort: {
-            TotalVotes: -1
-          }
-        },
-        // { $limit: 8 },
-      ])
-      await CacheService.setCache("teacherRecommend", JSON.stringify(subjectsetting), 28800)
-    }
+            },
+            {
+              $project: {
+                FullName: 1,
+                AvatarPath: 1,
+                RegisterStatus: 1,
+                IsActive: 1,
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: {
+          "Teacher.RegisterStatus": 3,
+          "Teacher.IsActive": true,
+        }
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      {
+        $project: {
+          _id: 1,
+          Subject: 1,
+          Levels: 1,
+          Price: 1,
+          LearnTypes: 1,
+          Teacher: 1,
+          TotalVotes: 1,
+          Votes: 1
+        }
+      },
+      {
+        $sort: {
+          TotalVotes: -1
+        }
+      },
+      // { $limit: 8 },
+    ])
     return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
@@ -246,99 +239,94 @@ const teacherRecommendation = async (req: Request) => {
     query = {
       _id: {
         $in: matches.map((i: any) => new mongoose.Types.ObjectId(`${i.id}`))
-      }
+      },
+      RegisterStatus: 3,
+      IsDisabled: false
     }
-    const dataCacheRaw = await CacheService.getCache("teacherRecommend") as string
-    const dataCache = JSON.parse(dataCacheRaw)
-    if (!!dataCache?.length) {
-      subjectsetting = dataCache
-    } else {
-      subjectsetting = await SubjectSetting.aggregate([
-        {
-          $match: query
-        },
-        {
-          $addFields: {
-            TotalVotes: { $sum: "$Votes" }
-          }
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "Teacher",
-            foreignField: "_id",
-            as: "Teacher",
-            pipeline: [
-              {
-                $lookup: {
-                  from: "accounts",
-                  localField: "_id",
-                  foreignField: "UserID",
-                  as: "Account"
-                }
-              },
-              { $unwind: '$Account' },
-              {
-                $addFields: {
-                  IsActive: "$Account.IsActive",
-                }
-              },
-              {
-                $project: {
-                  FullName: 1,
-                  AvatarPath: 1,
-                  RegisterStatus: 1,
-                  IsActive: 1,
-                }
+    subjectsetting = await SubjectSetting.aggregate([
+      {
+        $match: query
+      },
+      {
+        $addFields: {
+          TotalVotes: { $sum: "$Votes" }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "Teacher",
+          foreignField: "_id",
+          as: "Teacher",
+          pipeline: [
+            {
+              $lookup: {
+                from: "accounts",
+                localField: "_id",
+                foreignField: "UserID",
+                as: "Account"
               }
-            ]
-          }
-        },
-        { $unwind: "$Teacher" },
-        {
-          $match: {
-            "Teacher.RegisterStatus": 3,
-            "Teacher.IsActive": true,
-          }
-        },
-        {
-          $lookup: {
-            from: "subjects",
-            localField: "Subject",
-            foreignField: "_id",
-            as: "Subject",
-            pipeline: [
-              {
-                $project: {
-                  _id: 1,
-                  SubjectName: 1
-                }
+            },
+            { $unwind: '$Account' },
+            {
+              $addFields: {
+                IsActive: "$Account.IsActive",
               }
-            ]
-          }
-        },
-        { $unwind: "$Subject" },
-        {
-          $project: {
-            _id: 1,
-            Subject: 1,
-            Levels: 1,
-            Price: 1,
-            LearnTypes: 1,
-            Teacher: 1,
-            TotalVotes: 1,
-            Votes: 1
-          }
-        },
-        {
-          $sort: {
-            TotalVotes: -1
-          }
-        },
-        { $limit: 8 },
-      ])
-      await CacheService.setCache("teacherRecommend", JSON.stringify(subjectsetting), 28800)
-    }
+            },
+            {
+              $project: {
+                FullName: 1,
+                AvatarPath: 1,
+                RegisterStatus: 1,
+                IsActive: 1,
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Teacher" },
+      {
+        $match: {
+          "Teacher.RegisterStatus": 3,
+          "Teacher.IsActive": true,
+        }
+      },
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "Subject",
+          foreignField: "_id",
+          as: "Subject",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                SubjectName: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Subject" },
+      {
+        $project: {
+          _id: 1,
+          Subject: 1,
+          Levels: 1,
+          Price: 1,
+          LearnTypes: 1,
+          Teacher: 1,
+          TotalVotes: 1,
+          Votes: 1
+        }
+      },
+      {
+        $sort: {
+          TotalVotes: -1
+        }
+      },
+      { $limit: 8 },
+    ])
     return response(subjectsetting, false, "tạo câu trả lời thành công", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)

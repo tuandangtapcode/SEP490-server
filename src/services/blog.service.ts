@@ -15,6 +15,7 @@ import { getRealScheduleForBlog } from "../utils/dateUtils"
 import TimeTable from "../models/timetable"
 import moment from "moment"
 import { Roles } from "../utils/constant"
+import Confirm from "../models/confirm"
 
 const fncCreateBlog = async (req: Request) => {
   try {
@@ -58,6 +59,24 @@ const fncCreateBlog = async (req: Request) => {
     })
     if (!!checkExistSchedules.length)
       return response(checkExistSchedules, true, "Lịch học của bạn đã trùng với lịch học trong thời khóa biểu", 200)
+    const confirms = await Confirm
+      .find({
+        ConfirmStatus: { $ne: 3 },
+        Sender: UserID
+      })
+      .select("Schedules")
+      .lean()
+    confirms.forEach((i: any) => {
+      i.Schedules.forEach((r: any) => {
+        const check = realSchdules.find((re: any) =>
+          new Date(r.StartTime) >= new Date(re.StartTime) &&
+          new Date(r.StartTime) <= new Date(re.EndTime)
+        )
+        if (!!check) checkExistSchedules.push(check)
+      })
+    })
+    if (!!checkExistSchedules.length)
+      return response(checkExistSchedules, true, "Lịch học của bạn đã trùng với 1 booking", 200)
     const newCreateBlog = await Blog.create({
       ...req.body,
       RegisterStatus: 2,
@@ -417,7 +436,7 @@ const fncGetListBlog = async (req: Request) => {
         }
       },
       {
-        $sort: { createdAt: -1 }
+        $sort: { updatedAt: -1 }
       },
       { $skip: (CurrentPage - 1) * PageSize },
       { $limit: PageSize }
@@ -632,6 +651,44 @@ const fncSendRequestReceive = async (req: Request) => {
     })
     if (!!checkExistSchedules.length)
       return response(checkExistSchedules, true, "Lịch dạy của bạn đã trùng với lịch học của học sinh đăng bài", 200)
+    const blogs = await Blog
+      .find({
+        "TeacherReceive.Teacher": UserID,
+        "TeacherReceive.ReceiveStatus": {
+          $ne: 2
+        }
+      })
+      .select("_id RealSchedules")
+      .lean()
+    blogs.forEach((i: any) => {
+      i.RealSchedules.forEach((r: any) => {
+        const check = realSchdules.find((re: any) =>
+          new Date(r.StartTime) >= new Date(re.StartTime) &&
+          new Date(r.StartTime) <= new Date(re.EndTime)
+        )
+        if (!!check) checkExistSchedules.push(check)
+      })
+    })
+    if (!!checkExistSchedules.length)
+      return response(checkExistSchedules, true, "Bạn bị trùng lịch dạy với 1 bài đăng đã nhận lớp", 200)
+    const confirms = await Confirm
+      .find({
+        ConfirmStatus: { $ne: 3 },
+        Receiver: UserID
+      })
+      .select("Schedules")
+      .lean()
+    confirms.forEach((i: any) => {
+      i.Schedules.forEach((r: any) => {
+        const check = realSchdules.find((re: any) =>
+          new Date(r.StartTime) >= new Date(re.StartTime) &&
+          new Date(r.StartTime) <= new Date(re.EndTime)
+        )
+        if (!!check) checkExistSchedules.push(check)
+      })
+    })
+    if (!!checkExistSchedules.length)
+      return response(checkExistSchedules, true, "Bạn đã bị trùng lịch dạy với 1 yêu cầu booking", 200)
     await Blog.updateOne(
       { _id: BlogID },
       {
@@ -738,7 +795,7 @@ const fncChangeReceiveStatus = async (req: Request) => {
         })),
       }
     }
-    return response(data, false, "Trạng thái đăng ký của giáo viên đã được cập nhật", 200)
+    return response(data, false, "Trạng thái đăng ký của bài đăng đã được cập nhật", 200)
   } catch (error: any) {
     console.error(error)
     return response({}, true, error.toString(), 500)
