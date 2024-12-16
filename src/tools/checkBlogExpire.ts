@@ -6,7 +6,11 @@ const checkBlogExpire = async () => {
     await Blog.updateMany(
       {
         $or: [
-          { StartDate: new Date() },
+          {
+            StartDate: {
+              $lte: new Date()
+            }
+          },
           {
             "TeacherReceive.ReceiveStatus": 3,
             IsPaid: false

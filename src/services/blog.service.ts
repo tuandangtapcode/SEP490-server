@@ -573,7 +573,7 @@ const fncGetListBlogByUser = async (req: Request) => {
       .limit(PageSize)
       .populate("Subject", ["_id", "SubjectName"])
       .populate("TeacherReceive.Teacher", ["_id", "FullName"])
-      .select("_id User Subject Gender Title Price NumberSlot LearnType Address ProfessionalLevel Schedules StartDate TeacherReceive RegisterStatus RealSchedules IsDeleted")
+      .select("_id User Subject Gender Title Price NumberSlot LearnType Address ProfessionalLevel Schedules StartDate TeacherReceive RegisterStatus RealSchedules IsDeleted createdAt")
       .lean()
     const total = Blog.countDocuments(query)
     const result = await Promise.all([blogs, total])
@@ -786,8 +786,7 @@ const fncGetListBlogApproval = async (req: Request) => {
     const UserID = req.user.ID
     const { SubjectID, ReceiveStatus, CurrentPage, PageSize, ReceiveDate } = req.body as GetListBlogApprovalDTO
     let query = {
-      "TeacherReceive.Teacher": UserID,
-      IsDeleted: false
+      "TeacherReceive.Teacher": UserID
     } as any
     if (!!SubjectID) {
       query.Subject = SubjectID
