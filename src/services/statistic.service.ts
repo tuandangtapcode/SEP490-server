@@ -4,9 +4,14 @@ import LearnHistory from "../models/learnhistory"
 import Payment from "../models/payment"
 import User from "../models/user"
 import { Roles } from "../utils/constant"
-import { StatisticTotalUserDTO } from "../dtos/statistic.dto"
 import response from "../utils/response"
 import { getCurrentWeekRange } from "../utils/dateUtils"
+import Confirm from "../models/confirm"
+import { PaginationDTO } from "../dtos/common.dto"
+
+interface StatisticBookingDTO extends PaginationDTO {
+  Key: string
+}
 
 const getResultData = (TotalTeacher: number, TotalStudent: number) => {
   return {
@@ -16,24 +21,62 @@ const getResultData = (TotalTeacher: number, TotalStudent: number) => {
   }
 }
 
-const fncStatisticTotalUser = async (req: Request) => {
+const fncStatisticTotalUser = async () => {
   try {
-    const { FromDate, ToDate } = req.body as StatisticTotalUserDTO
-    const queryDate = {
-      $gte: FromDate,
-      $lte: ToDate
+    let listTeacher = [], listStudent = []
+    const currentDate = new Date()
+    for (let i = 1; i <= 12; i++) {
+      const totalTeacher = User.countDocuments({
+        RoleID: Roles.ROLE_TEACHER,
+        createdAt: {
+          $gte: new Date(`${currentDate.getFullYear()}-${i}-01`),
+          $lt: new Date(`
+            ${i === 12 ? currentDate.getFullYear() + 1 : currentDate.getFullYear()}-
+            ${i === 12 ? 1 : i + 1}-
+            01`
+          )
+        }
+      })
+      const totalStudent = User.countDocuments({
+        RoleID: Roles.ROLE_STUDENT,
+        createdAt: {
+          $gte: new Date(`${currentDate.getFullYear()}-${i}-01`),
+          $lt: new Date(`
+            ${i === 12 ? currentDate.getFullYear() + 1 : currentDate.getFullYear()}-
+            ${i === 12 ? 1 : i + 1}-
+            01`
+          )
+        }
+      })
+      listTeacher.push(totalTeacher)
+      listStudent.push(totalStudent)
     }
-    const teacher = User.countDocuments({
-      RoleID: Roles.ROLE_TEACHER,
-      createdAt: queryDate
-    })
-    const student = User.countDocuments({
-      RoleID: Roles.ROLE_STUDENT,
-      createdAt: queryDate
-    })
-    const result = await Promise.all([teacher, student])
+    const totalUser = await User
+      .find({
+        RoleID: {
+          $in: [Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]
+        }
+      })
+      .select("_id RoleID") as any
+    const resultTeacher = await Promise.all(listTeacher)
+    const resultStudent = await Promise.all(listStudent)
+    const dataTeacher = resultTeacher.map((i, idx) => ({
+      Month: `Tháng ${idx + 1}`,
+      Total: i
+    }))
+    const dataStudent = resultStudent.map((i, idx) => ({
+      Month: `Tháng ${idx + 1}`,
+      Total: i
+    }))
     return response(
-      getResultData(result[0], result[1]),
+      {
+        DataTotal: getResultData(
+          totalUser.filter((i: any) => i.RoleID === Roles.ROLE_TEACHER).length,
+          totalUser.filter((i: any) => i.RoleID === Roles.ROLE_STUDENT).length,
+        ),
+        DataTeacher: dataTeacher,
+        DataStudent: dataStudent,
+      },
       false,
       "Lấy data thành công",
       200
@@ -43,100 +86,44 @@ const fncStatisticTotalUser = async (req: Request) => {
   }
 }
 
-const fncStatisticNewRegisteredUser = async (req: Request) => {
+const fncStatisticNewRegisteredUser = async () => {
   try {
-    const { Key } = req.query as { Key: string }
+    const { startOfWeek, endOfWeek } = getCurrentWeekRange()
     const currentDate = new Date()
-    let teacher, student, result, queryDate
-    switch (Key) {
-      case "Day":
-        teacher = User.countDocuments({
-          RoleID: Roles.ROLE_TEACHER,
-          createdAt: Date.now()
-        })
-        student = User.countDocuments({
-          RoleID: Roles.ROLE_STUDENT,
-          createdAt: Date.now()
-        })
-        result = await Promise.all([teacher, student])
-        return response(
-          getResultData(result[0], result[1]),
-          false,
-          "Lấy data thành công",
-          200
-        )
-      case "Week":
-        const { startOfWeek, endOfWeek } = getCurrentWeekRange()
-        queryDate = {
-          $gte: startOfWeek,
-          $lt: endOfWeek
-        }
-        teacher = User.countDocuments({
-          RoleID: Roles.ROLE_TEACHER,
-          createdAt: queryDate
-        })
-        student = User.countDocuments({
-          RoleID: Roles.ROLE_STUDENT,
-          createdAt: queryDate
-        })
-        result = await Promise.all([teacher, student])
-        return response(
-          getResultData(result[0], result[1]),
-          false,
-          "Lấy data thành công",
-          200
-        )
-      case "Month":
-        queryDate = {
-          $gte: new Date(`${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-01`),
+    const totalUser = User.countDocuments({
+      RoleID: {
+        $in: [Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]
+      }
+    })
+    const totalNewUser = User.countDocuments({
+      RoleID: {
+        $in: [Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]
+      },
+      createdAt: {
+        $gte: startOfWeek,
+        $lt: endOfWeek
+      }
+    })
+    let totalUserByMonth = [], totalNewUserByMonth = []
+    for (let i = 1; i <= 12; i++) {
+      const totalUser = User.countDocuments({
+        RoleID: {
+          $in: [Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]
+        },
+        createdAt: {
+          $gte: new Date(`${currentDate.getFullYear()}-01-01`),
           $lt: new Date(`
-            ${currentDate.getMonth() + 1 === 12 ? currentDate.getFullYear() + 1 : currentDate.getFullYear()}-
-            ${currentDate.getMonth() + 1 === 12 ? "01" : currentDate.getMonth() + 2}-
+            ${i === 12 ? currentDate.getFullYear() + 1 : currentDate.getFullYear()}-
+            ${i === 12 ? 1 : i + 1}-
             01`
           )
         }
-        teacher = User.countDocuments({
-          RoleID: Roles.ROLE_TEACHER,
-          createdAt: queryDate
-        })
-        student = User.countDocuments({
-          RoleID: Roles.ROLE_STUDENT,
-          createdAt: queryDate
-        })
-        result = await Promise.all([teacher, student])
-        return response(
-          getResultData(result[0], result[1]),
-          false,
-          "Lấy data thành công",
-          200
-        )
-      default:
-        teacher = User.countDocuments({
-          RoleID: Roles.ROLE_TEACHER
-        })
-        student = User.countDocuments({
-          RoleID: Roles.ROLE_STUDENT
-        })
-        result = await Promise.all([teacher, student])
-        return response(
-          getResultData(result[0], result[1]),
-          false,
-          "Lấy data thành công",
-          200
-        )
-    }
-  } catch (error: any) {
-    return response({}, true, error.toString(), 500)
-  }
-}
-
-const fncStatisticBooking = async () => {
-  try {
-    let listBooking = []
-    const currentDate = new Date()
-    for (let i = 1; i <= 12; i++) {
-      const totalBooking = LearnHistory.countDocuments({
-        RegisterDate: {
+      })
+      const totalNewUser = User.countDocuments({
+        RoleID: {
+          $in: [Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]
+        },
+        createdAt: {
           $gte: new Date(`${currentDate.getFullYear()}-${i}-01`),
           $lt: new Date(`
             ${i === 12 ? currentDate.getFullYear() + 1 : currentDate.getFullYear()}-
@@ -145,14 +132,49 @@ const fncStatisticBooking = async () => {
           )
         }
       })
-      listBooking.push(totalBooking)
+      totalUserByMonth.push(totalUser)
+      totalNewUserByMonth.push(totalNewUser)
     }
-    const listTotal = await Promise.all(listBooking)
-    const list = listTotal.map((i, idx) => ({
+    const resultTotal = await Promise.all([totalUser, totalNewUser])
+    const resultTotalUserByMonth = await Promise.all(totalUserByMonth)
+    const resultTotalNewUserByMonth = await Promise.all(totalNewUserByMonth)
+    const dataTotalUserByMonth = resultTotalUserByMonth.map((i, idx) => ({
       Month: `Tháng ${idx + 1}`,
       Total: i
     }))
-    return response(list, false, "Lấy data thành công", 200)
+    const dataTotalNewUserByMonth = resultTotalNewUserByMonth.map((i, idx) => ({
+      Month: `Tháng ${idx + 1}`,
+      Total: i
+    }))
+    return response(
+      {
+        TotalUser: resultTotal[0],
+        TotalNewUser: resultTotal[1],
+        TotalUserByMonth: dataTotalUserByMonth,
+        TotalNewUserByMonth: dataTotalNewUserByMonth
+      },
+      false,
+      "Lay data thanh cong",
+      200
+    )
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncStatisticTotalBooking = async () => {
+  try {
+    const totalBooking = await Confirm.find().select("_id ConfirmStatus")
+    return response(
+      {
+        TotalBooking: totalBooking.length,
+        SuccessBooking: totalBooking.filter((i: any) => i.ConfirmStatus === 2).length,
+        CancelBooking: totalBooking.filter((i: any) => i.ConfirmStatus === 3).length,
+      },
+      false,
+      "Lấy data thành công",
+      200
+    )
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -233,11 +255,201 @@ const fncStatisticFinancial = async (req: Request) => {
   }
 }
 
+const fncStatisticTopTeacher = async () => {
+  try {
+    const topTeachers = await User.aggregate([
+      {
+        $match: {
+          RoleID: Roles.ROLE_TEACHER
+        }
+      },
+      {
+        $lookup: {
+          from: "subjectsettings",
+          localField: "_id",
+          foreignField: "Teacher",
+          as: "SubjectSetting",
+          pipeline: [
+            { $unwind: '$Votes' },
+            {
+              $group: {
+                _id: "$Teacher",
+                TotalVotes: { $sum: "$Votes" },
+                Votes: { $push: "$Votes" }
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$SubjectSetting" },
+      {
+        $lookup: {
+          from: "confirms",
+          localField: "_id",
+          foreignField: "Receiver",
+          as: "Confirm",
+          pipeline: [
+            {
+              $group: {
+                _id: "$Teacher",
+                Total: { $sum: 1 },
+              }
+            },
+            {
+              $project: {
+                _id: 0,
+                Total: 1
+              }
+            }
+          ]
+        }
+      },
+      { $unwind: "$Confirm" },
+      {
+        $project: {
+          _id: 1,
+          FullName: 1,
+          AvatarPath: 1,
+          TotalVotes: "$SubjectSetting.TotalVotes",
+          Votes: "$SubjectSetting.Votes",
+          TotalBook: "$Confirm.Total"
+        }
+      },
+      {
+        $sort: {
+          TotalVotes: -1
+        }
+      },
+      { $limit: 3 },
+    ])
+    return response(topTeachers, false, "Lay data thanh cong", 200)
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
+const fncStatisticBooking = async (req: Request) => {
+  try {
+    const { CurrentPage, PageSize, Key } = req.body as StatisticBookingDTO
+    let bookings, total, result
+    switch (Key) {
+      case "Day":
+        bookings = Confirm
+          .find({
+            createdAt: Date.now()
+          })
+          .populate("Sender", ["_id", "FullName"])
+          .select("_id Sender TotalFee createdAt ConfirmStatus")
+          .sort({
+            createdAt: -1
+          })
+          .skip((CurrentPage - 1) * PageSize)
+          .limit(PageSize)
+        total = Confirm.countDocuments({
+          createdAt: Date.now()
+        })
+        result = await Promise.all([bookings, total])
+        return response(
+          { List: result[0], Total: result[1] },
+          false,
+          "Lấy data thành công",
+          200
+        )
+      case "Week":
+        const { startOfWeek, endOfWeek } = getCurrentWeekRange()
+        bookings = Confirm
+          .find({
+            createdAt: {
+              $gte: startOfWeek,
+              $lt: endOfWeek
+            }
+          })
+          .populate("Sender", ["_id", "FullName"])
+          .select("_id Sender TotalFee createdAt ConfirmStatus")
+          .sort({
+            createdAt: -1
+          })
+          .skip((CurrentPage - 1) * PageSize)
+          .limit(PageSize)
+        total = Confirm.countDocuments({
+          createdAt: {
+            $gte: startOfWeek,
+            $lt: endOfWeek
+          }
+        })
+        result = await Promise.all([bookings, total])
+        return response(
+          { List: result[0], Total: result[1] },
+          false,
+          "Lấy data thành công",
+          200
+        )
+      case "Month":
+        const currentDate = new Date()
+        let queryDate = {
+          $gte: new Date(`${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-01`),
+          $lt: new Date(`
+            ${currentDate.getMonth() + 1 === 12 ? currentDate.getFullYear() + 1 : currentDate.getFullYear()}-
+            ${currentDate.getMonth() + 1 === 12 ? "01" : currentDate.getMonth() + 2}-
+            01`
+          )
+        }
+        bookings = Confirm
+          .find({
+            createdAt: queryDate
+          })
+          .populate("Sender", ["_id", "FullName"])
+          .select("_id Sender TotalFee createdAt ConfirmStatus")
+          .sort({
+            createdAt: -1
+          })
+          .skip((CurrentPage - 1) * PageSize)
+          .limit(PageSize)
+        total = Confirm.countDocuments({
+          createdAt: queryDate
+        })
+        result = await Promise.all([bookings, total])
+        return response(
+          { List: result[0], Total: result[1] },
+          false,
+          "Lấy data thành công",
+          200
+        )
+      default:
+        bookings = Confirm
+          .find({
+            createdAt: Date.now()
+          })
+          .populate("Sender", ["_id, FullName"])
+          .select("_id Sender TotalFee createdAt ConfirmStatus")
+          .sort({
+            createdAt: -1
+          })
+          .skip((CurrentPage - 1) * PageSize)
+          .limit(PageSize)
+        total = Confirm.countDocuments({
+          createdAt: Date.now()
+        })
+        result = await Promise.all([bookings, total])
+        return response(
+          { List: result[0], Total: result[1] },
+          false,
+          "Lấy data thành công",
+          200
+        )
+    }
+  } catch (error: any) {
+    return response({}, true, error.toString(), 500)
+  }
+}
+
 const StatisticService = {
   fncStatisticTotalUser,
   fncStatisticNewRegisteredUser,
-  fncStatisticBooking,
-  fncStatisticFinancial
+  fncStatisticTotalBooking,
+  fncStatisticFinancial,
+  fncStatisticTopTeacher,
+  fncStatisticBooking
 }
 
 export default StatisticService

@@ -139,6 +139,7 @@ const teacherRecommendationByLearnHistory = async (req: Request) => {
       }
     }
     const dataCacheRaw = await CacheService.getCache("teacherRecommend") as string
+    console.log("dataCacheRaw", dataCacheRaw);
     const dataCache = JSON.parse(dataCacheRaw)
     if (!!dataCache?.length) {
       subjectsetting = dataCache
