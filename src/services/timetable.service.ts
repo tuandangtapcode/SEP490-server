@@ -232,18 +232,16 @@ const fncGetTimeTableByUser = async (req: Request) => {
       },
       { $unwind: "$Subject" },
     ])
-    const data = timetables.map((i: any) => ({
+    const data = [...timetables, ...schedulesInBlog].map((i: any) => ({
       ...i,
       IsAttendance: (moment().isAfter(i.StartTime) &&
         moment().isBefore(moment(i.EndTime).add(24, "hours")) &&
         !i.Status)
         ? true
         : false,
-      IsUpdateTimeTable: moment().isBefore(moment(i.StartTime).diff(12, "hours")) &&
-        moment().isBefore(moment(i.StartTime)) ||
-        moment().isAfter(i.EndTime)
-        ? false
-        : true,
+      IsUpdateTimeTable: moment().isBefore(moment(i.StartTime).subtract(12, "hours"))
+        ? true
+        : false,
     }))
     return response({ List: data, ButtonShow }, false, "Lấy data thành công", 200)
   } catch (error: any) {
