@@ -24,7 +24,7 @@ TimeTableRoute.post("/updateTimeTable",
   TimeTableValidation.updateTimeTable,
   TimeTableController.updateTimeTable
 )
-TimeTableRoute.get("/getTimeTableByUser",
+TimeTableRoute.post("/getTimeTableByUser",
   authMiddleware([Roles.ROLE_STUDENT, Roles.ROLE_TEACHER]),
   TimeTableController.getTimeTableByUser
 )
