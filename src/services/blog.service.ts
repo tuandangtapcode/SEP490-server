@@ -95,8 +95,7 @@ const fncGetDetailBlog = async (req: Request) => {
     const blog = await Blog.aggregate([
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(`${BlogID}`),
-          IsDeleted: false
+          _id: new mongoose.Types.ObjectId(`${BlogID}`)
         }
       },
       {
@@ -217,32 +216,32 @@ const fncGetDetailBlog = async (req: Request) => {
           TeacherReceive: { $push: "$TeacherReceive" },
           IsDeleted: { $first: "$IsDeleted" },
           RegisterStatus: { $first: "$RegisterStatus" },
-          IsPaid: { $first: "$IsDeleted" },
+          IsPaid: { $first: "$IsPaid" },
         }
       },
-      // {
-      //   $addFields: {
-      //     TeacherReceive: {
-      //       $filter: {
-      //         input: "$TeacherReceive",
-      //         as: "item",
-      //         cond: { $ne: ["$$item", {}] }
-      //       }
-      //     }
-      //   }
-      // },
+      {
+        $addFields: {
+          TeacherReceive: {
+            $filter: {
+              input: "$TeacherReceive",
+              as: "item",
+              cond: { $ne: ["$$item", {}] }
+            }
+          }
+        }
+      },
     ])
-    // const teacher = blog[0].TeacherReceive.find((i: any) => i.ReceiveStatus === 3)
-    // if (!teacher) return response({}, true, "Booking chưa được phép thanh toán", 200)
-    // const data = {
-    //   TotalFee: blog[0].Price * blog[0].NumberSlot,
-    //   Receiver: teacher,
-    //   Subject: blog[0].Subject,
-    //   Schedules: blog[0].RealSchedules,
-    //   IsPaid: blog[0].IsPaid,
-    //   LearnType: blog[0].LearnType[0]
-    // }
-    return response(blog[0], false, "Blog tồn tại", 200)
+    const teacher = blog[0].TeacherReceive.find((i: any) => i.ReceiveStatus === 3)
+    if (!teacher) return response({}, true, "Booking chưa được phép thanh toán", 200)
+    const data = {
+      TotalFee: blog[0].Price * blog[0].NumberSlot,
+      Receiver: teacher,
+      Subject: blog[0].Subject,
+      Schedules: blog[0].RealSchedules,
+      IsPaid: blog[0].IsPaid,
+      LearnType: blog[0].LearnType[0]
+    }
+    return response(data, false, "Blog tồn tại", 200)
   } catch (error: any) {
     return response({}, true, error.toString(), 500)
   }
@@ -606,7 +605,7 @@ const fncGetListBlogByUser = async (req: Request) => {
       IsPayment: !i.IsPaid
         ? !!i.TeacherReceive.some((t: any) => t.ReceiveStatus === 3)
         : false,
-      IsDisabled: new Date() > new Date(i.StartDate) || !!i.TeacherReceive.length
+      IsDisabled: new Date() > new Date(i.StartDate) || !!i.TeacherReceive.some((t: any) => t.ReceiveStatus === 3)
         ? false
         : true
 
@@ -724,6 +723,7 @@ const fncChangeReceiveStatus = async (req: Request) => {
           }
         }
       })
+      blog.IsDeleted = true
     } else {
       newTeacherReceive = blog.TeacherReceive.map((i: any) => {
         if (i.Teacher.equals(TeacherID)) {
