@@ -81,18 +81,18 @@ const processLearnHistory = async (userID: string) => {
       .populate("Teacher", ["_id", "FullName", "Address", "Description", "Gender"])
       .populate("Student", ["_id", "FullName", "Address", "Gender"]) as any
     const text = `
-      Subject: ${learnHistory.Subject?.SubjectName || ""}
-      SubjectIntroduction: ${learnHistory.Subject?.Description || ""}
-      Teacher: ${learnHistory.Teacher?.FullName || ""}
-      TeacherInformation: ${learnHistory.Teacher?.Description || ""}
+      Subject: ${learnHistory.map((m: any) => m.Subject.SujectName)}
+      SubjectIntroduction: ${learnHistory.map((m: any) => m.Subject?.Description)}
+      Teacher: ${learnHistory.map((m: any) => m.Teacher?.FullName)}
+      TeacherInformation: ${learnHistory.Teacher?.Description || ""} ${learnHistory.map((m: any) => m.Teacher?.Description)}
       `.trim()
     const embedding = await OpenaiService.generateEmbedding(text as string)
     const checkLearnHistory = await PineconeService.searchPineconeByID(userID)
     if (!checkLearnHistory[0]) {
       await PineconeService.upsertVector(userID, "learnhistory", embedding, {
-        student: learnHistory.Student?.FullName || "",
-        gender: learnHistory.Student?.Gender === 1 ? "Nam" : "Nữ",
-        address: learnHistory.Student?.Address || "",
+        student: learnHistory[0].Student?.FullName || "",
+        gender: learnHistory[0].Student?.Gender === 1 ? "Nam" : "Nữ",
+        address: learnHistory[0].Student?.Address || "",
       })
     }
     else {
