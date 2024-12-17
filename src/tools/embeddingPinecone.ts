@@ -76,7 +76,6 @@ const updateSubjectSetting = async (subjectSettingId: string) => {
 
 const processLearnHistory = async (userID: string) => {
   try {
-    console.log("chạy đến đây rồi")
     const learnHistory = await LearnHistory.find({ Student: userID })
       .populate("Subject", ["_id", "SubjectName", "Description"])
       .populate("Teacher", ["_id", "FullName", "Address", "Description", "Gender"])
