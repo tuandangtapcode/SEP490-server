@@ -235,11 +235,11 @@ const fncGetDetailBlog = async (req: Request) => {
     if (!teacher) return response({}, true, "Booking chưa được phép thanh toán", 200)
     const data = {
       TotalFee: blog[0].Price * blog[0].NumberSlot,
-      Receiver: teacher,
+      Receiver: teacher.Teacher,
       Subject: blog[0].Subject,
       Schedules: blog[0].RealSchedules,
       IsPaid: blog[0].IsPaid,
-      LearnType: blog[0].LearnType[0]
+      LearnType: blog[0].LearnType[0],
     }
     return response(data, false, "Blog tồn tại", 200)
   } catch (error: any) {
